@@ -13,7 +13,7 @@ Round 1: the project
 | 1 | What is the project called? | Free text |
 | 2 | What is it for, in one line? | Free text |
 | 3 | Is the repo public or private? | A private (rec) · B public |
-| 4 | What should agents call you in the repo files? | A "the owner" (rec) · B a role, for example "the maintainer" · C your first name (private repos only) |
+| 4 | What should agents call you in the repo files? | A "the owner" (rec) · B a role, for example "the maintainer" · C your first name (private repos only; with the guard on, a name on your denylist blocks every push, so choose C only with the guard off) |
 
 Round 2: personal data and tools
 
@@ -29,7 +29,7 @@ Rules for the asking agent:
 
 ## 2. Apply the answers
 
-1. Run `scripts/bootstrap.sh "<1>" <owner/repo from git remote get-url origin> "<2>" "<4>"`. Leave out the 4th argument for "the owner".
+1. Run `scripts/bootstrap.sh "<1>" <owner/repo from git remote get-url origin> "<2>" "<4>"`. Leave out the 4th argument for "the owner". The script deletes itself when done; keep this file, because step 3 is also what an agent shows when a session reports DENYLIST.
 2. Public repo: add to AGENTS.md "Project rules" a line that names a private place for the project log (for example a private Claude doc), because the log can hold environment detail. Write the date and "(the owner, YYYY-MM-DD)".
 3. Guard off (5B): delete `.pii-guard`. The hook and the Action then skip the guard.
 4. Record the answers as the owner's decisions in docs/DECISIONS.md, and add one `decision` row to the project log.

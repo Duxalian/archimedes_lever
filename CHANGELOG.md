@@ -7,6 +7,7 @@ Template repo only: scripts/bootstrap.sh deletes this file in new projects. Newe
 - Decided (1A): first use is agent-driven. `scripts/first_use_check.py` (Claude Code SessionStart hook; other agents run it first) reports FIRST USE while AGENTS.md has placeholders (the template repo itself is skipped), and DENYLIST when `.pii-guard` is on and the session has no denylist. docs/FIRST_USE.md holds 7 questions in 2 rounds and the steps. The agent never asks for the denylist names; the owner types them in each settings page.
 - Decided (2A): with `.pii-guard` on, the pre-push hook and the pull-request Action fail when no denylist is found (`pii_guard.py --require-denylist`). `--status` prints the source and the count, never the names. The denylist can also come from the environment variable `PII_GUARD_DENYLIST` (comma or newline separated), for Claude cloud environments.
 - Decided (3A): the owner adds `PII_GUARD_DENYLIST` to the Default, ICF and NMB cloud environments.
+- Fresh review (0 MAJOR, 9 MINOR): fixed: one shared denylist rule in both scripts (a comment-only variable no longer hides the file); each session-start check fails on its own; a push of branch deletes only needs no denylist; sync adds docs/FIRST_USE.md when missing; question 4 option C warns about the guard; tests for `--require-denylist`, `--status` and deletes. Accepted: a stale guard copy without `--require-denylist` blocks the push (fails closed); the hook needs `python3` on PATH.
 
 ## 2026-11-11: archimedes_lever
 
