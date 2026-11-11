@@ -55,7 +55,8 @@ def baseline_head(base_text, proj_text, owner):
     cut = sb.find_heading(base_text, sb.RULES_HEADING)
     head = base_text[:cut] if cut >= 0 else base_text
     name, repo, purpose = sb.header_values(proj_text or "")
-    for key, val in (("PROJECT_NAME", name), ("REPO", repo), ("PURPOSE", purpose), ("OWNER", sb.BASELINE_OWNER)):
+    for key, val in (("PROJECT_NAME", name), ("REPO", repo), ("PURPOSE", purpose), ("OWNER", sb.BASELINE_OWNER),
+                     ("TIMEZONE", sb.header_timezone(proj_text or ""))):
         if val:
             head = head.replace("{{" + key + "}}", val)
     return sb.apply_owner(head, owner)
@@ -184,7 +185,8 @@ def self_test():
         expect("missing copied file", get(("file", "scripts/stop_check.py")), "missing")
         expect("never synced", get(("pin", ".baseline")), "missing")
         text = (base / "AGENTS.md").read_text()
-        for k, v in (("PROJECT_NAME", "Demo"), ("REPO", "D/d"), ("PURPOSE", "P"), ("OWNER", "the maintainer")):
+        for k, v in (("PROJECT_NAME", "Demo"), ("REPO", "D/d"), ("PURPOSE", "P"), ("OWNER", "the maintainer"),
+                     ("TIMEZONE", "Europe/Berlin")):
             text = text.replace("{{" + k + "}}", v)
         (proj / "AGENTS.md").write_text(sb.apply_owner(text, "the maintainer"))
         expect("synced section, owner renamed", get(("AGENTS.md", "Delegation")), "same")
@@ -193,7 +195,7 @@ def self_test():
         (proj / "scripts/stop_check.py").write_text(sb.apply_owner((base / "scripts/stop_check.py").read_text(), "the maintainer"))
         expect("copied file, owner renamed", get(("file", "scripts/stop_check.py")), "same")
         text = (base / "AGENTS.md").read_text().replace("- Owner: {{OWNER}}\n", "")
-        for k, v in (("PROJECT_NAME", "Demo"), ("REPO", "D/d"), ("PURPOSE", "P")):
+        for k, v in (("PROJECT_NAME", "Demo"), ("REPO", "D/d"), ("PURPOSE", "P"), ("TIMEZONE", "UTC")):
             text = text.replace("{{" + k + "}}", v)
         (proj / "AGENTS.md").write_text(sb.apply_owner(text, "Sam"))
         rows, _ = report(proj, base, "Sam")

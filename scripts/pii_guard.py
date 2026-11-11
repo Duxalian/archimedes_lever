@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Block personal data before it reaches the remote: emails, phone numbers, .internal addresses, ID-number shapes, and
-names from a denylist that is kept outside the repo.
+"""Block personal data and secrets before they reach the remote: emails, phone numbers, ID-number shapes, API tokens
+and private keys, names from a denylist that is kept outside the repo, and (opt-in) .internal addresses.
 
 Usage:
     python3 scripts/pii_guard.py --all             # every tracked file (working tree)
@@ -13,7 +13,8 @@ Usage:
 
 Opt-in: the guard runs only in a repo with a `.pii-guard` file at its root (the hook and the Action check for it).
 That file lists exact strings that are allowed (one per line, `#` comments), and paths to skip as
-`skip: <path or glob>` lines (for example a public reference text that quotes office contacts). Only the owner adds entries;
+`skip: <path or glob>` lines (for example a public reference text that quotes office contacts), and opt-in checks as
+`check: <name>` lines (today: `check: internal`). Only the owner adds entries;
 agents never add one to get past a block (AGENTS.md "Personal data").
 
 Name denylist (never committed): one name or word per line, `#` comments, matched whole-word, any case.
@@ -25,11 +26,12 @@ With no denylist, names are not checked and the guard says so (exit code unchang
 Checks:
     email      any address, except *@users.noreply.github.com, noreply@ / no-reply@ addresses, and the
                reserved example domains (example.com/.org/.net, *.example, *.invalid, *.test, *.localhost)
-    internal        any .internal address or host name (email or web)
+    internal        any .internal address or host name (email or web); only with a `check: internal` line in .pii-guard
     phone      US numbers (NNN-NNN-NNNN, (NNN) NNN-NNNN, NNN.NNN.NNNN), +country numbers, ORG numbers
     id         SSN shape (NNN-NN-NNNN); a 10-digit number next to ORGID / ORG ID / BADGE
+    secret     API tokens (GitHub, GitLab, AWS, Anthropic, OpenAI, Google, Slack, Stripe) and private-key headers
     name       denylist words
-Matches are printed masked (names as a length only), so CI logs do not repeat them. Exit 1 when anything is found.
+Matches are printed masked (names and secrets as a length only), so CI logs do not repeat them. Exit 1 when anything is found.
 Standard library only. Needs git (except for FILE mode).
 """
 import argparse
@@ -55,6 +57,18 @@ PHONE = [
 SSN = re.compile(r"(?<![\w-])\d{3}-\d{2}-\d{4}(?![\w-])")
 SSN_KW = re.compile(r"(?i)\b(?:SSN|social security)\b\D{0,20}?(\d{3}[ -]?\d{2}[ -]?\d{4})\b")
 ORGID = re.compile(r"(?i)\b(?:ORGID|ORG ?ID|ORGID|BADGE)\b\D{0,20}(\d{10})\b")
+SECRET = [re.compile(r) for r in (
+    r"\bgh[pousr]_[A-Za-z0-9]{36,}\b",                 # GitHub tokens
+    r"\bgithub_pat_[A-Za-z0-9_]{60,}\b",               # GitHub fine-grained token
+    r"\bglpat-[A-Za-z0-9_-]{20,}",                      # GitLab
+    r"\b(?:AKIA|ASIA)[0-9A-Z]{16}\b",                  # AWS access key id
+    r"\bsk-ant-[A-Za-z0-9_-]{20,}",                     # Anthropic
+    r"\bsk-(?:proj-|svcacct-)?(?=[A-Za-z0-9_-]*[A-Z])(?=[A-Za-z0-9_-]*\d)[A-Za-z0-9_-]{32,}",  # OpenAI (mixed case + digit)
+    r"\bAIza[0-9A-Za-z_-]{35}(?![0-9A-Za-z_-])",        # Google API key
+    r"\bxox[abposr]-[A-Za-z0-9-]{10,}",                 # Slack
+    r"\b[rs]k_live_[0-9A-Za-z]{24,}",                   # Stripe live key
+    r"-----BEGIN (?:[A-Z0-9]+ )*PRIVATE KEY(?: BLOCK)?-----",  # PEM, OpenSSH and PGP private keys
+)]
 ALLOWED_EMAIL = re.compile(
     r"(?i)(@users\.noreply\.github\.com$|^(no-?reply)@|@example\.(com|org|net)$|\.(example|invalid|test|localhost)$)")
 SKIP_SUFFIX = (".png", ".jpg", ".jpeg", ".gif", ".webp", ".ico", ".pdf", ".zip", ".gz", ".woff", ".woff2", ".ttf")
@@ -63,7 +77,7 @@ MAX_BYTES = 2_000_000
 
 def mask(kind, s):
     """Show the kind and a length, never enough to rebuild the value (CI logs may be public)."""
-    if kind == "name":
+    if kind in ("name", "secret"):
         return f"<{len(s)} chars>"
     if kind in ("email", "internal") and "@" in s:
         return "***@" + "*" * len(s.split("@", 1)[1])
@@ -123,6 +137,11 @@ def load_allow(root, ref=None):
     return {v for v in vals if v}
 
 
+def check_on(allow, name):
+    """True when .pii-guard turns on the opt-in check `name` with a `check: <name>` line."""
+    return any(a.startswith("check:") and a[6:].strip().lower() == name for a in allow)
+
+
 def skipped(path, allow):
     """True when a `skip: <path or glob>` line in .pii-guard covers this repo-relative path."""
     globs = [a[5:].strip() for a in allow if a.startswith("skip:")]
@@ -139,14 +158,17 @@ def scan_text(text, where, deny, allow):
         for m in EMAIL.finditer(line):
             if not ALLOWED_EMAIL.search(m.group()):
                 hits.append(("email", m.group()))
-        hits += [("internal", m.group()) for m in INTERNAL.finditer(line)]
+        if check_on(allow, "internal"):
+            hits += [("internal", m.group()) for m in INTERNAL.finditer(line)]
+        for rx in SECRET:
+            hits += [("secret", m.group()) for m in rx.finditer(line)]
         for rx in PHONE:
             hits += [("phone", m.group(m.lastindex or 0)) for m in rx.finditer(line)]
         hits += [("id", m.group()) for m in SSN.finditer(line)]
         hits += [("id", m.group(1)) for m in SSN_KW.finditer(line)]
         hits += [("id", m.group(1)) for m in ORGID.finditer(line)]
         if name_re:
-            spans = [(s.start(), s.end()) for v in allow if not v.startswith("skip:")
+            spans = [(s.start(), s.end()) for v in allow if not v.startswith(("skip:", "check:"))
                      for s in re.finditer(re.escape(v), line, re.IGNORECASE)]
             hits += [("name", m.group(1)) for m in name_re.finditer(line)
                      if not any(a <= m.start(1) and m.end(1) <= b for a, b in spans)]  # inside an allowed string
@@ -240,8 +262,10 @@ def self_test():
     expect("noreply allowed", "noreply" + at + "anthropic" + dot + "com", [])
     expect("example domain allowed", "a" + at + "example" + dot + "com", [])
     expect("placeholder t@t ignored", "t" + at + "t", [])
-    expect(".internal email", "x" + dot + "y" + at + "example" + dot + "internal", ["email", "internal"])
-    expect(".internal host", "see example" + dot + "internal today", ["internal"])
+    internal_on = ["check: internal"]
+    expect(".internal off by default", "see example" + dot + "internal today", [])
+    expect(".internal email", "x" + dot + "y" + at + "example" + dot + "internal", ["email", "internal"], allow=internal_on)
+    expect(".internal host", "see example" + dot + "internal today", ["internal"], allow=internal_on)
     expect("phone dashes", "call 555-123-" + "4567", ["phone"])
     expect("phone parens", "call (555) 123-" + "4567", ["phone"])
     expect("phone intl", "call +44 20 7946 " + "0958", ["phone"])
@@ -255,19 +279,36 @@ def self_test():
     expect("denylist name", "ask Alex" + "andra first", ["name"], deny=["Alexandra"])
     expect("denylist any case", "ALEX" + "ANDRA", ["name"], deny=["alexandra"])
     expect("denylist whole word", "Alexandra" + "s", [], deny=["Alexandra"])
-    expect("allow list", "see example" + dot + "internal", [], allow=["example" + dot + "internal"])
-    expect("skip line is not an allowed value", "see example" + dot + "internal", ["internal"], allow=["skip: ref/x.txt"])
+    expect("allow list", "see example" + dot + "internal", [], allow=["example" + dot + "internal", "check: internal"])
+    expect("skip line is not an allowed value", "see example" + dot + "internal", ["internal"], allow=["skip: ref/x.txt", "check: internal"])
     good = not skipped("a.txt", {"skip: *"}) and not skipped("a/b.txt", {"skip: **"}) \
         and skipped("ref/x.txt", {"skip: ref/x.txt"}) and skipped("ref/a/b.txt", {"skip: ref/"}) \
         and skipped("ref/y.txt", {"skip: ref/*.txt"}) and not skipped("docs/x.txt", {"skip: ref/x.txt"})
     print(("ok   " if good else "FAIL ") + "skip: exact path, folder, glob; other paths still scanned")
     ok = ok and good
     expect("name inside an allowed host is not flagged", "https://acme" + dot + "dps" + dot + "internal/sites/x", [],
-           deny=["ACME"], allow=["acme" + dot + "dps" + dot + "internal"])
+           deny=["ACME"], allow=["acme" + dot + "dps" + dot + "internal", "check: internal"])
     expect("allowed string matches in any case", "https://ACME" + dot + "DPS" + dot + "INTERNAL/x", ["internal"],
-           deny=["ACME"], allow=["acme" + dot + "dps" + dot + "internal"])
+           deny=["ACME"], allow=["acme" + dot + "dps" + dot + "internal", "check: internal"])
     expect("same name elsewhere on the line is flagged", "ACME team at acme" + dot + "dps" + dot + "internal", ["name"],
-           deny=["ACME"], allow=["acme" + dot + "dps" + dot + "internal"])
+           deny=["ACME"], allow=["acme" + dot + "dps" + dot + "internal", "check: internal"])
+    expect("check line is not an allowed value", "see check: internal", [], allow=["check: internal"])
+    # Secret test values are built at run time, so this file holds no token shape itself.
+    x36 = "A1b2C3d4E5" * 3 + "F6g7H8"
+    for label, val in (("GitHub token", "gh" + "p_" + x36), ("GitHub fine-grained", "github" + "_pat_" + x36 * 2),
+                       ("GitLab", "gl" + "pat-" + x36[:20]), ("AWS key id", "AK" + "IA" + "ABCDEFGHIJ234567"),
+                       ("Anthropic", "sk" + "-ant-api03-" + x36), ("OpenAI", "sk" + "-proj-" + x36),
+                       ("Google", "AI" + "za" + x36[:35]), ("Slack", "xo" + "xb-1234567890-" + x36[:12]),
+                       ("Stripe", "sk" + "_live_" + x36[:24]),
+                       ("private key", "-----BEGIN OPENSSH " + "PRIVATE KEY-----"),
+                       ("RSA private key", "-----BEGIN RSA " + "PRIVATE KEY-----")):
+        expect("secret: " + label, "token = " + val, ["secret"])
+    expect("not a secret: short sk- word", "sk" + "-learn and task-runner", [])
+    expect("not a secret: long kebab slug", "docs/sk" + "-" + "-".join(["setup", "guide", "for", "new", "projects", "today"]), [])
+    expect("not a secret: public key header", "-----BEGIN " + "PUBLIC KEY-----", [])
+    good = mask("secret", "gh" + "p_" + x36) == f"<{len(x36) + 4} chars>"
+    print(("ok   " if good else "FAIL ") + "secrets print as a length only")
+    ok = ok and good
     expect("allow list is exact", "call 555-123-" + "4567", ["phone"], allow=["call 555-123-" + "4567 now"])
     expect("URL path not a phone", "github.com/x/pull/123-456-" + "7890", [])
     expect("phone keyword, no separators", "tel: 555123" + "4567", ["phone"])
