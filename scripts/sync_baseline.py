@@ -56,7 +56,9 @@ COPY_IF_MISSING = [".claude/agents/worker.md", ".claude/agents/scout.md", ".clau
                    "docs/FIRST_USE.md"]
 BASELINE_OWNER = "the owner"  # role word in baseline text; no real name lives in the baseline
 # Never rename the owner inside this script: it holds BASELINE_OWNER as a literal.
-NO_OWNER_RENAME = {"scripts/sync_baseline.py"}
+# first_use_check.py and docs/FIRST_USE.md use "the owner" as an answer option and a role: keep them as written
+# (bootstrap.sh skips them too).
+NO_OWNER_RENAME = {"scripts/sync_baseline.py", "scripts/first_use_check.py", "docs/FIRST_USE.md"}
 OWNER_RE = r"[A-Za-z0-9 ._,()-]+"  # safe inside Python strings, JSON and Markdown
 
 
@@ -265,7 +267,8 @@ def main():
                 new[rel] = text if rel in NO_OWNER_RENAME else apply_owner(text, owner)
         for rel in COPY_IF_MISSING:
             if (base / rel).exists() and not (root / rel).exists():
-                new[rel] = apply_owner((base / rel).read_text(), owner)
+                text = (base / rel).read_text()
+                new[rel] = text if rel in NO_OWNER_RENAME else apply_owner(text, owner)
         if (base / ".claude/settings.json").exists():
             new[".claude/settings.json"] = merge_settings(base / ".claude/settings.json", root / ".claude/settings.json")
         if (base / ".gitignore").exists():
