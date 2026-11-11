@@ -125,6 +125,20 @@ def header_values(text):
     return (name and name.group(1), repo and repo.group(1), purpose and purpose.group(1))
 
 
+def valid_timezone(name):
+    """An IANA name the system knows (UTC always passes, also where the time zone database is missing)."""
+    if name == "UTC":
+        return True
+    if not re.fullmatch(r"[A-Za-z0-9_+/-]+", name):
+        return False
+    try:
+        import zoneinfo
+        zoneinfo.ZoneInfo(name)
+        return True
+    except Exception:
+        return False
+
+
 def header_timezone(text):
     tz = re.search(r"^- Time zone: (.+?)\s*$", text or "", re.M)
     return tz and tz.group(1)
@@ -234,8 +248,8 @@ def main():
     ap.add_argument("--owner")
     ap.add_argument("--timezone", help="IANA time zone for project log times, for example Europe/Berlin")
     args = ap.parse_args()
-    if args.timezone and not re.fullmatch(r"[A-Za-z0-9_+/-]+", args.timezone):
-        die(f"time zone {args.timezone!r}: give an IANA name, for example UTC or Europe/Berlin")
+    if args.timezone and not valid_timezone(args.timezone):
+        die(f"time zone {args.timezone!r} is not a known IANA name (for example UTC, Europe/Berlin)")
 
     try:
         root = Path(git("rev-parse", "--show-toplevel"))

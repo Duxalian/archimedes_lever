@@ -1,10 +1,29 @@
 # First use
 
-The agent runs this once, in a new repo made from the template, before any other work. `scripts/first_use_check.py` (the Claude Code SessionStart hook, or the first step of "Start of session") says when it is due: AGENTS.md still has template placeholders.
+The agent runs this once, before any other work, in either of two starts:
+
+- A plain clone of the kit, and the user asks to "initiate" (or start, or set up) a project. `scripts/first_use_check.py` (the Claude Code SessionStart hook, or the first step of "Start of session") says KIT. Start at step 0.
+- A repo made with GitHub's "Use this template". The check says FIRST USE: AGENTS.md still has template placeholders. Start at step 1.
+
+If the check did not run, look at `git remote get-url origin`: a URL that ends in `archimedes_lever` is the kit itself.
+
+## 0. Move a clone of the kit to its own repo (KIT only)
+
+Ask round 1 below first, then ask question 10 with round 2.
+
+| # | Question | Options |
+|---|---|---|
+| 10 | Where does the new repo go? | A I create it on GitHub now, public or private as in answer 3 (rec; needs a GitHub tool on this host or a signed-in `gh`) · B you create an empty repo on GitHub (no README, no license) and paste its URL · C local only for now (the Stop hook then reminds you at each turn end until a remote exists) |
+
+Then, before step 2:
+
+1. `git remote rename origin kit`. The kit stays as a second remote; nothing is deleted.
+2. For 10A: create the repo with the host's GitHub tool, or `gh repo create <user>/<name> --private` (or `--public`), then `git remote add origin https://github.com/<user>/<name>.git`. For 10B: `git remote add origin <URL>`. For 10C: no remote; use `<user>/<name>` as planned for bootstrap's repo argument.
+3. The project keeps the kit's git history below its own first commit. The folder keeps the name it was cloned as; the user can rename it after the session.
 
 ## 1. Ask the questions
 
-Ask all questions of a round together (3 rounds, 9 questions). In Claude Code, use the clickable question dialog (4 questions at most per dialog). On other hosts, write them as a numbered list with lettered options. Mark your recommendation. A free-text answer comes through "Other".
+Ask all questions of a round together (3 rounds, 9 questions; 10 with step 0). In Claude Code, use the clickable question dialog (4 questions at most per dialog). On other hosts, write them as a numbered list with lettered options. Mark your recommendation. A free-text answer comes through "Other".
 
 Round 1: the project
 
@@ -15,7 +34,7 @@ Round 1: the project
 | 3 | Is the repo public or private? | A private (rec) · B public |
 | 8 | Which license for the project? | A MIT (rec for a public repo) · B Apache-2.0 · C none: all rights reserved (rec for a private repo) |
 
-Round 2: you and personal data
+Round 2: you and personal data (step 0 adds question 10 here)
 
 | # | Question | Options |
 |---|---|---|
@@ -41,7 +60,7 @@ Rules for the asking agent:
 3. Guard: for 5B, remove the "# " in front of the line `# check: internal` in `.pii-guard`. For 5C, delete `.pii-guard`; the hook and the Action then skip the guard.
 4. License (answer 8): for A, copy docs/archimedes_lever-LICENSE.txt to `LICENSE` and change the copyright line to the current year and the GitHub account or organization from `<owner/repo>`, unless the owner names another holder (a public repo never uses a real name the owner has not given). For B, save the text from https://www.apache.org/licenses/LICENSE-2.0.txt, unchanged, as `LICENSE`. For C, add no LICENSE.
 5. Record the answers as the owner's decisions in docs/DECISIONS.md, and add one `decision` row to the project log.
-6. Commit with a noreply identity, run `scripts/session_checkin.sh` (it installs the git hooks), and push.
+6. Commit with a noreply identity, run `scripts/session_checkin.sh` (it installs the git hooks), and push (`git push -u origin main`; for 10C, skip the push).
 
 ## 3. The denylist places (guard on)
 

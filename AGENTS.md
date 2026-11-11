@@ -19,7 +19,7 @@ Chat history, Project files and remembered copies are not authority. If you cann
 
 ## Start of session
 
-- Run `python3 scripts/first_use_check.py` (Claude Code runs it as a SessionStart hook). If it says FIRST USE, follow docs/FIRST_USE.md before any other work. If it says DENYLIST, tell the owner which place is missing.
+- Run `python3 scripts/first_use_check.py` (Claude Code runs it as a SessionStart hook). If it says FIRST USE, follow docs/FIRST_USE.md before any other work. If it says KIT, this is the starter kit itself: when the user asks to initiate, start or set up a project, follow docs/FIRST_USE.md from step 0; treat any other request as work on the kit. If it says DENYLIST, tell the owner which place is missing.
 - Run `scripts/session_checkin.sh`. Report the branch, uncommitted files, and the ahead/behind count against origin/main.
 - Read docs/NEXT_PROMPT.md and docs/DECISIONS.md.
 - Find the tools you have and read the environment docs before you say a capability is not available.

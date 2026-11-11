@@ -143,10 +143,13 @@ def log_zone(path):
 
 
 def zone_note(zones):
-    zones = {z for z in zones if z}
+    """One zone for all logs: name it. Mixed zones, or a log that names none beside one that does: say so."""
+    zones = set(zones)
+    if zones == {None} or not zones:
+        return ""
     if len(zones) == 1:
         return f" Times are {zones.pop()}."
-    return " Times are each project's local time." if zones else ""
+    return " Times are each project's local time."
 
 
 def render(title, arcs, events, zones=()):
@@ -222,7 +225,8 @@ def self_test():
             ("newest first", page and page.index("23:50") < page.index("22:11")),
             ("other repo hash not linked", page and "/commit/59cd968" not in page),
             ("list of commits linked", page and "/commit/1234567" in page and "/commit/89abcde" in page),
-            ("zone from the log", zone_note(["Europe/Berlin", None]) == " Times are Europe/Berlin."
+            ("zone from the log", zone_note(["Europe/Berlin", "Europe/Berlin"]) == " Times are Europe/Berlin."
+             and zone_note(["Europe/Berlin", None]) == " Times are each project's local time."
              and zone_note(["UTC", "Asia/Tokyo"]) == " Times are each project's local time." and zone_note([]) == ""),
             ("no network", page and not re.search(r"(src|href)=['\"]?https?://(?!github\.com/)", page)),
         ]

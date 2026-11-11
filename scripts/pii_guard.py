@@ -63,7 +63,7 @@ SECRET = [re.compile(r) for r in (
     r"\bglpat-[A-Za-z0-9_-]{20,}",                      # GitLab
     r"\b(?:AKIA|ASIA)[0-9A-Z]{16}\b",                  # AWS access key id
     r"\bsk-ant-[A-Za-z0-9_-]{20,}",                     # Anthropic
-    r"\bsk-(?:proj-|svcacct-)?[A-Za-z0-9_-]{32,}",      # OpenAI
+    r"\bsk-(?:proj-|svcacct-)?(?=[A-Za-z0-9_-]*[A-Z])(?=[A-Za-z0-9_-]*\d)[A-Za-z0-9_-]{32,}",  # OpenAI (mixed case + digit)
     r"\bAIza[0-9A-Za-z_-]{35}(?![0-9A-Za-z_-])",        # Google API key
     r"\bxox[abposr]-[A-Za-z0-9-]{10,}",                 # Slack
     r"\b[rs]k_live_[0-9A-Za-z]{24,}",                   # Stripe live key
@@ -304,6 +304,7 @@ def self_test():
                        ("RSA private key", "-----BEGIN RSA " + "PRIVATE KEY-----")):
         expect("secret: " + label, "token = " + val, ["secret"])
     expect("not a secret: short sk- word", "sk" + "-learn and task-runner", [])
+    expect("not a secret: long kebab slug", "docs/sk" + "-" + "-".join(["setup", "guide", "for", "new", "projects", "today"]), [])
     expect("not a secret: public key header", "-----BEGIN " + "PUBLIC KEY-----", [])
     good = mask("secret", "gh" + "p_" + x36) == f"<{len(x36) + 4} chars>"
     print(("ok   " if good else "FAIL ") + "secrets print as a length only")
