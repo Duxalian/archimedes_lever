@@ -2,6 +2,15 @@
 
 Template repo only: scripts/bootstrap.sh deletes this file in new projects. Newest first. "Decided" = decision by the owner. "Rec" = agent recommendation that the owner has not approved.
 
+## 2026-11-11: a starter for anyone
+
+- Decided: the kit is a starter for one new project, for the owner or anyone else; managing many projects from one place is out of scope.
+- Decided (1B): added `scripts/check.sh` (one check command: every self-test, the project log check, the personal-data scan, then `scripts/check.local.sh`), set as the default Test command in AGENTS.md "Commands" and run by the pull-request workflow; a secret scan in `scripts/pii_guard.py` (GitHub, GitLab, AWS, Anthropic, OpenAI, Google, Slack and Stripe tokens, private-key headers; printed as a length only); a "What you need" section in README.md; first-use question 8 (license) and 9 (time zone).
+- Decided (1B): the time zone is a project setting: `- Time zone:` line in AGENTS.md, bootstrap 5th argument (default UTC), `sync_baseline.py --timezone` for projects without the line. The log column is now "When"; log_check.py still accepts an older "When (CT)" header. timeline.py reads the zone from each log.
+- Decided (1B): the .mil check is opt-in (`check: mil` in .pii-guard; first-use question 5 option B). sync_baseline.py prints a note for a project whose .pii-guard has no such line, because the next sync turns its .mil check off.
+- Decided (2A): the 3 preference files moved to a private Claude doc. Replaces 3A of the "archimedes_lever" entry below.
+- Decided (3A): the kit is MIT licensed (LICENSE). Bootstrap moves it to docs/archimedes_lever-LICENSE.txt, which sync keeps current; the project chooses its own LICENSE.
+
 ## 2026-11-11: skip rule and PII scan
 
 - Fixed: denylist entries copied as `<Name>` (from a placeholder) matched nothing, so names were not checked. The guard now drops one wrapping pair of `<>` or quotes, and drops entries under 2 characters or with no letter or digit. A name inside an allowed string on the same line (for example a host name) is not flagged; allowed strings match in any case. Fresh review: 0 MAJOR, 3 MINOR (2 fixed; accepted: an allowed string that contains a name hides it).
@@ -12,7 +21,7 @@ Template repo only: scripts/bootstrap.sh deletes this file in new projects. Newe
 
 - Decided (1A): first use is agent-driven. `scripts/first_use_check.py` (Claude Code SessionStart hook; other agents run it first) reports FIRST USE while AGENTS.md has placeholders (the template repo itself is skipped), and DENYLIST when `.pii-guard` is on and the session has no denylist. docs/FIRST_USE.md holds 7 questions in 2 rounds and the steps. The agent never asks for the denylist names; the owner types them in each settings page.
 - Decided (2A): with `.pii-guard` on, the pre-push hook and the pull-request Action fail when no denylist is found (`pii_guard.py --require-denylist`). `--status` prints the source and the count, never the names. The denylist can also come from the environment variable `PII_GUARD_DENYLIST` (comma or newline separated), for Claude cloud environments.
-- Decided (3A): the owner adds `PII_GUARD_DENYLIST` to the Default, ICF and NMB cloud environments.
+- Decided (3A): the owner adds `PII_GUARD_DENYLIST` to each cloud environment the owner's projects use.
 - Fresh review (0 MAJOR, 9 MINOR): fixed: one shared denylist rule in both scripts (a comment-only variable no longer hides the file); each session-start check fails on its own; a push of branch deletes only needs no denylist; sync adds docs/FIRST_USE.md when missing; question 4 option C warns about the guard; tests for `--require-denylist`, `--status` and deletes. Accepted: a stale guard copy without `--require-denylist` blocks the push (fails closed); the hook needs `python3` on PATH.
 
 ## 2026-11-11: archimedes_lever

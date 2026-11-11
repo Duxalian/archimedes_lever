@@ -5,6 +5,7 @@ This file is the source of truth for every agent on this repo: Claude, GPT/Codex
 - Repo: {{REPO}}
 - Purpose: {{PURPOSE}}
 - Owner: {{OWNER}}
+- Time zone: {{TIMEZONE}}
 
 ## Order of authority
 
@@ -59,7 +60,7 @@ Chat history, Project files and remembered copies are not authority. If you cann
 
 - Never commit personal data: real names, email addresses, phone numbers, home or work addresses, ID numbers, or the owner's job details. Use a role (for example "the maintainer") and fake sample data. A private repo may put its owner's real name in the `- Owner:` line (or pass `sync_baseline.py --owner`).
 - Commit with a GitHub noreply address (`ID+USER@users.noreply.github.com`) or the agent's own noreply identity, never a personal email.
-- A repo with a `.pii-guard` file at its root runs `scripts/pii_guard.py` in the pre-push hook and in the pull-request Action (.github/workflows/pii-guard.yml). It blocks emails, phone numbers, .mil addresses, ID-number shapes, and names from a denylist kept outside the repo (environment variable `PII_GUARD_DENYLIST` in a cloud environment, the file `~/.config/pii-guard/denylist.txt`, or the Actions secret `PII_GUARD_DENYLIST`). Never commit the denylist.
+- A repo with a `.pii-guard` file at its root runs `scripts/pii_guard.py` in the pre-push hook and in the pull-request Action (.github/workflows/pii-guard.yml). It blocks emails, phone numbers, ID-number shapes, API tokens and private keys, names from a denylist kept outside the repo, and .mil addresses when `.pii-guard` has the line `check: mil` (environment variable `PII_GUARD_DENYLIST` in a cloud environment, the file `~/.config/pii-guard/denylist.txt`, or the Actions secret `PII_GUARD_DENYLIST`). Never commit the denylist.
 - With the guard on, a push or pull-request check with no denylist fails (the owner, 2026-11-11). Never ask for the names in chat: the owner adds them in the places docs/FIRST_USE.md lists. Check with `python3 scripts/pii_guard.py --status` (it prints a count, never names).
 - When the guard blocks: remove the data, fix the unpushed commit, and push again. Only the owner adds allow entries to `.pii-guard`. Never push with `--no-verify`.
 
@@ -67,7 +68,7 @@ Chat history, Project files and remembered copies are not authority. If you cann
 
 <!-- Fill in when the project has them. Give exact commands. -->
 - Build: not set yet.
-- Test: not set yet.
+- Test: `scripts/check.sh` (the kit's self-tests, the log check and the personal-data scan; put this project's own tests in `scripts/check.local.sh`, which check.sh runs last).
 - Lint: not set yet.
 
 ## Verification
@@ -100,8 +101,8 @@ The project log feeds a timeline of milestones, breakthroughs and narratives for
 
 - Location: docs/LOG.md, unless "Project rules" names another place. Check it with `python3 scripts/log_check.py`. A public repo must name a private place (for example a private Claude doc), because entries can hold environment or security detail.
 - Append an entry in the same turn the event happens. Backfill the same turn if you missed one.
-- One row per event. Columns, in this order: # | When (CT) | Type | Arc | Topic | Raised by | What the other missed | Evidence | Result.
-- When: `YYYY-MM-DD HH:MM` in America/Chicago. A range: `YYYY-MM-DD HH:MM–HH:MM`. Mark an estimate with `~` before the date or the time.
+- One row per event. Columns, in this order: # | When | Type | Arc | Topic | Raised by | What the other missed | Evidence | Result.
+- When: `YYYY-MM-DD HH:MM` in the project time zone (the `- Time zone:` line at the top). A range: `YYYY-MM-DD HH:MM–HH:MM`. Mark an estimate with `~` before the date or the time.
 - Type, one of:
   - `milestone`: a deliverable exists or a goal is met (first import works, v1 published).
   - `breakthrough`: a test or idea removes a blocker or changes direction.

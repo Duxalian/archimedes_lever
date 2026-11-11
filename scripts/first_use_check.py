@@ -23,7 +23,7 @@ import sys
 import tempfile
 
 TEMPLATE_NAME = "archimedes_lever"
-PLACEHOLDER = re.compile(r"\{\{(PROJECT_NAME|REPO|PURPOSE|OWNER)\}\}")
+PLACEHOLDER = re.compile(r"\{\{(PROJECT_NAME|REPO|PURPOSE|OWNER|TIMEZONE)\}\}")
 
 
 def origin_name(root):

@@ -8,6 +8,8 @@ Run it from inside the project repo:
 Options:
     --baseline PATH_OR_URL   Baseline repo (default: https://github.com/Duxalian/archimedes_lever)
     --name, --repo, --purpose   Header values, needed only when the project AGENTS.md has none.
+    --timezone ZONE          IANA time zone for project log times, needed only when the project AGENTS.md has no
+                             "- Time zone:" line (projects synced before 2026-11-11 have none).
     --owner NAME             Name agents use for the decider (default: the project's "- Owner:" line, else "the owner").
                              A public repo sets a role, for example --owner "the maintainer", so no real name is synced in.
 
@@ -21,17 +23,20 @@ What it changes:
     .claude/agents/worker.md, scout.md, reviewer.md, GEMINI.md, docs/FIRST_USE.md   Added only when missing (a project
                            may tune them; FIRST_USE.md holds the denylist places that the session-start check names).
     scripts/log_check.py, scripts/drift.py, scripts/timeline.py, scripts/pii_guard.py, scripts/first_use_check.py,
-    scripts/git-hooks/pre-push
+    scripts/check.sh, scripts/git-hooks/pre-push
                            Replaced with the baseline copies. (.pii-guard is not copied: a project opts in itself.)
     .claude/settings.json  Adds the baseline deny rules, and each baseline hook event the project has no hook for.
                            Keeps all other settings.
     .gitignore             Adds the baseline lines. Keeps all other lines.
     .baseline              Records the baseline commit that was used.
+    docs/archimedes_lever-LICENSE.txt   The kit's license (MIT), which covers the copied files.
     Owner name             In baseline text only (AGENTS.md above "## Project rules" and the copied files, not this
                            script), "the owner" becomes the project owner ("The owner" becomes the owner with a capital
                            first letter). Project text is never renamed. A private repo may keep a real name
                            (--owner NAME); a public repo uses a role. Owner: letters, digits, space . _ , ( ) -
-What it never changes: README.md, docs/ (except adding a missing docs/FIRST_USE.md) and all other files.
+What it never changes: README.md, docs/ (except adding a missing docs/FIRST_USE.md and updating the kit license),
+.pii-guard and all other files. It prints a note when .pii-guard has no `check: mil` line (the .mil check is opt-in
+since 2026-11-11).
 Standard library only. Needs git.
 """
 import argparse
@@ -49,7 +54,7 @@ RULES_HEADING = "## Project rules"
 COMMANDS_HEADING = "## Commands"
 COPY_FILES = ["scripts/session_checkin.sh", "scripts/sync_baseline.py", "scripts/stop_check.py",
               "scripts/worker_guard.py", "scripts/log_check.py", "scripts/drift.py", "scripts/timeline.py", "scripts/pii_guard.py", "scripts/first_use_check.py",
-              "scripts/git-hooks/pre-push",
+              "scripts/check.sh", "scripts/git-hooks/pre-push",
               ".claude/orchestration.md"]
 # Agent definitions: copied only when the project has no file with that name (projects may tune them).
 COPY_IF_MISSING = [".claude/agents/worker.md", ".claude/agents/scout.md", ".claude/agents/reviewer.md", "GEMINI.md",
@@ -120,6 +125,11 @@ def header_values(text):
     return (name and name.group(1), repo and repo.group(1), purpose and purpose.group(1))
 
 
+def header_timezone(text):
+    tz = re.search(r"^- Time zone: (.+?)\s*$", text or "", re.M)
+    return tz and tz.group(1)
+
+
 def header_owner(text):
     owner = re.search(r"^- Owner: (.+?)\s*$", text or "", re.M)
     return owner and owner.group(1)
@@ -139,15 +149,16 @@ def build_agents(base_text, proj_text, args, owner):
     name = args.name or found[0]
     repo = args.repo or found[1]
     purpose = args.purpose or found[2]
-    missing = [k for k, v in (("--name", name), ("--repo", repo), ("--purpose", purpose)) if not v]
+    timezone = args.timezone or header_timezone(proj_text)
+    missing = [k for k, v in (("--name", name), ("--repo", repo), ("--purpose", purpose), ("--timezone", timezone)) if not v]
     if missing:
-        die("the project AGENTS.md has no baseline header; give " + ", ".join(missing))
+        die("the project AGENTS.md header lacks a value; give " + ", ".join(missing))
 
     cut = find_heading(base_text, RULES_HEADING)
     if cut < 0:
         die(f"the baseline AGENTS.md has no '{RULES_HEADING}' heading")
     head = base_text[:cut]
-    for key, val in (("PROJECT_NAME", name), ("REPO", repo), ("PURPOSE", purpose)):
+    for key, val in (("PROJECT_NAME", name), ("REPO", repo), ("PURPOSE", purpose), ("TIMEZONE", timezone)):
         head = head.replace("{{" + key + "}}", val)
     if "{{OWNER}}" in head:
         head = head.replace("{{OWNER}}", BASELINE_OWNER)
@@ -221,7 +232,10 @@ def main():
     ap.add_argument("--repo")
     ap.add_argument("--purpose")
     ap.add_argument("--owner")
+    ap.add_argument("--timezone", help="IANA time zone for project log times, for example Europe/Berlin")
     args = ap.parse_args()
+    if args.timezone and not re.fullmatch(r"[A-Za-z0-9_+/-]+", args.timezone):
+        die(f"time zone {args.timezone!r}: give an IANA name, for example UTC or Europe/Berlin")
 
     try:
         root = Path(git("rev-parse", "--show-toplevel"))
@@ -274,6 +288,12 @@ def main():
         if (base / ".gitignore").exists():
             new[".gitignore"] = merge_lines(base / ".gitignore", root / ".gitignore")
         new[".baseline"] = f"Duxalian/archimedes_lever {base_sha}\n"
+        if (base / "LICENSE").exists():
+            new["docs/archimedes_lever-LICENSE.txt"] = (base / "LICENSE").read_text()
+        guard = root / ".pii-guard"
+        if guard.is_file() and not any(l.strip().lower() == "check: mil" for l in guard.read_text().splitlines()):
+            print("NOTE: the .mil check in scripts/pii_guard.py is opt-in now. To keep blocking .mil addresses, "
+                  "the owner adds the line 'check: mil' to .pii-guard.\n")
 
 
         changed = []
