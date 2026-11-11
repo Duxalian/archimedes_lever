@@ -12,7 +12,7 @@ It reports:
     FIRST USE       the repo still has template placeholders (a new project made from the template, not set up):
                     follow docs/FIRST_USE.md before any other work.
     KIT             the repo is the kit itself (origin named archimedes_lever), for example a plain `git clone` of it:
-                    when the user asks to initiate or start a project, follow docs/FIRST_USE.md from step 0.
+                    when the user asks to initiate or start a project, follow docs/FIRST_USE.md.
     DENYLIST        the repo has a .pii-guard file but this session has no name denylist, so pushes will be blocked.
 The kit repo itself keeps its placeholders on purpose: it gets the KIT line, never FIRST USE.
 Exit 0 always: a session-start hook informs, it never blocks. Standard library only.
@@ -54,7 +54,7 @@ def messages(root):
         out.append(f"first_use_check: placeholder check skipped ({e})")
     if is_kit:
         out.append("KIT: this is the archimedes_lever starter kit itself (origin is the kit repo). If the user asks to "
-                   "initiate, start or set up a project, follow docs/FIRST_USE.md from step 0: it moves this clone to "
+                   "initiate, start or set up a project, follow docs/FIRST_USE.md: it moves this clone to "
                    "the user's own repo first. Any other request is work on the kit.")
     if first_use:
         out.append("FIRST USE: this repo was made from the template and is not set up yet. Before any other work, "

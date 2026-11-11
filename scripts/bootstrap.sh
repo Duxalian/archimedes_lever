@@ -67,7 +67,7 @@ base_sha="$(git ls-remote https://github.com/Duxalian/archimedes_lever HEAD 2>/d
 echo "Duxalian/archimedes_lever ${base_sha:-unknown (ls-remote failed)}" > .baseline
 
 # The kit's changelog lives only in the template repo. The kit's license moves next to the docs: the copied scripts
-# stay under it, and the root LICENSE is the project's own choice (docs/FIRST_USE.md, question 8).
+# stay under it, and the root LICENSE is the project's own choice (docs/FIRST_USE.md, question 6).
 rm -f -- CHANGELOG.md
 if [ -f LICENSE ]; then mv -- LICENSE docs/archimedes_lever-LICENSE.txt; fi
 
