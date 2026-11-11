@@ -7,6 +7,8 @@ Usage:
     python3 scripts/pii_guard.py --range A..B      # commits in A..B: added lines, messages, author and committer
     python3 scripts/pii_guard.py --push            # pre-push hook mode: reads the hook's stdin lines
     python3 scripts/pii_guard.py FILE ...          # these files
+    python3 scripts/pii_guard.py --status          # where the denylist comes from and how many entries (never the names)
+    --require-denylist                             # fail when no denylist is found (the hook and the Action use it)
     python3 scripts/pii_guard.py --test            # self-test; prints PII GUARD TEST PASS
 
 Opt-in: the guard runs only in a repo with a `.pii-guard` file at its root (the hook and the Action check for it).
@@ -66,11 +68,25 @@ def mask(kind, s):
     return "*" * (len(s) - 2) + s[-2:] if len(s) > 6 else "*" * len(s)
 
 
-def load_denylist():
+def denylist_source():
+    """Return (raw text, where it came from) or ("", None)."""
     raw = os.environ.get("PII_GUARD_DENYLIST", "")
+    if raw.strip():
+        return raw, "environment variable PII_GUARD_DENYLIST"
     path = os.environ.get("PII_GUARD_DENYLIST_FILE") or os.path.expanduser("~/.config/pii-guard/denylist.txt")
-    if not raw and os.path.isfile(path):
-        raw = pathlib.Path(path).read_text(errors="replace")
+    if os.path.isfile(path):
+        return pathlib.Path(path).read_text(errors="replace"), "file " + path
+    return "", None
+
+
+MISSING_HELP = ("no denylist found. Add your names (comma or newline separated), never in a repo or a chat: "
+                "a cloud session: environment variable PII_GUARD_DENYLIST in the cloud environment's settings; "
+                "GitHub Actions: repository secret PII_GUARD_DENYLIST; your computer: ~/.config/pii-guard/denylist.txt. "
+                "See docs/FIRST_USE.md.")
+
+
+def load_denylist():
+    raw, _ = denylist_source()
     words = []
     for line in re.split(r"[\n,]", raw):
         w = line.split("#", 1)[0].strip()
@@ -218,6 +234,19 @@ def self_test():
     good = mask("name", "Sam") == "<3 chars>" and mask("email", "a" + at + "b" + dot + "io") == "***@****"
     print(("ok   " if good else "FAIL ") + "masking hides names and email users")
     ok = ok and good
+    saved = {k: os.environ.pop(k, None) for k in ("PII_GUARD_DENYLIST", "PII_GUARD_DENYLIST_FILE")}
+    try:
+        os.environ["PII_GUARD_DENYLIST_FILE"] = os.devnull + ".missing"
+        good = load_denylist() == [] and denylist_source()[1] is None
+        os.environ["PII_GUARD_DENYLIST"] = "Alex,  Sam\n# note\nRiver"
+        good = good and load_denylist() == ["Alex", "Sam", "River"] and "environment" in denylist_source()[1]
+    finally:
+        for k, v in saved.items():
+            os.environ.pop(k, None)
+            if v is not None:
+                os.environ[k] = v
+    print(("ok   " if good else "FAIL ") + "denylist source: none, then environment (comma and newline)")
+    ok = ok and good
     with tempfile.TemporaryDirectory() as d:
         env = {**os.environ, "GIT_AUTHOR_NAME": "Sam", "GIT_COMMITTER_NAME": "Sam",
                "GIT_AUTHOR_EMAIL": "1+s" + at + "users.noreply.github" + dot + "com",
@@ -260,17 +289,29 @@ def main():
     ap.add_argument("--range", help="scan commits in this range (A..B)")
     ap.add_argument("--push", action="store_true", help="pre-push mode: read the hook's stdin")
     ap.add_argument("--allow-from", metavar="REF", help="read .pii-guard from this git ref (CI: the PR base), not the tree")
+    ap.add_argument("--require-denylist", action="store_true", help="fail when no name denylist is found")
+    ap.add_argument("--status", action="store_true", help="print the denylist source and entry count, never the names")
     ap.add_argument("--test", action="store_true")
     a = ap.parse_args()
     if a.test:
         return self_test()
+    if a.status:
+        raw, src = denylist_source()
+        n = len(load_denylist())
+        print(f"denylist: {n} entries from {src}" if src and n else "denylist: none (" + MISSING_HELP + ")")
+        return 0 if n else 1
     if not (a.files or a.all or a.range or a.push):
-        ap.error("give --all, --range, --push or files")
+        ap.error("give --all, --range, --push, --status or files")
     try:
         root = git("rev-parse", "--show-toplevel").strip()
     except (subprocess.CalledProcessError, FileNotFoundError):
         root = "."
     deny, allow = load_denylist(), load_allow(root, a.allow_from)
+    if a.require_denylist and not deny:
+        if a.push:
+            sys.stdin.read()
+        print("PII GUARD FAIL: " + MISSING_HELP)
+        return 1
     found, what = [], []
     if a.all:
         files = git("ls-files", "-z", root=root).split("\0")

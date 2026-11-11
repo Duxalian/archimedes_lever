@@ -24,9 +24,9 @@ jobs:
           # Opt-in and allow list come from the PR base, so a PR cannot switch the guard off or widen it.
           ref="${BASE_SHA:-HEAD}"
           if ! git cat-file -e "$ref:.pii-guard" 2>/dev/null; then echo "no .pii-guard file on $ref: guard not enabled"; exit 0; fi
-          if [ -z "$PII_GUARD_DENYLIST" ]; then echo "::warning::PII_GUARD_DENYLIST secret not set (fork or Dependabot PR, or not added): names are not checked"; fi
+          # No secret (not added, or a fork or Dependabot PR) = the check fails: names must be checked (decision 2A).
           if [ -n "$BASE_SHA" ]; then
-            python3 scripts/pii_guard.py --all --range "$BASE_SHA..HEAD" --allow-from "$BASE_SHA"
+            python3 scripts/pii_guard.py --require-denylist --all --range "$BASE_SHA..HEAD" --allow-from "$BASE_SHA"
           else
-            python3 scripts/pii_guard.py --all
+            python3 scripts/pii_guard.py --require-denylist --all
           fi

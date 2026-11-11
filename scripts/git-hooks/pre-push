@@ -70,7 +70,7 @@ if [ -f "$top/.pii-guard" ]; then
   if [ -z "$guard" ]; then
     echo "pre-push: blocked: .pii-guard is on but pii_guard.py was not found (scripts/ or tools/)." >&2; exit 1
   fi
-  printf '%s\n' "$input" | python3 "$guard" --push >&2 || { echo "pre-push: blocked by pii_guard.py (personal data). Remove it, then push again." >&2; exit 1; }
+  printf '%s\n' "$input" | python3 "$guard" --push --require-denylist >&2 || { echo "pre-push: blocked by pii_guard.py (personal data). Remove it, then push again." >&2; exit 1; }
 fi
 
 # Chain to a pre-push hook the repo already had in .git/hooks (for example Git LFS), which core.hooksPath hides.
