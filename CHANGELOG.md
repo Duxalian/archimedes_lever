@@ -9,6 +9,9 @@ Template repo only: scripts/bootstrap.sh deletes this file in new projects. Newe
 - Decided (1B): the time zone is a project setting: `- Time zone:` line in AGENTS.md, bootstrap 5th argument (default UTC), `sync_baseline.py --timezone` for projects without the line. The log column is now "When"; log_check.py still accepts an older "When (CT)" header. timeline.py reads the zone from each log.
 - Decided (1B): the .mil check is opt-in (`check: mil` in .pii-guard; first-use question 5 option B). sync_baseline.py prints a note for a project whose .pii-guard has no such line, because the next sync turns its .mil check off.
 - Decided (2A): the 3 preference files moved to a private Claude doc. Replaces 3A of the "archimedes_lever" entry below.
+- Decided: a plain clone works as a start. `first_use_check.py` reports KIT for the kit repo; on "initiate" the agent follows docs/FIRST_USE.md step 0 (question 10: where the repo goes). README "Start here" is the QR-code target.
+- Decided (3B): a clone-started project gets a fresh history (orphan `main`); the kit's history stays on the local `kit-main` branch and is never pushed.
+- Decided (2A): the LICENSE copyright holder is the GitHub handle "Duxalian". Decided (4B): the repo stays private until the owner has read the merged README; then the owner makes it public.
 - Decided (3A): the kit is MIT licensed (LICENSE). Bootstrap moves it to docs/archimedes_lever-LICENSE.txt, which sync keeps current; the project chooses its own LICENSE.
 
 ## 2026-11-11: skip rule and PII scan

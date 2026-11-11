@@ -19,7 +19,8 @@ Then, before step 2:
 
 1. `git remote rename origin kit`. The kit stays as a second remote; nothing is deleted.
 2. For 10A: create the repo with the host's GitHub tool, or `gh repo create <user>/<name> --private` (or `--public`), then `git remote add origin https://github.com/<user>/<name>.git`. For 10B: `git remote add origin <URL>`. For 10C: no remote; use `<user>/<name>` as planned for bootstrap's repo argument.
-3. The project keeps the kit's git history below its own first commit. The folder keeps the name it was cloned as; the user can rename it after the session.
+3. Start a fresh history, as GitHub's "Use this template" does: `git branch -m main kit-main`, then `git checkout --orphan main`. The files stay as they are; the bootstrap commit in step 2 becomes the project's first commit. Nothing is deleted: the kit's history stays on the local branch `kit-main` and the `kit` remote, and is never pushed to the new repo.
+4. The folder keeps the name it was cloned as; the user can rename it after the session.
 
 ## 1. Ask the questions
 
