@@ -7,7 +7,7 @@ Usage:
 
 Checks (each failure prints FILE:LINE: message):
 - A "## Arcs" table with the columns Arc | Span | Summary | Outcome.
-- A "## Log" table with the columns # | When (CT) | Type | Arc | Topic | Raised by | What the other missed | Evidence | Result.
+- A "## Log" table with the columns # | When | Type | Arc | Topic | Raised by | What the other missed | Evidence | Result.
 - Every row has 9 cells; # is a whole number, unique, and rows are in # order.
 - When: YYYY-MM-DD HH:MM, or a range YYYY-MM-DD HH:MM-HH:MM (en dash or hyphen), or a range across days
   YYYY-MM-DD HH:MM-YYYY-MM-DD HH:MM; "~" before the date or a time marks an estimate. Dates and times must exist.
@@ -25,7 +25,7 @@ import re
 import sys
 import tempfile
 
-LOG_COLS = ["#", "When (CT)", "Type", "Arc", "Topic", "Raised by", "What the other missed", "Evidence", "Result"]
+LOG_COLS = ["#", "When", "Type", "Arc", "Topic", "Raised by", "What the other missed", "Evidence", "Result"]
 ARC_COLS = ["Arc", "Span", "Summary", "Outcome"]
 TYPES = {"milestone", "breakthrough", "miss", "decision"}
 ARC_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
@@ -111,6 +111,8 @@ def check(path):
             else:
                 arcs[c[0]] = ln
     ln, head, rows = t["Log"]
+    if len(head) > 1 and re.fullmatch(r"When \(.+\)", head[1]):
+        head = head[:1] + ["When"] + head[2:]  # an older log names its zone in the header, for example "When (CT)"
     if head != LOG_COLS:
         found.append(f"{p}:{ln}: Log columns must be {' | '.join(LOG_COLS)}")
         return len(rows), found
@@ -158,7 +160,7 @@ GOOD = """# Project log: Demo
 
 ## Log
 
-| # | When (CT) | Type | Arc | Topic | Raised by | What the other missed | Evidence | Result |
+| # | When | Type | Arc | Topic | Raised by | What the other missed | Evidence | Result |
 |---|---|---|---|---|---|---|---|---|
 | 0 | 2026-11-10 22:11 | milestone | setup | Repo | Owner | - | Commit 63ae6e2 | Made |
 | 1 | 2026-11-11 ~06:40 | miss | flow-import | A \\| B | Claude | gap | Test x | ok |
@@ -193,6 +195,7 @@ def self_test():
     expect("empty evidence", GOOD.replace("Commit 8375b2e", "-"), "Evidence is empty")
     expect("missing cell", GOOD.replace("| Repo | Owner | - |", "| Repo | Owner |"), "8 cells")
     expect("wrong columns", GOOD.replace("| Evidence | Result |", "| Test / evidence | Result |"), "Log columns")
+    expect("older header 'When (CT)' passes", GOOD.replace("| # | When |", "| # | When (CT) |"), None)
     expect("no arcs table", GOOD.split("## Arcs")[0] + "## Log" + GOOD.split("## Log")[1], "no table under '## Arcs'")
     print("LOG CHECK TEST " + ("PASS" if ok else "FAIL"))
     return 0 if ok else 1

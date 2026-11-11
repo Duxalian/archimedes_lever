@@ -133,7 +133,26 @@ document.getElementById('theme').addEventListener('click',()=>{const r=document.
 """
 
 
-def render(title, arcs, events):
+def log_zone(path):
+    """The time zone a log names in its intro ("Times are <zone>."), or None."""
+    try:
+        m = re.search(r"Times are ([A-Za-z0-9_+/-]+)\.", pathlib.Path(path).read_text(encoding="utf-8", errors="replace"))
+    except OSError:
+        return None
+    return m and m.group(1)
+
+
+def zone_note(zones):
+    """One zone for all logs: name it. Mixed zones, or a log that names none beside one that does: say so."""
+    zones = set(zones)
+    if zones == {None} or not zones:
+        return ""
+    if len(zones) == 1:
+        return f" Times are {zones.pop()}."
+    return " Times are each project's local time."
+
+
+def render(title, arcs, events, zones=()):
     e = html.escape
     events = sorted(events, key=lambda x: (x["sort"], x["project"], int(x["num"]) if x["num"].isdigit() else 0), reverse=True)
     projects = sorted({x["project"] for x in events} | {a["project"] for a in arcs})
@@ -142,7 +161,7 @@ def render(title, arcs, events):
     last = max((x["day"] for x in events if x["day"]), default="")
     out = [f"<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>",
            f"<title>{e(title)}</title><style>{CSS}</style></head><body><main>",
-           f"<h1>{e(title)}</h1><p class='sub'>{len(events)} events in {len(projects)} project(s), {e(first)} to {e(last)}. Times are America/Chicago.</p>",
+           f"<h1>{e(title)}</h1><p class='sub'>{len(events)} events in {len(projects)} project(s), {e(first)} to {e(last)}.{e(zone_note(zones))}</p>",
            "<div class='stats'>"]
     for t in TYPE_ORDER:
         out.append(f"<div class='stat {t}'><span class='type'><span class='mark' aria-hidden='true'></span>{t}</span><b>{counts[t]}</b></div>")
@@ -178,7 +197,7 @@ def render(title, arcs, events):
 
 
 def build(specs, title, force=False):
-    arcs, events, problems = [], [], []
+    arcs, events, problems, zones = [], [], [], []
     for spec in specs:
         label, path, repo = parse_spec(spec)
         _, found = log_check.check(path)
@@ -186,9 +205,10 @@ def build(specs, title, force=False):
             problems += found
             continue
         a, ev = load(label, path, repo)
+        zones.append(log_zone(path))
         arcs += a
         events += ev
-    return (render(title, arcs, events) if not problems else None), problems
+    return (render(title, arcs, events, zones) if not problems else None), problems
 
 
 def self_test():
@@ -205,6 +225,9 @@ def self_test():
             ("newest first", page and page.index("23:50") < page.index("22:11")),
             ("other repo hash not linked", page and "/commit/59cd968" not in page),
             ("list of commits linked", page and "/commit/1234567" in page and "/commit/89abcde" in page),
+            ("zone from the log", zone_note(["Europe/Berlin", "Europe/Berlin"]) == " Times are Europe/Berlin."
+             and zone_note(["Europe/Berlin", None]) == " Times are each project's local time."
+             and zone_note(["UTC", "Asia/Tokyo"]) == " Times are each project's local time." and zone_note([]) == ""),
             ("no network", page and not re.search(r"(src|href)=['\"]?https?://(?!github\.com/)", page)),
         ]
         bad = pathlib.Path(d, "BAD.md")
