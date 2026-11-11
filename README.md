@@ -4,6 +4,19 @@ A starter kit for projects built with AI agents (Claude, GPT/Codex, Gemini and o
 
 "Give me a place to stand, and I will move the world." The repo is the place to stand: the rules, decisions and history live in files that every agent reads, not in a chat that disappears.
 
+## Start here
+
+1. Clone the kit into a folder named for your project:
+   ```
+   git clone https://github.com/Duxalian/archimedes_lever my-project
+   ```
+2. Open the folder with your agent (Claude Code, Codex, Gemini CLI or another tool that reads AGENTS.md) and say:
+   ```
+   Please read the repo and initiate.
+   ```
+
+The agent asks up to 10 questions, moves the clone to your own GitHub repo, fills in the project files and tells you what is left to do. Details: [docs/FIRST_USE.md](docs/FIRST_USE.md). Before you start, check [What you need](#what-you-need).
+
 ## What you get
 
 | Part | What it does for you |
@@ -27,7 +40,7 @@ A starter kit for projects built with AI agents (Claude, GPT/Codex, Gemini and o
 
 An agent host is optional: Claude Code, Codex, Gemini CLI or another tool that reads AGENTS.md. Without one, follow the steps below by hand.
 
-## Start a new project (3 steps)
+## Start a new project by hand (3 steps)
 
 1. Make the repo from this template:
    ```
@@ -48,7 +61,7 @@ Then run `scripts/session_checkin.sh` once per clone. It installs the git hooks.
 
 ## First use
 
-Open the new repo in an agent session. On the first session the agent asks 9 questions in 3 rounds (Claude Code shows clickable dialogs): project name, purpose, public or private, license, what agents call you, the personal-data guard, where you push from, time zone, and which other agents you use. It then fills the placeholders, commits, and gives you a short list of the places where your name denylist must go. The questions and steps are in [docs/FIRST_USE.md](docs/FIRST_USE.md); `scripts/first_use_check.py` (a SessionStart hook in Claude Code) says when first use is due, and when a session has no denylist.
+Open the new repo in an agent session. On the first session the agent asks 9 questions in 3 rounds, 10 from a plain clone (Claude Code shows clickable dialogs): project name, purpose, public or private, license, what agents call you, the personal-data guard, where you push from, time zone, and which other agents you use. It then fills the placeholders, commits, and gives you a short list of the places where your name denylist must go. The questions and steps are in [docs/FIRST_USE.md](docs/FIRST_USE.md); `scripts/first_use_check.py` (a SessionStart hook in Claude Code) says when first use is due, and when a session has no denylist.
 
 ## Keep personal data out
 
