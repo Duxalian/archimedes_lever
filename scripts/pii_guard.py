@@ -12,7 +12,8 @@ Usage:
     python3 scripts/pii_guard.py --test            # self-test; prints PII GUARD TEST PASS
 
 Opt-in: the guard runs only in a repo with a `.pii-guard` file at its root (the hook and the Action check for it).
-That file lists exact strings that are allowed (one per line, `#` comments). Only the owner adds entries;
+That file lists exact strings that are allowed (one per line, `#` comments), and paths to skip as
+`skip: <path or glob>` lines (for example a public reference text that quotes office contacts). Only the owner adds entries;
 agents never add one to get past a block (AGENTS.md "Personal data").
 
 Name denylist (never committed): one name or word per line, `#` comments, matched whole-word, any case.
@@ -32,6 +33,7 @@ Matches are printed masked (names as a length only), so CI logs do not repeat th
 Standard library only. Needs git (except for FILE mode).
 """
 import argparse
+import fnmatch
 import os
 import pathlib
 import re
@@ -106,7 +108,16 @@ def load_allow(root, ref=None):
     else:
         f = pathlib.Path(root) / ".pii-guard"
         text = f.read_text() if f.is_file() else ""
-    return {l.split("#", 1)[0].strip() for l in text.splitlines() if l.split("#", 1)[0].strip()}
+    # A comment starts at the line start or after whitespace, so "skip: docs/#1.txt" keeps its "#".
+    vals = (re.split(r"(?:^|\s)#", l, maxsplit=1)[0].strip() for l in text.splitlines())
+    return {v for v in vals if v}
+
+
+def skipped(path, allow):
+    """True when a `skip: <path or glob>` line in .pii-guard covers this repo-relative path."""
+    globs = [a[5:].strip() for a in allow if a.startswith("skip:")]
+    globs = [g for g in globs if g.strip("*/")]  # a bare "*" or "**" would switch the guard off: ignored
+    return any(fnmatch.fnmatchcase(path, g) or path.startswith(g.rstrip("/") + "/") for g in globs if g)
 
 
 def scan_text(text, where, deny, allow):
@@ -144,7 +155,7 @@ def scan_files(paths, root, deny, allow):
     found = []
     for p in paths:
         f = pathlib.Path(root) / p
-        if not f.is_file() or f.suffix.lower() in SKIP_SUFFIX or f.stat().st_size > MAX_BYTES:
+        if skipped(str(p), allow) or not f.is_file() or f.suffix.lower() in SKIP_SUFFIX or f.stat().st_size > MAX_BYTES:
             continue
         data = f.read_bytes()
         if b"\0" in data[:8192]:
@@ -164,12 +175,16 @@ def scan_commits(revs, root, deny, allow):
         ident = "\n".join(lines[:4])
         found += [(f"commit {short} author/committer", n, k, v) for _, n, k, v in scan_text(ident, "", deny, allow)]
         found += [(f"commit {short} message", n, k, v) for _, n, k, v in scan_text("\n".join(lines[4:]), "", deny, allow)]
-        patch = git("show", "--format=", "--unified=0", "--no-color", "--no-ext-diff", sha, root=root)
+        patch = git("-c", "core.quotepath=off", "show", "--format=", "--unified=0", "--no-color", "--no-ext-diff",
+                    "--src-prefix=a/", "--dst-prefix=b/", sha, root=root)
         cur = "?"
         for line in patch.splitlines():
             if line.startswith("+++ "):
-                cur = line[6:] if line.startswith("+++ b/") else line[4:]
-            elif line.startswith("+") and not cur.endswith(SKIP_SUFFIX):
+                name = line[4:].split("\t", 1)[0]
+                if len(name) > 1 and name[0] == name[-1] == '"':
+                    name = name[1:-1].replace('\\"', '"').replace("\\\\", "\\")
+                cur = name[2:] if name.startswith("b/") else name
+            elif line.startswith("+") and not cur.endswith(SKIP_SUFFIX) and not skipped(cur, allow):
                 found += [(f"commit {short} {cur}", "+", k, v) for _, _, k, v in scan_text(line[1:], "", deny, allow)]
     return found, len(shas)
 
@@ -228,6 +243,12 @@ def self_test():
     expect("denylist any case", "ALEX" + "ANDRA", ["name"], deny=["alexandra"])
     expect("denylist whole word", "Alexandra" + "s", [], deny=["Alexandra"])
     expect("allow list", "see example" + dot + "internal", [], allow=["example" + dot + "internal"])
+    expect("skip line is not an allowed value", "see example" + dot + "internal", ["internal"], allow=["skip: ref/x.txt"])
+    good = not skipped("a.txt", {"skip: *"}) and not skipped("a/b.txt", {"skip: **"}) \
+        and skipped("ref/x.txt", {"skip: ref/x.txt"}) and skipped("ref/a/b.txt", {"skip: ref/"}) \
+        and skipped("ref/y.txt", {"skip: ref/*.txt"}) and not skipped("docs/x.txt", {"skip: ref/x.txt"})
+    print(("ok   " if good else "FAIL ") + "skip: exact path, folder, glob; other paths still scanned")
+    ok = ok and good
     expect("allow list is exact", "call 555-123-" + "4567", ["phone"], allow=["call 555-123-" + "4567 now"])
     expect("URL path not a phone", "github.com/x/pull/123-456-" + "7890", [])
     expect("phone keyword, no separators", "tel: 555123" + "4567", ["phone"])
@@ -347,7 +368,8 @@ def main():
         found += scan_files([f for f in files if f], root, deny, allow)
         what.append(f"{len([f for f in files if f])} tracked files")
     if a.files:
-        found += scan_files(a.files, ".", deny, allow)
+        rel = [os.path.relpath(os.path.abspath(f), root) for f in a.files]
+        found += scan_files(rel, root, deny, allow)
         what.append(f"{len(a.files)} file(s)")
     n = 0
     for revs in revsets:
@@ -356,6 +378,9 @@ def main():
         n += k
     if revsets:
         what.append(f"{n} commit(s)")
+    skips = sorted(a[5:].strip() for a in allow if a.startswith("skip:"))
+    if skips:
+        what.append(f"{len(skips)} skip rule(s): {', '.join(skips)}")
     return report(found, ", ".join(what) or "nothing", deny)
 
 

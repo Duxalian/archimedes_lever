@@ -2,6 +2,11 @@
 
 Template repo only: scripts/bootstrap.sh deletes this file in new projects. Newest first. "Decided" = decision by the owner. "Rec" = agent recommendation that the owner has not approved.
 
+## 2026-11-11: skip rule and PII scan
+
+- Added: a `skip: <path or glob>` line in `.pii-guard` excludes a path from the file and commit scans (for a public reference text that quotes office contacts). A bare `*` or `**` is ignored; the report line lists the skip rules. Fresh review: 0 MAJOR, 4 MINOR, all fixed (quoted and spaced paths in commit scans, `#` inside a path, `./` file arguments).
+- Fixed: sync_baseline.py keeps scripts/first_use_check.py and docs/FIRST_USE.md as written (no owner rename), as bootstrap does.
+
 ## 2026-11-11: first use
 
 - Decided (1A): first use is agent-driven. `scripts/first_use_check.py` (Claude Code SessionStart hook; other agents run it first) reports FIRST USE while AGENTS.md has placeholders (the template repo itself is skipped), and DENYLIST when `.pii-guard` is on and the session has no denylist. docs/FIRST_USE.md holds 7 questions in 2 rounds and the steps. The agent never asks for the denylist names; the owner types them in each settings page.
