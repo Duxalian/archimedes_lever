@@ -70,7 +70,16 @@ if [ -f "$top/.pii-guard" ]; then
   if [ -z "$guard" ]; then
     echo "pre-push: blocked: .pii-guard is on but pii_guard.py was not found (scripts/ or tools/)." >&2; exit 1
   fi
-  printf '%s\n' "$input" | python3 "$guard" --push --require-denylist >&2 || { echo "pre-push: blocked by pii_guard.py (personal data). Remove it, then push again." >&2; exit 1; }
+  pout=$(printf '%s\n' "$input" | python3 "$guard" --push --require-denylist 2>&1); rc=$?
+  [ -n "$pout" ] && printf '%s\n' "$pout" >&2
+  if [ "$rc" -ne 0 ]; then
+    if printf '%s' "$pout" | grep -q "no denylist found"; then
+      echo "pre-push: blocked: this session has no name denylist, so the guard cannot check names. No personal data was found; the list is missing. Add it (docs/FIRST_USE.md step 4), then push again." >&2
+    else
+      echo "pre-push: blocked by pii_guard.py: personal data or a secret is in this push (listed above, masked). Remove it, then push again." >&2
+    fi
+    exit 1
+  fi
 fi
 
 # Chain to a pre-push hook the repo already had in .git/hooks (for example Git LFS), which core.hooksPath hides.

@@ -2,6 +2,15 @@
 
 Template repo only: scripts/bootstrap.sh deletes this file in new projects. Newest first. "Decided" = decision by the owner. "Rec" = agent recommendation that the owner has not approved.
 
+## 2026-11-11: beginner start
+
+- Decided: README "Start here" has two ways with no git for the user: A, "Use this template" plus Claude Code on the web; B, an agent app that clones the kit from its URL. `git clone` stays as one line for people who know git.
+- Decided (1A): the denylist comes before the first push. FIRST_USE.md step 4: on a computer the user creates the file in the same session; in a cloud session the agent stops before bootstrap and gives a prompt with all answers for a new session. The pre-push hook now says "no name denylist" when that is the cause, not "personal data".
+- Decided (2A): fast path. Round 1 asks name, purpose, time zone, and "use the recommended settings?"; the other questions only on "choose each one".
+- Decided (3A): questions numbered 1 to 12 in the order they are asked.
+- Decided (5A): question 12 asks a public repo where the project log goes (private Claude doc, in the repo, or none).
+- Decided (4A): README order: What you need, Start here, After setup, What you get, by hand; the "First use" section and the "Or tell your agent" line are gone.
+
 ## 2026-11-11: a starter for anyone
 
 - Decided: the kit is a starter for one new project, for the owner or anyone else; managing many projects from one place is out of scope.

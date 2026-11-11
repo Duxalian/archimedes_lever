@@ -4,9 +4,15 @@ A starter kit for projects built with AI agents (Claude, GPT/Codex, Gemini and o
 
 "Give me a place to stand, and I will move the world." The repo is the place to stand: the rules, decisions and history live in files that every agent reads, not in a chat that disappears.
 
+## What you need
+
+- A free [GitHub account](https://github.com/signup).
+- An AI agent that can run commands and edit files: Claude Code (in the browser at claude.ai/code, or the app), Codex, Cursor, Gemini CLI, or another tool that reads AGENTS.md. A chat with no file access (for example a plain ChatGPT or claude.ai chat) cannot set up the project; use the steps "by hand" below with it.
+- For way B only, on your computer: git, Python 3.9 or later, bash and perl. macOS and Linux have bash and perl; on Windows, use Git Bash or WSL. If one is missing, the agent tells you how to install it.
+
 ## Start here
 
-You need a free [GitHub account](https://github.com/signup) and an AI agent that can work with files, for example Claude Code, Codex, Cursor or Gemini CLI. You do not need to know git: the agent does that part. Pick one way.
+You do not need to know git: the agent does that part. Pick one way.
 
 **A. In your browser, nothing to install** (Claude Code on the web)
 
@@ -25,9 +31,17 @@ You need a free [GitHub account](https://github.com/signup) and an AI agent that
    Please set up a new project from https://github.com/[old handle]/archimedes_lever: get the repo, read it, and initiate.
    ```
 
-Either way, the agent asks a few questions, makes your own GitHub repository, fills in the project files and tells you what is left to do. It explains each question; when you are not sure, take the answer it marks as recommended. Details for agents: [docs/FIRST_USE.md](docs/FIRST_USE.md).
+Either way, the agent asks 4 questions: the name, what it is for, your time zone, and whether to use the recommended settings. It explains each one; when you are not sure, take the answer it marks as recommended. Then it makes your own GitHub repository, fills in the project files and tells you what is left to do.
+
+One step is yours: the agent asks you to type your own names into a private list (the personal-data guard checks every push against it, so your names never land on GitHub by mistake). You never type them into the chat. In the browser (way A), this means you add a setting and start one new session; the agent gives you a prompt to paste there, so you do not answer the questions again.
 
 If you know git: `git clone https://github.com/[old handle]/archimedes_lever my-project`, open the folder with your agent and type `Please read the repo and initiate.`
+
+Details for agents: [docs/FIRST_USE.md](docs/FIRST_USE.md).
+
+## After setup
+
+Open the project with any agent and say what you want to do next. The agent reads AGENTS.md (the rules) and docs/NEXT_PROMPT.md (where the work stands) first, so you do not have to explain the project again in each chat.
 
 ## What you get
 
@@ -41,43 +55,27 @@ If you know git: `git clone https://github.com/[old handle]/archimedes_lever my-
 | Multi-agent pack | `.claude/orchestration.md`: scout, worker and reviewer roles, model tiers (fast, standard, strong) per host, and fallbacks for hosts without subagents or hooks. |
 | Upkeep | `scripts/sync_baseline.py` brings a project up to the current kit; `scripts/drift.py` reports how far a project has drifted. |
 
-## What you need
+## Start a new project by hand
 
-| Tool | Used by | Check |
-|---|---|---|
-| git 2.28 or later | way B and the hooks (the agent runs it; way A needs nothing on your computer) | `git --version` |
-| Python 3.9 or later (standard library only) | all checks and hooks | `python3 --version` |
-| bash and perl | `scripts/bootstrap.sh`, `scripts/check.sh` (macOS and Linux have both; on Windows use Git Bash or WSL) | `perl -v` |
-| GitHub CLI `gh` (optional) | step 1 from the command line; the web page works without it | `gh --version` |
-
-An agent host is optional: Claude Code, Codex, Gemini CLI or another tool that reads AGENTS.md. Without one, follow the steps below by hand.
-
-## Start a new project by hand (3 steps)
+For people who use git and want no agent in the setup, or who use a chat with no file access.
 
 1. Make the repo from this template:
    ```
    gh repo create YOUR_USER/NEW_NAME --private --template [old handle]/archimedes_lever --clone
    ```
-   Or, on GitHub: **Use this template → Create a new repository**.
-2. In the new repo, fill the placeholders, then commit and push:
+   Or, on GitHub: **Use this template → Create a new repository**, then clone it.
+2. In the new repo, fill the placeholders:
    ```
    scripts/bootstrap.sh "Project Name" YOUR_USER/NEW_NAME "One-line purpose" "the owner" "Europe/Berlin"
    ```
    The 4th argument is the name agents use for you (default "the owner"). A public repo uses a role, for example `"the maintainer"`; a private repo may use your first name. The 5th is the time zone for project log times, as an IANA name (default UTC).
-   Then add a `LICENSE` if you want one: bootstrap moves the kit's MIT license to docs/archimedes_lever-LICENSE.txt (keep it: it covers the kit's scripts), so the root LICENSE is your choice.
-3. Paste the Project text from `docs/host-prompts.md` into your claude.ai Project instructions (or the GPT / Gemini equivalent).
-
-Or tell your agent: "Bootstrap a new project NEW_NAME from [old handle]/archimedes_lever. Purpose: …". It can do steps 1–2 and give you the text for step 3.
-
-Then run `scripts/session_checkin.sh` once per clone. It installs the git hooks.
-
-## First use
-
-Open the new repo in an agent session. On the first session the agent asks 9 questions in 3 rounds, 10 from a plain clone (Claude Code shows clickable dialogs): project name, purpose, public or private, license, what agents call you, the personal-data guard, where you push from, time zone, and which other agents you use. It then fills the placeholders, commits, and gives you a short list of the places where your name denylist must go. The questions and steps are in [docs/FIRST_USE.md](docs/FIRST_USE.md); `scripts/first_use_check.py` (a SessionStart hook in Claude Code) says when first use is due, and when a session has no denylist.
+   Bootstrap moves the kit's MIT license to docs/archimedes_lever-LICENSE.txt (keep it: it covers the kit's scripts). Add your own `LICENSE` if you want one.
+3. Set up the name denylist (next section), run `scripts/session_checkin.sh` (it installs the git hooks), then commit and push.
+4. Paste the Project text from `docs/host-prompts.md` into your claude.ai Project instructions (or the GPT / Gemini equivalent).
 
 ## Keep personal data out
 
-0. With the guard on, every push and pull-request check with no denylist fails, so set each place you use (steps 2 and 3, plus the cloud environment variable `PII_GUARD_DENYLIST` for Claude cloud sessions). `python3 scripts/pii_guard.py --status` prints where the list comes from and how many entries, never the names.
+0. With the guard on, every push and pull-request check with no denylist fails, so set each place you use: your computer (step 2), GitHub (step 3), and the cloud environment variable `PII_GUARD_DENYLIST` for Claude cloud sessions. `python3 scripts/pii_guard.py --status` prints where the list comes from and how many entries, never the names.
 1. Commit as your GitHub noreply address: GitHub **Settings → Emails**, turn on "Keep my email addresses private" and "Block command line pushes that expose my email". Then:
    ```
    git config --global user.email "ID+USER@users.noreply.github.com"
@@ -144,6 +142,7 @@ An old AGENTS.md without the kit layout moves under "Project rules" with a revie
 
 - A project does not update by itself. Run the sync after a kit change (see CHANGELOG.md).
 - Account-wide preferences (your own settings in Claude, ChatGPT or Codex) reach only that host. Every agent gets the rules from AGENTS.md.
+- Setup needs an agent with file access. A chat that cannot run commands can only give you text to paste: use "Start a new project by hand".
 - Hooks are seat belts, not locks: Claude Code hooks bind Claude Code only, and `--no-verify` skips git hooks.
 - The guard finds shapes and listed names. It does not find a name you did not list, or personal facts written in prose. Read before you publish.
 - Model names in orchestration.md go stale; the tiers stay.
