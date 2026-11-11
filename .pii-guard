@@ -1,0 +1,3 @@
+# Opt-in file for scripts/pii_guard.py (pre-push hook and the pii-guard GitHub Action).
+# Below: exact strings that are allowed although they look like personal data, one per line.
+# Only the owner adds entries. Agents never add one to get past a block (AGENTS.md "Personal data").

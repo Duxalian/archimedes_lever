@@ -1,0 +1,30 @@
+name: pii-guard
+# Pull requests and manual runs only, never on push (AGENTS.md "Verification": Actions minutes).
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Self-test
+        run: python3 scripts/pii_guard.py --test
+      - name: Scan files and commits
+        env:
+          # Name denylist, one name per line. Set it in Settings > Secrets and variables > Actions.
+          PII_GUARD_DENYLIST: ${{ secrets.PII_GUARD_DENYLIST }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if [ ! -f .pii-guard ]; then echo "no .pii-guard file: guard not enabled"; exit 0; fi
+          if [ -z "$PII_GUARD_DENYLIST" ]; then echo "::warning::PII_GUARD_DENYLIST secret not set: names are not checked"; fi
+          if [ -n "$BASE_SHA" ]; then
+            python3 scripts/pii_guard.py --all --range "$BASE_SHA..HEAD"
+          else
+            python3 scripts/pii_guard.py --all
+          fi
