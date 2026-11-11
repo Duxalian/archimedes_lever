@@ -1,80 +1,88 @@
 # First use
 
-The agent runs this once, before any other work, in either of two starts:
+The agent runs this once, before any other work. It starts in one of three ways:
 
-- A plain clone of the kit, and the user asks to "initiate" (or start, or set up) a project. `scripts/first_use_check.py` (the Claude Code SessionStart hook, or the first step of "Start of session") says KIT. Start at step 0.
-- A repo made with GitHub's "Use this template". The check says FIRST USE: AGENTS.md still has template placeholders. Start at step 1.
-
-If the check did not run, look at `git remote get-url origin`: a URL that ends in `archimedes_lever` is the kit itself.
-
-## 0. Move a clone of the kit to its own repo (KIT only)
-
-Ask round 1 below first, then ask question 10 with round 2.
-
-| # | Question | Options |
+| Start | How the agent knows | What to do |
 |---|---|---|
-| 10 | Where does the new repo go? | A I create it on GitHub now, public or private as in answer 3 (rec; needs a GitHub tool on this host or a signed-in `gh`) · B you create an empty repo on GitHub (no README, no license) and paste its URL · C local only for now (the Stop hook then reminds you at each turn end until a remote exists) |
+| The user asks to set up a project from the kit's URL (https://github.com/[old handle]/archimedes_lever), and the agent is not in a clone of it | The user's message | Step 1, round 1. Then `git clone https://github.com/[old handle]/archimedes_lever <name>`, where `<name>` is answer 1 in lower case with hyphens for spaces. Work inside that folder from now on and read its AGENTS.md. Then the rest of step 1, and step 2. If git is missing, tell the user how to install it (https://git-scm.com/downloads), or point to way A in README.md "Start here" |
+| A plain clone of the kit, and the user says "initiate" (or start, or set up) | `scripts/first_use_check.py` says KIT. If it did not run: `git remote get-url origin` ends in `archimedes_lever` | Step 1, then step 2 |
+| A repo made with GitHub's "Use this template" | `scripts/first_use_check.py` says FIRST USE: AGENTS.md still has template placeholders | Step 1, then step 3 (skip step 2) |
 
-Then, before step 2:
+The check runs as the Claude Code SessionStart hook, or as the first step of AGENTS.md "Start of session" on other hosts.
 
-1. `git remote rename origin kit`. The kit stays as a second remote; nothing is deleted.
-2. For 10A: create the repo with the host's GitHub tool, or `gh repo create <user>/<name> --private` (or `--public`), then `git remote add origin https://github.com/<user>/<name>.git`. For 10B: `git remote add origin <URL>`. For 10C: no remote; use `<user>/<name>` as planned for bootstrap's repo argument.
-3. Start a fresh history, as GitHub's "Use this template" does: `git branch -m main kit-main`, then `git checkout --orphan main`. The files stay as they are; the bootstrap commit in step 2 becomes the project's first commit. Nothing is deleted: the kit's history stays on the local branch `kit-main` and the `kit` remote, and is never pushed to the new repo.
-4. The folder keeps the name it was cloned as; the user can rename it after the session.
+**Cloud session with the guard on and no denylist** (the check also says DENYLIST; in the URL start, run `python3 scripts/pii_guard.py --status` right after the clone): do step 4 right after step 1, before steps 2 and 3, so no work is lost.
 
 ## 1. Ask the questions
 
-Ask all questions of a round together (3 rounds, 9 questions; 10 with step 0). In Claude Code, use the clickable question dialog (4 questions at most per dialog). On other hosts, write them as a numbered list with lettered options. Mark your recommendation. A free-text answer comes through "Other".
+Ask the questions of a round together. In Claude Code, use the clickable question dialog (4 questions at most per dialog). On other hosts, write a numbered list with lettered options. Explain each question in one plain sentence: the user may be new to GitHub. Mark your recommendation. A free-text answer comes through "Other".
 
-Round 1: the project
+Round 1, always:
 
 | # | Question | Options |
 |---|---|---|
 | 1 | What is the project called? | Free text |
 | 2 | What is it for, in one line? | Free text |
-| 3 | Is the repo public or private? | A private (rec) · B public |
-| 8 | Which license for the project? | A MIT (rec for a public repo) · B Apache-2.0 · C none: all rights reserved (rec for a private repo) |
+| 3 | Which time zone are you in? (for times in the project log) | A your local zone (rec): give a city or the IANA name, for example Europe/Berlin; the agent finds the IANA name · B UTC |
+| 4 | Use the recommended settings for the rest? List them in the question: private repo, no license, agents call you "the owner", personal-data guard on, a new GitHub repo the agent creates (for a clone), project texts for the agent you use now. | A yes (rec) · B choose each one |
 
-Round 2: you and personal data (step 0 adds question 10 here)
+With 4A, use the "Recommended" column below for questions 5 to 12 and skip rounds 2 and 3. Exception: ask question 10 alone when the start needs a new repo and this host cannot create one (no GitHub tool and no signed-in `gh`).
 
-| # | Question | Options |
-|---|---|---|
-| 4 | What should agents call you in the repo files? | A "the owner" (rec) · B a role, for example "the maintainer" · C your first name (private repos only; with the guard on, a name on your denylist blocks every push, so choose C only with the guard off) |
-| 5 | Turn on the personal-data guard? It blocks emails, phone numbers, ID numbers, API tokens, private keys and your listed names before a push. | A on (rec) · B on, and also block .internal addresses (for US government or org-specific work) · C off |
-| 6 | Where will you push from? | A Claude cloud sessions · B your own computer · C both |
+Round 2, only with 4B:
 
-Round 3: time and tools
+| # | Question | Options | Recommended |
+|---|---|---|---|
+| 5 | Is the repo public or private? | A private · B public | A |
+| 6 | Which license for the project? | A MIT · B Apache-2.0 · C none: all rights reserved | C for a private repo, A for a public repo |
+| 7 | What should agents call you in the repo files? | A "the owner" · B a role, for example "the maintainer" · C your first name (private repos only; with the guard on, a name on your denylist blocks every push, so choose C only with the guard off) | A |
+| 8 | Turn on the personal-data guard? It blocks emails, phone numbers, ID numbers, API tokens, private keys and your listed names before a push. | A on · B on, and also block .internal addresses (for US government or org-specific work) · C off | A |
 
-| # | Question | Options |
-|---|---|---|
-| 9 | Which time zone for project log times? | A your local time zone (rec; give its IANA name, for example Europe/Berlin or America/New_York) · B UTC |
-| 7 | Which other agents will you use? (several allowed) | A none · B ChatGPT or Codex · C Gemini · D another tool |
+Round 3, only with 4B; ask only the questions that apply:
+
+| # | Question | When | Options | Recommended |
+|---|---|---|---|---|
+| 9 | Where will you work on the project? | always | A Claude cloud sessions (claude.ai/code) · B your own computer · C both | where this session runs |
+| 10 | Where does the new repo go? | clone and URL starts | A I create it on GitHub now (needs a GitHub tool on this host or a signed-in `gh`) · B you create an empty repo on GitHub (no README, no license) and paste its URL · C local only for now (the Stop hook then reminds you at each turn end until a remote exists) | A |
+| 11 | Which other agents will you use? (several allowed) | always | A none · B ChatGPT or Codex · C Gemini · D another tool | A |
+| 12 | Where does the project log go? It records how the project went and can hold environment details, so a public repo should not show it. | public repo (5B) | A a private Claude doc · B in the repo, visible to all (docs/LOG.md) · C no project log | A when this host has Claude docs, else C |
 
 Rules for the asking agent:
-- A public repo never uses a real name (question 4, option C is refused).
-- Never ask for the names on the denylist. The owner types them only in the settings pages in step 3. If the owner pastes names into the chat, do not repeat them, and tell the owner that they are now in the chat history.
+- A public repo never uses a real name (question 7, option C is refused).
+- Never ask for the names on the denylist. The user types them only in the places in step 4. If the user pastes names into the chat, do not repeat them, and tell the user that they are now in the chat history.
 
-## 2. Apply the answers
+## 2. Move a clone of the kit to its own repo (clone and URL starts only)
 
-1. Run `scripts/bootstrap.sh "<1>" <owner/repo from git remote get-url origin> "<2>" "<4>" "<9>"`. Give "the owner" as the 4th argument when that is the answer. The 5th argument is the IANA time zone name (UTC for 9B). The script deletes itself when done; keep this file, because step 3 is also what an agent shows when a session reports DENYLIST. It moves the kit's license to docs/archimedes_lever-LICENSE.txt: keep that file, because it covers the kit's scripts.
-2. Public repo: add to AGENTS.md "Project rules" a line that names a private place for the project log (for example a private Claude doc), because the log can hold environment detail. Write the date and "(the owner, YYYY-MM-DD)".
-3. Guard: for 5B, remove the "# " in front of the line `# check: internal` in `.pii-guard`. For 5C, delete `.pii-guard`; the hook and the Action then skip the guard.
-4. License (answer 8): for A, copy docs/archimedes_lever-LICENSE.txt to `LICENSE` and change the copyright line to the current year and the GitHub account or organization from `<owner/repo>`, unless the owner names another holder (a public repo never uses a real name the owner has not given). For B, save the text from https://www.apache.org/licenses/LICENSE-2.0.txt, unchanged, as `LICENSE`. For C, add no LICENSE.
-5. Record the answers as the owner's decisions in docs/DECISIONS.md, and add one `decision` row to the project log.
-6. Commit with a noreply identity, run `scripts/session_checkin.sh` (it installs the git hooks), and push (`git push -u origin main`; for 10C, skip the push).
+1. `git remote rename origin kit`. The kit stays as a second remote; nothing is deleted.
+2. For 10A: create the repo (public or private as in answer 5) with the host's GitHub tool, or `gh repo create <user>/<name> --private` (or `--public`); find `<user>` with the tool or `gh api user --jq .login`. Then `git remote add origin https://github.com/<user>/<name>.git`. For 10B: `git remote add origin <URL>`. For 10C: no remote; use `<user>/<name>` as planned for bootstrap's repo argument.
+3. Start a fresh history, as GitHub's "Use this template" does: `git branch -m main kit-main`, then `git checkout --orphan main`. The files stay as they are; the bootstrap commit in step 3 becomes the project's first commit. Nothing is deleted: the kit's history stays on the local branch `kit-main` and the `kit` remote, and is never pushed to the new repo.
+4. The folder keeps the name it was cloned as; the user can rename it after the session.
 
-## 3. The denylist places (guard on)
+## 3. Apply the answers
 
-The owner adds the names, comma or newline separated, in each place the answers need. Give the owner this list with the links filled in. The guard blocks every push and every pull request check where no denylist is found (decision 2A, 2026-11-11).
+1. Run `scripts/bootstrap.sh "<1>" <owner/repo from git remote get-url origin> "<2>" "<7>" "<3>"`. Give "the owner" as the 4th argument when that is the answer. The 5th argument is the IANA time zone name (UTC for 3B). The script deletes itself when done; keep this file, because step 4 is also what an agent shows when a session reports DENYLIST. It moves the kit's license to docs/archimedes_lever-LICENSE.txt: keep that file, because it covers the kit's scripts.
+2. Project log (answer 12, public repos only): for A, make a private Claude doc named "<1> project log" with the Arcs and Log tables of docs/LOG.md, delete docs/LOG.md, and add to AGENTS.md "Project rules": "Project log: <doc link> (the owner, YYYY-MM-DD)". For B, keep docs/LOG.md. For C, delete docs/LOG.md and add to "Project rules": "No project log (the owner, YYYY-MM-DD)".
+3. Guard (answer 8): for B, remove the "# " in front of the line `# check: internal` in `.pii-guard`. For C, delete `.pii-guard`; the hook and the Action then skip the guard.
+4. License (answer 6): for A, copy docs/archimedes_lever-LICENSE.txt to `LICENSE` and change the copyright line to the current year and the GitHub account or organization from `<owner/repo>`, unless the user names another holder (a public repo never uses a real name the user has not given). For B, save the text from https://www.apache.org/licenses/LICENSE-2.0.txt, unchanged, as `LICENSE`. For C, add no LICENSE.
+5. Record the answers as the owner's decisions in docs/DECISIONS.md (with 4A, one row: "Recommended settings" and the list), and add one `decision` row to the project log (not for 12C).
+6. Commit with a noreply identity, and run `scripts/session_checkin.sh` (it installs the git hooks). Do not push yet: step 4 comes first.
 
-| Answer 6 | Place | Where the owner adds it |
+## 4. The denylist, then the first push
+
+With the guard on (8A or 8B), every push and every pull-request check fails until a name denylist exists (decision 2A, 2026-11-11). The user types the names, comma or newline separated: their names, username variants, employer. Run `python3 scripts/pii_guard.py --status`; it prints a count, never the names.
+
+| Place | When | Where the user adds it |
 |---|---|---|
-| A or C | Each Claude cloud environment the repo uses | Environment menu in the session title bar > Edit > Environment variables: `PII_GUARD_DENYLIST=Name1,Name2,...`. A new session picks it up |
-| B or C | The owner's computer | The file `~/.config/pii-guard/denylist.txt` (Windows: `C:\Users\<user>\.config\pii-guard\denylist.txt`), one name per line |
-| Always | GitHub pull-request check | `https://github.com/<owner/repo>/settings/secrets/actions` > New repository secret > Name `PII_GUARD_DENYLIST` |
+| The user's computer | 9B or 9C | The file `~/.config/pii-guard/denylist.txt`, one name per line. macOS or Linux: `mkdir -p ~/.config/pii-guard && nano ~/.config/pii-guard/denylist.txt`. Windows (PowerShell): `mkdir -Force $HOME\.config\pii-guard; notepad $HOME\.config\pii-guard\denylist.txt` |
+| Each Claude cloud environment the repo uses | 9A or 9C | Environment menu in the session title bar > Edit > Environment variables: `PII_GUARD_DENYLIST=Name1,Name2,...`. Only a new session reads it |
+| GitHub pull-request check | always (after the first push is fine) | `https://github.com/<owner/repo>/settings/secrets/actions` > New repository secret > Name `PII_GUARD_DENYLIST` |
 
-## 4. Verify
+Then:
 
-Run `python3 scripts/pii_guard.py --status` in each place you can reach. It prints `denylist: N entries from <source>`, never the names. Then `python3 scripts/pii_guard.py --all` must print `PII GUARD PASS`. Report both lines. A cloud environment edited during this session is verified in the next session: the SessionStart check says so if it is still missing.
+- **`--status` shows a list:** push (`git push -u origin main`; for 10C, skip the push) and go to step 5.
+- **On the user's computer, no list:** give the user the command for their system from the table, ask them to type the names in the editor and save, and wait for "done". Run `--status` again, then push.
+- **In a cloud session, no list:** do not bootstrap and do not push: a cloud session reads the variable only when it starts, and its unpushed work is lost when it ends. Give the user (1) the cloud row from the table with the steps, and (2) under Copy, a prompt for the new session with every answer given so far (1 to 4, and 5 to 12 after 4B), for example `Please read the repo and initiate. My first-use answers: 1: Recipe box, 2: Family recipes in one place, 3: Europe/Berlin, 4: A`. Tell the user: add the variable, start a new session on the same repo, paste the prompt. In that session, use the given answers and ask only what is missing.
 
-Answer 7: paste the matching texts from docs/host-prompts.md for the owner, under Copy.
+## 5. Verify and hand over
+
+1. Run `python3 scripts/pii_guard.py --status` and `python3 scripts/pii_guard.py --all` (it must print `PII GUARD PASS`), then `scripts/check.sh`. Report the result lines.
+2. Answer 11 (and the agent in use now): paste the matching texts from docs/host-prompts.md for the user, under Copy.
+3. Tell the user, in plain words: what was set up (with links to the repo and to AGENTS.md); what is left (the GitHub secret, other cloud environments); and how to go on: open the project with any agent and say what they want next; the agent reads docs/NEXT_PROMPT.md first.
