@@ -18,6 +18,7 @@ Chat history, Project files and remembered copies are not authority. If you cann
 
 ## Start of session
 
+- Run `python3 scripts/first_use_check.py` (Claude Code runs it as a SessionStart hook). If it says FIRST USE, follow docs/FIRST_USE.md before any other work. If it says DENYLIST, tell the owner which place is missing.
 - Run `scripts/session_checkin.sh`. Report the branch, uncommitted files, and the ahead/behind count against origin/main.
 - Read docs/NEXT_PROMPT.md and docs/DECISIONS.md.
 - Find the tools you have and read the environment docs before you say a capability is not available.
@@ -58,7 +59,8 @@ Chat history, Project files and remembered copies are not authority. If you cann
 
 - Never commit personal data: real names, email addresses, phone numbers, home or work addresses, ID numbers, or the owner's job details. Use a role (for example "the maintainer") and fake sample data. A private repo may put its owner's real name in the `- Owner:` line (or pass `sync_baseline.py --owner`).
 - Commit with a GitHub noreply address (`ID+USER@users.noreply.github.com`) or the agent's own noreply identity, never a personal email.
-- A repo with a `.pii-guard` file at its root runs `scripts/pii_guard.py` in the pre-push hook and in the pull-request Action (.github/workflows/pii-guard.yml). It blocks emails, phone numbers, .internal addresses, ID-number shapes, and names from a denylist kept outside the repo (`~/.config/pii-guard/denylist.txt`, and the Actions secret `PII_GUARD_DENYLIST`). Never commit the denylist.
+- A repo with a `.pii-guard` file at its root runs `scripts/pii_guard.py` in the pre-push hook and in the pull-request Action (.github/workflows/pii-guard.yml). It blocks emails, phone numbers, .internal addresses, ID-number shapes, and names from a denylist kept outside the repo (environment variable `PII_GUARD_DENYLIST` in a cloud environment, the file `~/.config/pii-guard/denylist.txt`, or the Actions secret `PII_GUARD_DENYLIST`). Never commit the denylist.
+- With the guard on, a push or pull-request check with no denylist fails (the owner, 2026-11-11). Never ask for the names in chat: the owner adds them in the places docs/FIRST_USE.md lists. Check with `python3 scripts/pii_guard.py --status` (it prints a count, never names).
 - When the guard blocks: remove the data, fix the unpushed commit, and push again. Only the owner adds allow entries to `.pii-guard`. Never push with `--no-verify`.
 
 ## Commands
