@@ -10,7 +10,7 @@ The agent runs this once, before any other work. It starts in one of three ways:
 
 The check runs as the Claude Code SessionStart hook, or as the first step of AGENTS.md "Start of session" on other hosts.
 
-**Cloud session with the guard on and no denylist** (the check also says DENYLIST): do step 4 right after step 1, before steps 2 and 3, so no work is lost.
+**Cloud session with the guard on and no denylist** (the check also says DENYLIST; in the URL start, run `python3 scripts/pii_guard.py --status` right after the clone): do step 4 right after step 1, before steps 2 and 3, so no work is lost.
 
 ## 1. Ask the questions
 
@@ -79,7 +79,7 @@ Then:
 
 - **`--status` shows a list:** push (`git push -u origin main`; for 10C, skip the push) and go to step 5.
 - **On the user's computer, no list:** give the user the command for their system from the table, ask them to type the names in the editor and save, and wait for "done". Run `--status` again, then push.
-- **In a cloud session, no list:** do not bootstrap and do not push: a cloud session reads the variable only when it starts, and its unpushed work is lost when it ends. Give the user (1) the cloud row from the table with the steps, and (2) under Copy, a prompt for the new session with all answers, for example `Please read the repo and initiate. My first-use answers: 1: Recipe box, 2: Family recipes in one place, 3: Europe/Berlin, 4: A`. Tell the user: add the variable, start a new session on the same repo, paste the prompt. In that session, use the given answers and ask only what is missing.
+- **In a cloud session, no list:** do not bootstrap and do not push: a cloud session reads the variable only when it starts, and its unpushed work is lost when it ends. Give the user (1) the cloud row from the table with the steps, and (2) under Copy, a prompt for the new session with every answer given so far (1 to 4, and 5 to 12 after 4B), for example `Please read the repo and initiate. My first-use answers: 1: Recipe box, 2: Family recipes in one place, 3: Europe/Berlin, 4: A`. Tell the user: add the variable, start a new session on the same repo, paste the prompt. In that session, use the given answers and ask only what is missing.
 
 ## 5. Verify and hand over
 
