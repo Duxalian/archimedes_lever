@@ -11,6 +11,7 @@ Template repo only: scripts/bootstrap.sh deletes this file in new projects. Newe
 - Decided (2A): [old handle]/standard_project is archived after the projects point here; it is not deleted.
 - Added scripts/pii_guard.py: blocks emails (except GitHub noreply and no-reply placeholders), phone numbers, .internal addresses, ID-number shapes and names from a denylist kept outside the repo. Runs in scripts/git-hooks/pre-push and in a pull_request GitHub Action. AGENTS.md "Personal data" rule.
 - Example role in docs and tests: "the maintainer".
+- Fresh review (2026-11-11, 2 MAJOR, 8 MINOR): fixed: the Action reads .pii-guard from the PR base; names print as a length only and emails as ***@domain; the hook finds the guard in scripts/ or tools/ and blocks if it is missing; owner rename uses one word-boundary pass; keyword-gated phone and SSN forms; URL paths are not phones; allow entries match exactly. Accepted: noreply@ on any domain; fork PRs have no secret, so names are not checked there.
 
 ## 2026-11-11
 

@@ -61,8 +61,15 @@ out=$(printf '%s\n' "$input" | check) || { echo "$out" >&2; exit 1; }
 [ -n "$out" ] && echo "$out" >&2
 
 # Personal-data guard: runs only in a repo that opts in with a .pii-guard file at its root (AGENTS.md "Personal data").
-guard="$(cd "$(dirname "$0")/.." && pwd -P)/pii_guard.py"
-if [ -f "$(git rev-parse --show-toplevel)/.pii-guard" ] && [ -f "$guard" ]; then
+top="$(git rev-parse --show-toplevel)"
+if [ -f "$top/.pii-guard" ]; then
+  guard=""
+  for g in "$(cd "$(dirname "$0")/.." && pwd -P)/pii_guard.py" "$top/scripts/pii_guard.py" "$top/tools/pii_guard.py"; do
+    [ -f "$g" ] && { guard="$g"; break; }
+  done
+  if [ -z "$guard" ]; then
+    echo "pre-push: blocked: .pii-guard is on but pii_guard.py was not found (scripts/ or tools/)." >&2; exit 1
+  fi
   printf '%s\n' "$input" | python3 "$guard" --push >&2 || { echo "pre-push: blocked by pii_guard.py (personal data). Remove it, then push again." >&2; exit 1; }
 fi
 

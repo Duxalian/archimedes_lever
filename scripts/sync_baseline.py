@@ -125,7 +125,8 @@ def apply_owner(text, owner):
     if owner == BASELINE_OWNER:
         return text
     cap = owner[:1].upper() + owner[1:]
-    return text.replace(BASELINE_OWNER, owner).replace(BASELINE_OWNER[:1].upper() + BASELINE_OWNER[1:], cap)
+    # One pass with word boundaries: "the ownership" stays, and an owner that contains the role word is not re-replaced.
+    return re.sub(r"\b([Tt])he owner\b", lambda m: cap if m.group(1) == "T" else owner, text)
 
 
 def build_agents(base_text, proj_text, args, owner):

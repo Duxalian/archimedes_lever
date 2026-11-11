@@ -21,10 +21,12 @@ jobs:
           PII_GUARD_DENYLIST: ${{ secrets.PII_GUARD_DENYLIST }}
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
-          if [ ! -f .pii-guard ]; then echo "no .pii-guard file: guard not enabled"; exit 0; fi
-          if [ -z "$PII_GUARD_DENYLIST" ]; then echo "::warning::PII_GUARD_DENYLIST secret not set: names are not checked"; fi
+          # Opt-in and allow list come from the PR base, so a PR cannot switch the guard off or widen it.
+          ref="${BASE_SHA:-HEAD}"
+          if ! git cat-file -e "$ref:.pii-guard" 2>/dev/null; then echo "no .pii-guard file on $ref: guard not enabled"; exit 0; fi
+          if [ -z "$PII_GUARD_DENYLIST" ]; then echo "::warning::PII_GUARD_DENYLIST secret not set (fork or Dependabot PR, or not added): names are not checked"; fi
           if [ -n "$BASE_SHA" ]; then
-            python3 scripts/pii_guard.py --all --range "$BASE_SHA..HEAD"
+            python3 scripts/pii_guard.py --all --range "$BASE_SHA..HEAD" --allow-from "$BASE_SHA"
           else
             python3 scripts/pii_guard.py --all
           fi
