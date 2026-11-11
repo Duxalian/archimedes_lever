@@ -1,7 +1,8 @@
 # First use
 
-The agent runs this once, before any other work, in either of two starts:
+The agent runs this once, before any other work, in one of three starts:
 
+- The user asks you to set up a project from the kit's URL (https://github.com/[old handle]/archimedes_lever), and you are not in a clone of it yet. Ask questions 1 and 2 first, then run `git clone https://github.com/[old handle]/archimedes_lever <name>`, where `<name>` is the project name in lower case with hyphens for spaces. Work inside that folder from now on, read its AGENTS.md, and continue at step 0 (do not ask 1 and 2 again). If git is missing, tell the user how to install it for their system (https://git-scm.com/downloads), or suggest way A in README.md "Start here".
 - A plain clone of the kit, and the user asks to "initiate" (or start, or set up) a project. `scripts/first_use_check.py` (the Claude Code SessionStart hook, or the first step of "Start of session") says KIT. Start at step 0.
 - A repo made with GitHub's "Use this template". The check says FIRST USE: AGENTS.md still has template placeholders. Start at step 1.
 

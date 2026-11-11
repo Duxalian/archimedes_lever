@@ -6,16 +6,28 @@ A starter kit for projects built with AI agents (Claude, GPT/Codex, Gemini and o
 
 ## Start here
 
-1. Clone the kit into a folder named for your project:
-   ```
-   git clone https://github.com/[old handle]/archimedes_lever my-project
-   ```
-2. Open the folder with your agent (Claude Code, Codex, Gemini CLI or another tool that reads AGENTS.md) and say:
+You need a free [GitHub account](https://github.com/signup) and an AI agent that can work with files, for example Claude Code, Codex, Cursor or Gemini CLI. You do not need to know git: the agent does that part. Pick one way.
+
+**A. In your browser, nothing to install** (Claude Code on the web)
+
+1. On this page, click **Use this template → Create a new repository**. Type your project's name and choose **Private**.
+2. Open [claude.ai/code](https://claude.ai/code), connect GitHub when it asks, and start a session on your new repository.
+3. Type:
    ```
    Please read the repo and initiate.
    ```
 
-The agent asks up to 10 questions, moves the clone to your own GitHub repo, fills in the project files and tells you what is left to do. Details: [docs/FIRST_USE.md](docs/FIRST_USE.md). Before you start, check [What you need](#what-you-need).
+**B. With an agent app on your computer** (Claude Code, Codex, Cursor, Gemini CLI)
+
+1. Open the app in the folder where you keep projects (your Documents folder is fine).
+2. Type:
+   ```
+   Please set up a new project from https://github.com/[old handle]/archimedes_lever: get the repo, read it, and initiate.
+   ```
+
+Either way, the agent asks a few questions, makes your own GitHub repository, fills in the project files and tells you what is left to do. It explains each question; when you are not sure, take the answer it marks as recommended. Details for agents: [docs/FIRST_USE.md](docs/FIRST_USE.md).
+
+If you know git: `git clone https://github.com/[old handle]/archimedes_lever my-project`, open the folder with your agent and type `Please read the repo and initiate.`
 
 ## What you get
 
@@ -33,7 +45,7 @@ The agent asks up to 10 questions, moves the clone to your own GitHub repo, fill
 
 | Tool | Used by | Check |
 |---|---|---|
-| git 2.28 or later | everything | `git --version` |
+| git 2.28 or later | way B and the hooks (the agent runs it; way A needs nothing on your computer) | `git --version` |
 | Python 3.9 or later (standard library only) | all checks and hooks | `python3 --version` |
 | bash and perl | `scripts/bootstrap.sh`, `scripts/check.sh` (macOS and Linux have both; on Windows use Git Bash or WSL) | `perl -v` |
 | GitHub CLI `gh` (optional) | step 1 from the command line; the web page works without it | `gh --version` |
@@ -99,7 +111,7 @@ The guard runs only in a repo with a `.pii-guard` file at its root. That file al
 | .github/workflows/pii-guard.yml | Pull-request and manual check: `scripts/check.sh`, then the guard on all files and the PR's commits. Never on push (Actions minutes). |
 | .pii-guard | Turns the guard on; lists allowed exact strings, `skip:` paths and opt-in `check: internal`. Only the owner edits it. |
 | docs/FIRST_USE.md | The first-use questions and what the agent does with the answers. |
-| scripts/first_use_check.py | Session-start check (Claude Code SessionStart hook): FIRST USE when placeholders remain, DENYLIST when the guard is on and the session has no denylist. `--test`. |
+| scripts/first_use_check.py | Session-start check (Claude Code SessionStart hook): KIT in the kit itself (a plain clone), FIRST USE when placeholders remain, DENYLIST when the guard is on and the session has no denylist. `--test`. |
 | .baseline | The kit commit the project was made or last synced from. |
 | .gitignore | Keeps .env files and CLAUDE.local.md out of git. |
 | scripts/check.sh | The one check command (AGENTS.md "Commands": Test). Runs `scripts/check.local.sh` last when it exists. |
