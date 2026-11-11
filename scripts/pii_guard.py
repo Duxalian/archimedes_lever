@@ -70,8 +70,18 @@ def mask(kind, s):
     return "*" * (len(s) - 2) + s[-2:] if len(s) > 6 else "*" * len(s)
 
 
+def _clean_entry(w):
+    """Drop one wrapping pair of <> or quotes: a placeholder copied as "<Name>" must still match "Name"."""
+    w = w.strip()
+    if len(w) > 2 and (w[0], w[-1]) in (("<", ">"), ('"', '"'), ("'", "'")):
+        w = w[1:-1].strip()
+    return w
+
+
 def parse_denylist(raw):
-    return [w for w in (l.split("#", 1)[0].strip() for l in re.split(r"[\n,]", raw or "")) if w]
+    """Entries shorter than 2 characters, or with no letter or digit, are dropped: they would flag ordinary text."""
+    words = (_clean_entry(l.split("#", 1)[0]) for l in re.split(r"[\n,]", raw or ""))
+    return [w for w in words if len(w) >= 2 and re.search(r"[A-Za-z0-9]", w)]
 
 
 def denylist_source():
@@ -136,7 +146,10 @@ def scan_text(text, where, deny, allow):
         hits += [("id", m.group(1)) for m in SSN_KW.finditer(line)]
         hits += [("id", m.group(1)) for m in ORGID.finditer(line)]
         if name_re:
-            hits += [("name", m.group(1)) for m in name_re.finditer(line)]
+            spans = [(s.start(), s.end()) for v in allow if not v.startswith("skip:")
+                     for s in re.finditer(re.escape(v), line, re.IGNORECASE)]
+            hits += [("name", m.group(1)) for m in name_re.finditer(line)
+                     if not any(a <= m.start(1) and m.end(1) <= b for a, b in spans)]  # inside an allowed string
         seen = set()
         for kind, val in hits:
             if val in allow or (kind, val) in seen or any(val == v for _, v in seen):
@@ -249,6 +262,12 @@ def self_test():
         and skipped("ref/y.txt", {"skip: ref/*.txt"}) and not skipped("docs/x.txt", {"skip: ref/x.txt"})
     print(("ok   " if good else "FAIL ") + "skip: exact path, folder, glob; other paths still scanned")
     ok = ok and good
+    expect("name inside an allowed host is not flagged", "https://acme" + dot + "dps" + dot + "internal/sites/x", [],
+           deny=["ACME"], allow=["acme" + dot + "dps" + dot + "internal"])
+    expect("allowed string matches in any case", "https://ACME" + dot + "DPS" + dot + "INTERNAL/x", ["internal"],
+           deny=["ACME"], allow=["acme" + dot + "dps" + dot + "internal"])
+    expect("same name elsewhere on the line is flagged", "ACME team at acme" + dot + "dps" + dot + "internal", ["name"],
+           deny=["ACME"], allow=["acme" + dot + "dps" + dot + "internal"])
     expect("allow list is exact", "call 555-123-" + "4567", ["phone"], allow=["call 555-123-" + "4567 now"])
     expect("URL path not a phone", "github.com/x/pull/123-456-" + "7890", [])
     expect("phone keyword, no separators", "tel: 555123" + "4567", ["phone"])
@@ -269,7 +288,8 @@ def self_test():
             os.environ.pop(k, None)
             if v is not None:
                 os.environ[k] = v
-    print(("ok   " if good else "FAIL ") + "denylist source: none, then environment (comma and newline)")
+    good = good and parse_denylist("<Alex>, 'Sam' ,\"River\",<>,<a>,--") == ["Alex", "Sam", "River"]
+    print(("ok   " if good else "FAIL ") + "denylist source: none, then environment (comma and newline); <Name> wrappers dropped")
     ok = ok and good
     with tempfile.TemporaryDirectory() as d:
         f = pathlib.Path(d, "deny.txt")

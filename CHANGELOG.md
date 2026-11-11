@@ -4,6 +4,7 @@ Template repo only: scripts/bootstrap.sh deletes this file in new projects. Newe
 
 ## 2026-11-11: skip rule and PII scan
 
+- Fixed: denylist entries copied as `<Name>` (from a placeholder) matched nothing, so names were not checked. The guard now drops one wrapping pair of `<>` or quotes, and drops entries under 2 characters or with no letter or digit. A name inside an allowed string on the same line (for example a host name) is not flagged; allowed strings match in any case. Fresh review: 0 MAJOR, 3 MINOR (2 fixed; accepted: an allowed string that contains a name hides it).
 - Added: a `skip: <path or glob>` line in `.pii-guard` excludes a path from the file and commit scans (for a public reference text that quotes office contacts). A bare `*` or `**` is ignored; the report line lists the skip rules. Fresh review: 0 MAJOR, 4 MINOR, all fixed (quoted and spaced paths in commit scans, `#` inside a path, `./` file arguments).
 - Fixed: sync_baseline.py keeps scripts/first_use_check.py and docs/FIRST_USE.md as written (no owner rename), as bootstrap does.
 
