@@ -1,0 +1,242 @@
+#!/usr/bin/env python3
+"""Render one or more project logs (docs/LOG.md) as one self-contained HTML timeline page.
+
+Usage:
+    python3 scripts/timeline.py [LOG ...] [-o timeline.html] [--title TEXT]
+    LOG = path, or LABEL=path, or LABEL=path@owner/repo (commit hashes in Evidence become GitHub links)
+    Default: docs/LOG.md
+    python3 scripts/timeline.py --test      # self-test; prints TIMELINE TEST PASS
+
+The page has: a summary (counts by type and project), the arcs (narratives) with their spans and outcomes, and the
+events newest-first grouped by day, with filters by project, type and arc. Light and dark follow the system and a
+toggle. Each type has a shape and a label, not only a color (milestone square, breakthrough triangle, miss circle,
+decision diamond). No scripts or fonts load from the network.
+Logs are validated with scripts/log_check.py first; a log with findings is refused (fix it, or pass --force).
+Public pages: the output holds everything in the log. A public repo's log is private on purpose (AGENTS.md
+"Project log"), so publish a timeline from it only to a private place, or sanitize the log first.
+Standard library only.
+"""
+import argparse
+import datetime as dt
+import html
+import json
+import pathlib
+import re
+import sys
+import tempfile
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+import log_check  # noqa: E402
+
+TYPE_ORDER = ["milestone", "breakthrough", "miss", "decision"]
+COMMIT_RE = re.compile(r"\b([0-9a-f]{7,40})\b")
+# Only hashes in a "Commit x" / "Commits x, y" phrase link to the log's repo; "other_repo abc1234" stays text.
+COMMIT_PHRASE_RE = re.compile(r"\bCommits? ((?:[0-9a-f]{7,40})(?:(?:, | and )[0-9a-f]{7,40})*)\b")
+
+
+def parse_spec(spec):
+    label, repo, path = None, None, spec
+    if "=" in path:
+        label, path = path.split("=", 1)
+    if "@" in path:
+        path, repo = path.rsplit("@", 1)
+    p = pathlib.Path(path)
+    if not label:
+        text = p.read_text(encoding="utf-8") if p.exists() else ""
+        m = re.search(r"^# Project log: (.+?)\s*$", text, re.M)
+        label = m.group(1) if m else p.parent.parent.name or p.stem
+    return label, p, repo
+
+
+def load(label, path, repo):
+    t = log_check.tables(path.read_text(encoding="utf-8"))
+    arcs = [dict(zip(log_check.ARC_COLS, c)) for _, c in t.get("Arcs", (0, [], []))[2]]
+    events = []
+    for _, c in t["Log"][2]:
+        if len(c) != len(log_check.LOG_COLS):
+            continue
+        e = dict(zip(["num", "when", "type", "arc", "topic", "raised", "missed", "evidence", "result"], c))
+        m = log_check.WHEN_RE.match(e["when"])
+        start = dt.datetime.strptime(f"{m.group(1)} {m.group(2).lstrip('~')}", "%Y-%m-%d %H:%M") if m else None
+        e.update(project=label, repo=repo, sort=start.isoformat() if start else "", day=m.group(1) if m else "")
+        events.append(e)
+    for a in arcs:
+        a["project"] = label
+    return arcs, events
+
+
+def link_evidence(text, repo):
+    out = html.escape(text)
+    if not repo:
+        return out
+    link = lambda m: f'<a href="https://github.com/{html.escape(repo)}/commit/{m.group(1)}">{m.group(1)}</a>'
+    return COMMIT_PHRASE_RE.sub(lambda m: m.group(0).replace(m.group(1), COMMIT_RE.sub(link, m.group(1))), out)
+
+
+CSS = """
+:root{--bg:#f7f8fa;--card:#fff;--text:#16181d;--muted:#555b66;--line:#d9dde3;--chip:#eef0f3;
+--milestone:#1f5fbf;--breakthrough:#1b7a3d;--miss:#a35a00;--decision:#6b3fb3;--focus:#1f5fbf}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#111317;--card:#1a1d23;--text:#eceef2;--muted:#a7adb8;
+--line:#30353d;--chip:#262a31;--milestone:#7fb0ff;--breakthrough:#5fd38a;--miss:#f0a94a;--decision:#c3a2ff;--focus:#7fb0ff}}
+:root[data-theme=dark]{--bg:#111317;--card:#1a1d23;--text:#eceef2;--muted:#a7adb8;--line:#30353d;--chip:#262a31;
+--milestone:#7fb0ff;--breakthrough:#5fd38a;--miss:#f0a94a;--decision:#c3a2ff;--focus:#7fb0ff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);
+font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+main{max-width:960px;margin:0 auto;padding:24px 16px 64px}
+h1{font-size:28px;line-height:1.2;margin:0 0 4px}h2{font-size:20px;margin:32px 0 12px}
+.sub{color:var(--muted);margin:0 0 16px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:16px 0}
+button,select{font:inherit;color:var(--text);background:var(--card);border:1px solid var(--line);border-radius:8px;
+min-height:44px;padding:8px 12px;cursor:pointer}
+button:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+button[aria-pressed=false]{opacity:.6}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}
+.stat b{display:block;font-size:24px}
+.arcs{display:grid;gap:8px}.arcbox summary{cursor:pointer;min-height:44px;display:flex;align-items:center}
+.arcbox summary h2{display:inline;margin:0 0 0 4px}.arcbox{margin:24px 0 0}
+.arcbox summary{list-style:none}.arcbox summary::-webkit-details-marker{display:none}.arcbox summary::before{content:'\\25B8';color:var(--muted);width:16px}.arcbox[open] summary::before{content:'\\25BE'}
+.arc{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 16px}
+.arc h3{font-size:16px;margin:0}.arc p{margin:4px 0 0;color:var(--muted)}
+.day{margin:24px 0 8px;font-weight:600;color:var(--muted)}
+.ev{position:relative;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--c);
+border-radius:12px;padding:12px 16px;margin:8px 0}
+.ev header{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.ev h3{font-size:16px;margin:0;flex:1 1 220px}
+.type{display:inline-flex;gap:6px;align-items:center;font-weight:600;color:var(--c)}
+.mark{width:12px;height:12px;background:var(--c);display:inline-block}
+.milestone{--c:var(--milestone)}.milestone .mark{border-radius:2px}
+.breakthrough{--c:var(--breakthrough)}.breakthrough .mark{clip-path:polygon(50% 0,100% 100%,0 100%)}
+.miss{--c:var(--miss)}.miss .mark{border-radius:50%}
+.decision{--c:var(--decision)}.decision .mark{transform:rotate(45deg);width:10px;height:10px}
+.chip{background:var(--chip);border-radius:999px;padding:2px 10px;font-size:14px}
+.meta{color:var(--muted);font-size:14px}
+dl{display:grid;grid-template-columns:max-content 1fr;gap:4px 12px;margin:8px 0 0;font-size:15px}
+dt{color:var(--muted)}dd{margin:0;overflow-wrap:anywhere}
+a{color:var(--focus)}
+.hidden{display:none}
+"""
+
+JS = """
+const state={project:new Set(),type:new Set(),arc:'all'};
+function apply(){let shown=0;document.querySelectorAll('.ev').forEach(e=>{const ok=state.project.has(e.dataset.project)
+&&state.type.has(e.dataset.type)&&(state.arc==='all'||state.arc===e.dataset.project+'/'+e.dataset.arc);
+e.classList.toggle('hidden',!ok);if(ok)shown++});document.querySelectorAll('.day').forEach(d=>{let n=d.nextElementSibling,any=false;
+while(n&&!n.classList.contains('day')){if(n.classList.contains('ev')&&!n.classList.contains('hidden'))any=true;n=n.nextElementSibling}
+d.classList.toggle('hidden',!any)});document.getElementById('count').textContent=shown+' shown'}
+document.querySelectorAll('[data-filter]').forEach(b=>{state[b.dataset.filter].add(b.dataset.value);b.addEventListener('click',()=>{
+const s=state[b.dataset.filter],v=b.dataset.value;if(s.has(v)){s.delete(v);b.setAttribute('aria-pressed','false')}else{s.add(v);
+b.setAttribute('aria-pressed','true')}apply()})});
+document.getElementById('arc').addEventListener('change',e=>{state.arc=e.target.value;apply()});
+document.getElementById('theme').addEventListener('click',()=>{const r=document.documentElement,dark=r.dataset.theme?r.dataset.theme==='dark'
+:matchMedia('(prefers-color-scheme: dark)').matches;r.dataset.theme=dark?'light':'dark'});apply();
+"""
+
+
+def render(title, arcs, events):
+    e = html.escape
+    events = sorted(events, key=lambda x: (x["sort"], x["project"], int(x["num"]) if x["num"].isdigit() else 0), reverse=True)
+    projects = sorted({x["project"] for x in events} | {a["project"] for a in arcs})
+    counts = {t: sum(1 for x in events if x["type"] == t) for t in TYPE_ORDER}
+    first = min((x["day"] for x in events if x["day"]), default="")
+    last = max((x["day"] for x in events if x["day"]), default="")
+    out = [f"<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>",
+           f"<title>{e(title)}</title><style>{CSS}</style></head><body><main>",
+           f"<h1>{e(title)}</h1><p class='sub'>{len(events)} events in {len(projects)} project(s), {e(first)} to {e(last)}. Times are America/Chicago.</p>",
+           "<div class='stats'>"]
+    for t in TYPE_ORDER:
+        out.append(f"<div class='stat {t}'><span class='type'><span class='mark' aria-hidden='true'></span>{t}</span><b>{counts[t]}</b></div>")
+    out.append(f"</div><details class='arcbox'><summary><h2>Arcs ({len(arcs)})</h2></summary><div class='arcs'>")
+    for a in arcs:
+        n = sum(1 for x in events if x["project"] == a["project"] and x["arc"] == a["Arc"])
+        out.append(f"<div class='arc'><h3>{e(a['Arc'])} <span class='meta'>· {e(a['project'])} · {n} event{'s' if n != 1 else ''} · {e(a['Span'])}</span></h3>"
+                   f"<p>{e(a['Summary'])} Outcome: {e(a['Outcome'])}</p></div>")
+    out.append("</div></details><h2>Events</h2><div class='bar' role='group' aria-label='Filters'>")
+    for p in projects:
+        out.append(f"<button type='button' data-filter='project' data-value='{e(p)}' aria-pressed='true'>{e(p)}</button>")
+    for t in TYPE_ORDER:
+        out.append(f"<button type='button' class='{t}' data-filter='type' data-value='{t}' aria-pressed='true'><span class='type'><span class='mark' aria-hidden='true'></span>{t}</span></button>")
+    out.append("<label><span class='meta'>Arc </span><select id='arc'><option value='all'>All arcs</option>")
+    for a in arcs:
+        out.append(f"<option value='{e(a['project'])}/{e(a['Arc'])}'>{e(a['project'])}: {e(a['Arc'])}</option>")
+    out.append("</select></label><button type='button' id='theme'>Light / dark</button><span id='count' class='meta' aria-live='polite'></span></div>")
+    day = None
+    for x in events:
+        if x["day"] != day:
+            day = x["day"]
+            out.append(f"<div class='day'>{e(day)}</div>")
+        time = x["when"][len(x["day"]):].strip()
+        rows = [("Raised by", e(x["raised"])), ("Missed", e(x["missed"])), ("Evidence", link_evidence(x["evidence"], x["repo"])),
+                ("Result", e(x["result"]))]
+        dl = "".join(f"<dt>{k}</dt><dd>{v}</dd>" for k, v in rows if v and v != "-")
+        out.append(f"<article class='ev {e(x['type'])}' data-project='{e(x['project'])}' data-type='{e(x['type'])}' data-arc='{e(x['arc'])}'>"
+                   f"<header><span class='type'><span class='mark' aria-hidden='true'></span>{e(x['type'])}</span><h3>{e(x['topic'])}</h3>"
+                   f"<span class='meta'>{e(time)}</span><span class='chip'>{e(x['project'])}</span><span class='chip'>{e(x['arc'])}</span></header>"
+                   f"<dl>{dl}</dl></article>")
+    out.append(f"</main><script>{JS}</script></body></html>")
+    return "".join(out)
+
+
+def build(specs, title, force=False):
+    arcs, events, problems = [], [], []
+    for spec in specs:
+        label, path, repo = parse_spec(spec)
+        _, found = log_check.check(path)
+        if found and not force:
+            problems += found
+            continue
+        a, ev = load(label, path, repo)
+        arcs += a
+        events += ev
+    return (render(title, arcs, events) if not problems else None), problems
+
+
+def self_test():
+    ok = True
+    with tempfile.TemporaryDirectory() as d:
+        f = pathlib.Path(d, "LOG.md")
+        f.write_text(log_check.GOOD.replace("| T | Owner | - | Commit abc |", "| <script>x</script> | Owner | - | other_repo 59cd968; Commits 1234567, 89abcde |"), encoding="utf-8")
+        page, problems = build([f"Demo={f}@[old handle]/demo"], "Test")
+        checks = [
+            ("renders", page is not None and not problems),
+            ("all 4 rows", page and page.count("<article") == 4),
+            ("html escaped", page and "<script>x</script>" not in page and "&lt;script&gt;" in page),
+            ("commit linked", page and "https://github.com/[old handle]/demo/commit/63ae6e2" in page),
+            ("newest first", page and page.index("23:50") < page.index("22:11")),
+            ("other repo hash not linked", page and "/commit/59cd968" not in page),
+            ("list of commits linked", page and "/commit/1234567" in page and "/commit/89abcde" in page),
+            ("no network", page and not re.search(r"(src|href)=['\"]?https?://(?!github\.com/)", page)),
+        ]
+        bad = pathlib.Path(d, "BAD.md")
+        bad.write_text(log_check.GOOD.replace("| miss |", "| oops |"), encoding="utf-8")
+        _, probs = build([str(bad)], "Test")
+        checks.append(("refuses invalid log", bool(probs)))
+    for name, good in checks:
+        print(("ok   " if good else "FAIL ") + name)
+        ok = ok and bool(good)
+    print("TIMELINE TEST " + ("PASS" if ok else "FAIL"))
+    return 0 if ok else 1
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    ap.add_argument("logs", nargs="*", default=["docs/LOG.md"])
+    ap.add_argument("-o", "--output", default="timeline.html")
+    ap.add_argument("--title", default="Project timeline")
+    ap.add_argument("--force", action="store_true", help="render even when log_check finds problems")
+    ap.add_argument("--test", action="store_true")
+    a = ap.parse_args()
+    if a.test:
+        return self_test()
+    page, problems = build(a.logs, a.title, a.force)
+    if problems:
+        print("\n".join(problems))
+        print("TIMELINE: refused; fix the log or pass --force")
+        return 1
+    pathlib.Path(a.output).write_text(page, encoding="utf-8")
+    print(f"TIMELINE: wrote {a.output}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

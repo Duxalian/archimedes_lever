@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+# Git pre-push hook for every agent and tool (Claude, Codex, Gemini, any other, and people).
+# Install once per clone: git config core.hooksPath <the folder of this file> (scripts/session_checkin.sh or a SessionStart hook does it).
+# Also runs scripts/pii_guard.py --push when the repo root has a .pii-guard file.
+# Blocks: a push that is not a fast-forward (every force-push form, including --force-with-lease),
+# deleting main or master on the remote, and pushing a remote commit this clone has not fetched.
+# A person who truly needs to override runs the push with --no-verify; agents never do (AGENTS.md "Git safety").
+# Self-test: bash scripts/git-hooks/pre-push --test
+set -u
+zero=0000000000000000000000000000000000000000
+is_zero() { case "$1" in *[!0]*|'') return 1 ;; esac; return 0; }   # all-zero ID: SHA-1 (40) or SHA-256 (64)
+
+check() {  # reads "<local ref> <local sha> <remote ref> <remote sha>" lines; prints findings; returns 1 on a block
+  local blocked=0 lref lsha rref rsha
+  while read -r lref lsha rref rsha; do
+    [ -z "${rref:-}" ] && continue
+    if is_zero "$lsha"; then
+      case "$rref" in
+        refs/heads/main|refs/heads/master) echo "pre-push: blocked: deleting $rref"; blocked=1 ;;
+      esac
+      continue
+    fi
+    is_zero "$rsha" && continue
+    if ! git cat-file -e "$rsha^{commit}" 2>/dev/null; then
+      echo "pre-push: blocked: $rref on the remote has commits this clone does not have. Run: git pull origin ${rref#refs/heads/} (merge), then push again."
+      blocked=1
+    elif ! git merge-base --is-ancestor "$rsha" "$lsha" 2>/dev/null; then
+      echo "pre-push: blocked: push to $rref is not a fast-forward (force-push). Update by merge, then push again."
+      blocked=1
+    fi
+  done
+  return $blocked
+}
+
+if [ "${1:-}" = "--test" ]; then
+  set -e
+  t=$(mktemp -d); trap 'rm -rf "$t"' EXIT
+  git -C "$t" init -q -b main && cd "$t"
+  git -c user.email=t@t -c user.name=t commit -q --allow-empty -m a; a=$(git rev-parse HEAD)
+  git -c user.email=t@t -c user.name=t commit -q --allow-empty -m b; b=$(git rev-parse HEAD)
+  git checkout -q -b side "$a"; git -c user.email=t@t -c user.name=t commit -q --allow-empty -m c; c=$(git rev-parse HEAD)
+  set +e; fails=0
+  run() { local name=$1 want=$2 input=$3 got; out=$(printf '%s\n' "$input" | check); got=$?
+          if [ "$got" = "$want" ]; then echo "ok   $name"; else echo "FAIL $name (exit $got) $out"; fails=1; fi; }
+  run "fast-forward passes"      0 "refs/heads/main $b refs/heads/main $a"
+  run "new branch passes"        0 "refs/heads/x $c refs/heads/x $zero"
+  run "force-push blocked"       1 "refs/heads/main $c refs/heads/main $b"
+  run "delete main blocked"      1 "(delete) $zero refs/heads/main $b"
+  run "delete branch passes"     0 "(delete) $zero refs/heads/x $c"
+  run "unknown remote blocked"   1 "refs/heads/main $b refs/heads/main 1234567890123456789012345678901234567890"
+  z64=0000000000000000000000000000000000000000000000000000000000000000
+  run "sha256: new branch passes"  0 "refs/heads/x $c refs/heads/x $z64"
+  run "sha256: delete branch passes" 0 "(delete) $z64 refs/heads/x $c"
+  run "sha256: delete main blocked"  1 "(delete) $z64 refs/heads/main $b"
+  [ $fails = 0 ] && echo "PRE-PUSH TEST PASS" || { echo "PRE-PUSH TEST FAIL"; exit 1; }
+  exit 0
+fi
+
+input=$(cat)
+out=$(printf '%s\n' "$input" | check) || { echo "$out" >&2; exit 1; }
+[ -n "$out" ] && echo "$out" >&2
+
+# Personal-data guard: runs only in a repo that opts in with a .pii-guard file at its root (AGENTS.md "Personal data").
+guard="$(cd "$(dirname "$0")/.." && pwd -P)/pii_guard.py"
+if [ -f "$(git rev-parse --show-toplevel)/.pii-guard" ] && [ -f "$guard" ]; then
+  printf '%s\n' "$input" | python3 "$guard" --push >&2 || { echo "pre-push: blocked by pii_guard.py (personal data). Remove it, then push again." >&2; exit 1; }
+fi
+
+# Chain to a pre-push hook the repo already had in .git/hooks (for example Git LFS), which core.hooksPath hides.
+old="$(git rev-parse --git-common-dir 2>/dev/null)/hooks/pre-push"
+if [ -x "$old" ] && [ "$(cd "$(dirname "$old")" && pwd -P)/pre-push" != "$(cd "$(dirname "$0")" && pwd -P)/$(basename "$0")" ]; then
+  printf '%s\n' "$input" | "$old" "$@" || exit $?
+fi
+exit 0
