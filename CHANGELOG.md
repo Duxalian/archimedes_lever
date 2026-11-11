@@ -2,6 +2,12 @@
 
 Template repo only: scripts/bootstrap.sh deletes this file in new projects. Newest first. "Decided" = decision by the owner. "Rec" = agent recommendation that the owner has not approved.
 
+## 2026-11-11: first use
+
+- Decided (1A): first use is agent-driven. `scripts/first_use_check.py` (Claude Code SessionStart hook; other agents run it first) reports FIRST USE while AGENTS.md has placeholders (the template repo itself is skipped), and DENYLIST when `.pii-guard` is on and the session has no denylist. docs/FIRST_USE.md holds 7 questions in 2 rounds and the steps. The agent never asks for the denylist names; the owner types them in each settings page.
+- Decided (2A): with `.pii-guard` on, the pre-push hook and the pull-request Action fail when no denylist is found (`pii_guard.py --require-denylist`). `--status` prints the source and the count, never the names. The denylist can also come from the environment variable `PII_GUARD_DENYLIST` (comma or newline separated), for Claude cloud environments.
+- Decided (3A): the owner adds `PII_GUARD_DENYLIST` to the Default, ICF and NMB cloud environments.
+
 ## 2026-11-11: archimedes_lever
 
 - Decided (1A): this repo replaces Duxalian/standard_project as the baseline, with a fresh history (one clean first commit). The old history is not copied: it holds a personal email address and a real name in commit messages.

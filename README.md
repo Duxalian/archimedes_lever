@@ -34,8 +34,13 @@ Or tell your agent: "Bootstrap a new project NEW_NAME from Duxalian/archimedes_l
 
 Then run `scripts/session_checkin.sh` once per clone. It installs the git hooks.
 
+## First use
+
+Open the new repo in an agent session. On the first session the agent asks 7 questions in 2 rounds (Claude Code shows clickable dialogs): project name, purpose, public or private, what agents call you, the personal-data guard, where you push from, and which other agents you use. It then fills the placeholders, commits, and gives you a short list of the places where your name denylist must go. The questions and steps are in [docs/FIRST_USE.md](docs/FIRST_USE.md); `scripts/first_use_check.py` (a SessionStart hook in Claude Code) says when first use is due, and when a session has no denylist.
+
 ## Keep personal data out
 
+0. With the guard on, every push and pull-request check with no denylist fails, so set each place you use (steps 2 and 3, plus the cloud environment variable `PII_GUARD_DENYLIST` for Claude cloud sessions). `python3 scripts/pii_guard.py --status` prints where the list comes from and how many entries, never the names.
 1. Commit as your GitHub noreply address: GitHub **Settings → Emails**, turn on "Keep my email addresses private" and "Block command line pushes that expose my email". Then:
    ```
    git config --global user.email "ID+USER@users.noreply.github.com"
@@ -68,11 +73,13 @@ The guard runs only in a repo with a `.pii-guard` file at its root. That file al
 | .claude/agents/ | Claude Code roles: `scout` (fast tier, read-only), `worker` (standard), `reviewer` (standard, read-only). |
 | .github/workflows/pii-guard.yml | Pull-request and manual check: pii_guard self-test, all files, and the PR's commits. Never on push (Actions minutes). |
 | .pii-guard | Turns the guard on; lists allowed exact strings. Only the owner edits it. |
+| docs/FIRST_USE.md | The first-use questions and what the agent does with the answers. |
+| scripts/first_use_check.py | Session-start check (Claude Code SessionStart hook): FIRST USE when placeholders remain, DENYLIST when the guard is on and the session has no denylist. `--test`. |
 | .baseline | The kit commit the project was made or last synced from. |
 | .gitignore | Keeps .env files and CLAUDE.local.md out of git. |
 | scripts/session_checkin.sh | Start and end check: branch, ahead/behind, uncommitted files. Installs scripts/git-hooks when no other hooks path is set. |
 | scripts/git-hooks/pre-push | For every agent and tool: blocks force-pushes, non-fast-forward pushes and deleting main or master; runs pii_guard.py when `.pii-guard` exists. `--test`. |
-| scripts/pii_guard.py | Personal-data guard (`--all`, `--range A..B`, `--push`, files). `--test`. |
+| scripts/pii_guard.py | Personal-data guard (`--all`, `--range A..B`, `--push`, files; `--require-denylist`; `--status`). `--test`. |
 | scripts/stop_check.py | Claude Code Stop hook: blocks the end of a turn while work is uncommitted or unpushed. `--test`. |
 | scripts/worker_guard.py | PreToolUse hook that limits what `worker` and `reviewer` may do in git. `--test`. |
 | scripts/log_check.py | Checks docs/LOG.md against the Project log rules. `--test`. |
