@@ -68,14 +68,23 @@ def mask(kind, s):
     return "*" * (len(s) - 2) + s[-2:] if len(s) > 6 else "*" * len(s)
 
 
+def parse_denylist(raw):
+    return [w for w in (l.split("#", 1)[0].strip() for l in re.split(r"[\n,]", raw or "")) if w]
+
+
 def denylist_source():
-    """Return (raw text, where it came from) or ("", None)."""
+    """Return (raw text, where it came from) for the first source with at least one entry, or ("", None).
+    first_use_check.py imports this, so both scripts agree on what counts as a denylist."""
     raw = os.environ.get("PII_GUARD_DENYLIST", "")
-    if raw.strip():
+    if parse_denylist(raw):
         return raw, "environment variable PII_GUARD_DENYLIST"
     path = os.environ.get("PII_GUARD_DENYLIST_FILE") or os.path.expanduser("~/.config/pii-guard/denylist.txt")
-    if os.path.isfile(path):
-        return pathlib.Path(path).read_text(errors="replace"), "file " + path
+    try:
+        text = pathlib.Path(path).read_text(errors="replace") if os.path.isfile(path) else ""
+    except OSError:
+        text = ""
+    if parse_denylist(text):
+        return text, "file " + path
     return "", None
 
 
@@ -86,13 +95,7 @@ MISSING_HELP = ("no denylist found. Add your names (comma or newline separated),
 
 
 def load_denylist():
-    raw, _ = denylist_source()
-    words = []
-    for line in re.split(r"[\n,]", raw):
-        w = line.split("#", 1)[0].strip()
-        if w:
-            words.append(w)
-    return words
+    return parse_denylist(denylist_source()[0])
 
 
 def load_allow(root, ref=None):
@@ -248,6 +251,30 @@ def self_test():
     print(("ok   " if good else "FAIL ") + "denylist source: none, then environment (comma and newline)")
     ok = ok and good
     with tempfile.TemporaryDirectory() as d:
+        f = pathlib.Path(d, "deny.txt")
+        f.write_text("Alex\n")
+        env = {k: v for k, v in os.environ.items() if not k.startswith(("PII_GUARD", "GIT_"))}
+        env["PII_GUARD_DENYLIST_FILE"] = str(f)
+        env["PII_GUARD_DENYLIST"] = "# only a comment"
+        me = [sys.executable, os.path.abspath(__file__)]
+        r = subprocess.run(me + ["--status"], env=env, capture_output=True, text=True)
+        good = r.returncode == 0 and "1 entries from file" in r.stdout and "Alex" not in r.stdout
+        print(("ok   " if good else "FAIL ") + "comment-only env var does not shadow the file; status hides names")
+        ok = ok and good
+        env["PII_GUARD_DENYLIST_FILE"] = str(f) + ".missing"
+        subprocess.run(["git", "init", "-q", "-b", "main"], cwd=d, check=True, capture_output=True)
+        z = "0" * 40
+        r = subprocess.run(me + ["--push", "--require-denylist"], cwd=d, env=env, capture_output=True, text=True,
+                           input=f"refs/heads/main {'1' * 40} refs/heads/main {z}\n")
+        good = r.returncode == 1 and "no denylist" in r.stdout
+        print(("ok   " if good else "FAIL ") + "push with no denylist: blocked")
+        ok = ok and good
+        r = subprocess.run(me + ["--push", "--require-denylist"], cwd=d, env=env, capture_output=True, text=True,
+                           input=f"(delete) {z} refs/heads/x {'1' * 40}\n")
+        good = r.returncode == 0
+        print(("ok   " if good else "FAIL ") + "branch delete with no denylist: passes")
+        ok = ok and good
+    with tempfile.TemporaryDirectory() as d:
         env = {**os.environ, "GIT_AUTHOR_NAME": "Sam", "GIT_COMMITTER_NAME": "Sam",
                "GIT_AUTHOR_EMAIL": "1+s" + at + "users.noreply.github" + dot + "com",
                "GIT_COMMITTER_EMAIL": "1+s" + at + "users.noreply.github" + dot + "com"}
@@ -307,9 +334,11 @@ def main():
     except (subprocess.CalledProcessError, FileNotFoundError):
         root = "."
     deny, allow = load_denylist(), load_allow(root, a.allow_from)
-    if a.require_denylist and not deny:
-        if a.push:
-            sys.stdin.read()
+    revsets = [[a.range]] if a.range else []
+    if a.push:
+        revsets += push_revs(sys.stdin.read(), root)
+    deletes_only = a.push and not revsets and not (a.all or a.files or a.range)
+    if a.require_denylist and not deny and not deletes_only:
         print("PII GUARD FAIL: " + MISSING_HELP)
         return 1
     found, what = [], []
@@ -320,9 +349,6 @@ def main():
     if a.files:
         found += scan_files(a.files, ".", deny, allow)
         what.append(f"{len(a.files)} file(s)")
-    revsets = [[a.range]] if a.range else []
-    if a.push:
-        revsets += push_revs(sys.stdin.read(), root)
     n = 0
     for revs in revsets:
         f, k = scan_commits(revs, root, deny, allow)

@@ -33,22 +33,32 @@ def origin_name(root):
 
 
 def has_denylist():
-    if os.environ.get("PII_GUARD_DENYLIST", "").strip():
-        return True
-    path = os.environ.get("PII_GUARD_DENYLIST_FILE") or os.path.expanduser("~/.config/pii-guard/denylist.txt")
-    return os.path.isfile(path) and any(l.split("#", 1)[0].strip() for l in open(path, errors="replace"))
+    """Same rule as pii_guard.py (shared helper): the first source with at least one entry."""
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+    import pii_guard
+    return pii_guard.denylist_source()[1] is not None
 
 
 def messages(root):
     root = pathlib.Path(root)
     out = []
-    agents = root / "AGENTS.md"
-    text = agents.read_text(errors="replace") if agents.is_file() else ""
-    if PLACEHOLDER.search(text) and origin_name(root) != TEMPLATE_NAME:
+    try:
+        agents = root / "AGENTS.md"
+        text = agents.read_text(errors="replace") if agents.is_file() else ""
+        first_use = PLACEHOLDER.search(text) and origin_name(root) != TEMPLATE_NAME
+    except Exception as e:  # each check on its own: one failure must not hide the other
+        first_use, text = False, ""
+        out.append(f"first_use_check: placeholder check skipped ({e})")
+    if first_use:
         out.append("FIRST USE: this repo was made from the template and is not set up yet. Before any other work, "
                    "follow docs/FIRST_USE.md: ask the owner its questions (in Claude Code, with the clickable "
                    "question dialog), then run scripts/bootstrap.sh with the answers.")
-    if (root / ".pii-guard").is_file() and not has_denylist():
+    try:
+        guard_without_list = (root / ".pii-guard").is_file() and not has_denylist()
+    except Exception as e:
+        guard_without_list = False
+        out.append(f"first_use_check: denylist check skipped ({e})")
+    if guard_without_list:
         out.append("DENYLIST: this repo has the personal-data guard on, but this session has no name denylist, so "
                    "pushes will be blocked. Ask the owner to add the environment variable PII_GUARD_DENYLIST to this "
                    "cloud environment (environment menu in the session title bar > Edit > Environment variables; "

@@ -32,6 +32,7 @@ done
 
 # Replace the role word "the owner" / "The owner" (sync_baseline.py keeps the literal: it needs it).
 if [ "$BS_OWNER" != "the owner" ]; then
+  # Not renamed on purpose: docs/FIRST_USE.md and scripts/first_use_check.py, whose "the owner" is an option or a role.
   owner_files=("${files[@]}" .claude/orchestration.md scripts/stop_check.py scripts/worker_guard.py)
   for f in "${owner_files[@]}"; do
     perl -pi -e 'my $c = ucfirst $ENV{BS_OWNER}; s/\b([Tt])he owner\b/$1 eq "T" ? $c : $ENV{BS_OWNER}/ge' "$f"
