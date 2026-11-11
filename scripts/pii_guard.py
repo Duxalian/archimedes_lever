@@ -26,7 +26,7 @@ Checks:
     phone      US numbers (NNN-NNN-NNNN, (NNN) NNN-NNNN, NNN.NNN.NNNN), +country numbers, DSN numbers
     id         SSN shape (NNN-NN-NNNN); a 10-digit number next to EDIPI / DoD ID / CAC
     name       denylist words
-Matches are printed masked, so CI logs do not repeat them. Exit 1 when anything is found.
+Matches are printed masked (names as a length only), so CI logs do not repeat them. Exit 1 when anything is found.
 Standard library only. Needs git (except for FILE mode).
 """
 import argparse
@@ -41,12 +41,15 @@ ZERO = re.compile(r"^0+$")
 EMAIL = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}")
 MIL = re.compile(r"(?i)\b[A-Za-z0-9._%+-]*[A-Za-z0-9-]\.mil\b(?![.-][A-Za-z0-9])")
 PHONE = [
-    re.compile(r"(?<![\w.-])\(?\d{3}\)?[-. ]\d{3}[-.]\d{4}(?![\w-])"),
-    re.compile(r"(?<![\w.-])\(\d{3}\) ?\d{3}[-. ]\d{4}(?![\w-])"),
+    re.compile(r"(?<![\w./-])\(?\d{3}\)?[-. ]\d{3}[-.]\d{4}(?![\w-])"),
+    re.compile(r"(?<![\w./-])\(\d{3}\) ?\d{3}[-. ]\d{4}(?![\w-])"),
     re.compile(r"(?<![\w+])\+\d{1,3}[ -]\(?\d{1,4}\)?[ -]\d{2,4}[ -]\d{3,4}(?![\w-])"),
     re.compile(r"(?i)\bDSN:?\s*\d{3}[-. ]\d{4}\b"),
+    re.compile(r"(?i)\b(?:phone|tel|cell|mobile|fax|call)\b\D{0,20}?(\+?1?[ .-]?\d{3}[ .-]?\d{3}[ .-]?\d{4})\b"),
+    re.compile(r"(?<![\w+])\+1\d{10}\b"),
 ]
 SSN = re.compile(r"(?<![\w-])\d{3}-\d{2}-\d{4}(?![\w-])")
+SSN_KW = re.compile(r"(?i)\b(?:SSN|social security)\b\D{0,20}?(\d{3}[ -]?\d{2}[ -]?\d{4})\b")
 EDIPI = re.compile(r"(?i)\b(?:EDIPI|DoD ?ID|DODID|CAC)\b\D{0,20}(\d{10})\b")
 ALLOWED_EMAIL = re.compile(
     r"(?i)(@users\.noreply\.github\.com$|^(no-?reply)@|@example\.(com|org|net)$|\.(example|invalid|test|localhost)$)")
@@ -54,8 +57,13 @@ SKIP_SUFFIX = (".png", ".jpg", ".jpeg", ".gif", ".webp", ".ico", ".pdf", ".zip",
 MAX_BYTES = 2_000_000
 
 
-def mask(s):
-    return s if len(s) <= 4 else s[:2] + "*" * (len(s) - 4) + s[-2:]
+def mask(kind, s):
+    """Show the kind and a length, never enough to rebuild the value (CI logs may be public)."""
+    if kind == "name":
+        return f"<{len(s)} chars>"
+    if kind in ("email", "mil") and "@" in s:
+        return "***@" + "*" * len(s.split("@", 1)[1])
+    return "*" * (len(s) - 2) + s[-2:] if len(s) > 6 else "*" * len(s)
 
 
 def load_denylist():
@@ -71,11 +79,15 @@ def load_denylist():
     return words
 
 
-def load_allow(root):
-    f = pathlib.Path(root) / ".pii-guard"
-    if not f.is_file():
-        return set()
-    return {l.split("#", 1)[0].strip() for l in f.read_text().splitlines() if l.split("#", 1)[0].strip()}
+def load_allow(root, ref=None):
+    """Allowed exact strings from .pii-guard (working tree, or the file at a git ref such as the PR base)."""
+    if ref:
+        r = subprocess.run(["git", "show", f"{ref}:.pii-guard"], cwd=root, capture_output=True, text=True)
+        text = r.stdout if r.returncode == 0 else ""
+    else:
+        f = pathlib.Path(root) / ".pii-guard"
+        text = f.read_text() if f.is_file() else ""
+    return {l.split("#", 1)[0].strip() for l in text.splitlines() if l.split("#", 1)[0].strip()}
 
 
 def scan_text(text, where, deny, allow):
@@ -89,17 +101,18 @@ def scan_text(text, where, deny, allow):
                 hits.append(("email", m.group()))
         hits += [("mil", m.group()) for m in MIL.finditer(line)]
         for rx in PHONE:
-            hits += [("phone", m.group()) for m in rx.finditer(line)]
+            hits += [("phone", m.group(m.lastindex or 0)) for m in rx.finditer(line)]
         hits += [("id", m.group()) for m in SSN.finditer(line)]
+        hits += [("id", m.group(1)) for m in SSN_KW.finditer(line)]
         hits += [("id", m.group(1)) for m in EDIPI.finditer(line)]
         if name_re:
             hits += [("name", m.group(1)) for m in name_re.finditer(line)]
         seen = set()
         for kind, val in hits:
-            if val in allow or any(val in a for a in allow if kind != "name") or (kind, val) in seen:
+            if val in allow or (kind, val) in seen or any(val == v for _, v in seen):
                 continue
             seen.add((kind, val))
-            found.append((where, n, kind, mask(val)))
+            found.append((where, n, kind, mask(kind, val)))
     return found
 
 
@@ -196,6 +209,15 @@ def self_test():
     expect("denylist any case", "ALEX" + "ANDRA", ["name"], deny=["alexandra"])
     expect("denylist whole word", "Alexandra" + "s", [], deny=["Alexandra"])
     expect("allow list", "see genai" + dot + "mil", [], allow=["genai" + dot + "mil"])
+    expect("allow list is exact", "call 555-123-" + "4567", ["phone"], allow=["call 555-123-" + "4567 now"])
+    expect("URL path not a phone", "github.com/x/pull/123-456-" + "7890", [])
+    expect("phone keyword, no separators", "tel: 555123" + "4567", ["phone"])
+    expect("+1 packed", "+1555123" + "4567", ["phone"])
+    expect("SSN keyword, no dashes", "SSN 123456" + "789", ["id"])
+    expect("short name fully masked", "Sam", ["name"], deny=["Sam"])
+    good = mask("name", "Sam") == "<3 chars>" and mask("email", "a" + at + "b" + dot + "io") == "***@****"
+    print(("ok   " if good else "FAIL ") + "masking hides names and email users")
+    ok = ok and good
     with tempfile.TemporaryDirectory() as d:
         env = {**os.environ, "GIT_AUTHOR_NAME": "Sam", "GIT_COMMITTER_NAME": "Sam",
                "GIT_AUTHOR_EMAIL": "1+s" + at + "users.noreply.github" + dot + "com",
@@ -237,6 +259,7 @@ def main():
     ap.add_argument("--all", action="store_true", help="scan every tracked file")
     ap.add_argument("--range", help="scan commits in this range (A..B)")
     ap.add_argument("--push", action="store_true", help="pre-push mode: read the hook's stdin")
+    ap.add_argument("--allow-from", metavar="REF", help="read .pii-guard from this git ref (CI: the PR base), not the tree")
     ap.add_argument("--test", action="store_true")
     a = ap.parse_args()
     if a.test:
@@ -247,7 +270,7 @@ def main():
         root = git("rev-parse", "--show-toplevel").strip()
     except (subprocess.CalledProcessError, FileNotFoundError):
         root = "."
-    deny, allow = load_denylist(), load_allow(root)
+    deny, allow = load_denylist(), load_allow(root, a.allow_from)
     found, what = [], []
     if a.all:
         files = git("ls-files", "-z", root=root).split("\0")

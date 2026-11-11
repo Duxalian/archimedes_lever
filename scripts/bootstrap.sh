@@ -34,7 +34,7 @@ done
 if [ "$BS_OWNER" != "the owner" ]; then
   owner_files=("${files[@]}" .claude/orchestration.md scripts/stop_check.py scripts/worker_guard.py)
   for f in "${owner_files[@]}"; do
-    perl -pi -e 'my $c = ucfirst $ENV{BS_OWNER}; s/the owner/$ENV{BS_OWNER}/g; s/The owner/$c/g' "$f"
+    perl -pi -e 'my $c = ucfirst $ENV{BS_OWNER}; s/\b([Tt])he owner\b/$1 eq "T" ? $c : $ENV{BS_OWNER}/ge' "$f"
   done
 fi
 
