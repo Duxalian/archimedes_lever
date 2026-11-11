@@ -4,7 +4,7 @@ The agent runs this once, in a new repo made from the template, before any other
 
 ## 1. Ask the questions
 
-Ask all questions of a round together. In Claude Code, use the clickable question dialog (4 questions at most per dialog). On other hosts, write them as a numbered list with lettered options. Mark your recommendation. A free-text answer comes through "Other".
+Ask all questions of a round together (3 rounds, 9 questions). In Claude Code, use the clickable question dialog (4 questions at most per dialog). On other hosts, write them as a numbered list with lettered options. Mark your recommendation. A free-text answer comes through "Other".
 
 Round 1: the project
 
@@ -13,14 +13,21 @@ Round 1: the project
 | 1 | What is the project called? | Free text |
 | 2 | What is it for, in one line? | Free text |
 | 3 | Is the repo public or private? | A private (rec) · B public |
-| 4 | What should agents call you in the repo files? | A "the owner" (rec) · B a role, for example "the maintainer" · C your first name (private repos only; with the guard on, a name on your denylist blocks every push, so choose C only with the guard off) |
+| 8 | Which license for the project? | A MIT (rec for a public repo) · B Apache-2.0 · C none: all rights reserved (rec for a private repo) |
 
-Round 2: personal data and tools
+Round 2: you and personal data
 
 | # | Question | Options |
 |---|---|---|
-| 5 | Turn on the personal-data guard? It blocks emails, phone numbers, .internal addresses, ID numbers and your listed names before a push. | A on (rec) · B off |
+| 4 | What should agents call you in the repo files? | A "the owner" (rec) · B a role, for example "the maintainer" · C your first name (private repos only; with the guard on, a name on your denylist blocks every push, so choose C only with the guard off) |
+| 5 | Turn on the personal-data guard? It blocks emails, phone numbers, ID numbers, API tokens, private keys and your listed names before a push. | A on (rec) · B on, and also block .internal addresses (for US government or org-specific work) · C off |
 | 6 | Where will you push from? | A Claude cloud sessions · B your own computer · C both |
+
+Round 3: time and tools
+
+| # | Question | Options |
+|---|---|---|
+| 9 | Which time zone for project log times? | A your local time zone (rec; give its IANA name, for example Europe/Berlin or America/New_York) · B UTC |
 | 7 | Which other agents will you use? (several allowed) | A none · B ChatGPT or Codex · C Gemini · D another tool |
 
 Rules for the asking agent:
@@ -29,11 +36,12 @@ Rules for the asking agent:
 
 ## 2. Apply the answers
 
-1. Run `scripts/bootstrap.sh "<1>" <owner/repo from git remote get-url origin> "<2>" "<4>"`. Leave out the 4th argument for "the owner". The script deletes itself when done; keep this file, because step 3 is also what an agent shows when a session reports DENYLIST.
+1. Run `scripts/bootstrap.sh "<1>" <owner/repo from git remote get-url origin> "<2>" "<4>" "<9>"`. Give "the owner" as the 4th argument when that is the answer. The 5th argument is the IANA time zone name (UTC for 9B). The script deletes itself when done; keep this file, because step 3 is also what an agent shows when a session reports DENYLIST. It moves the kit's license to docs/archimedes_lever-LICENSE.txt: keep that file, because it covers the kit's scripts.
 2. Public repo: add to AGENTS.md "Project rules" a line that names a private place for the project log (for example a private Claude doc), because the log can hold environment detail. Write the date and "(the owner, YYYY-MM-DD)".
-3. Guard off (5B): delete `.pii-guard`. The hook and the Action then skip the guard.
-4. Record the answers as the owner's decisions in docs/DECISIONS.md, and add one `decision` row to the project log.
-5. Commit with a noreply identity, run `scripts/session_checkin.sh` (it installs the git hooks), and push.
+3. Guard: for 5B, remove the "# " in front of the line `# check: internal` in `.pii-guard`. For 5C, delete `.pii-guard`; the hook and the Action then skip the guard.
+4. License (answer 8): for A, copy docs/archimedes_lever-LICENSE.txt to `LICENSE` and change the copyright line to the current year and the GitHub account or organization from `<owner/repo>`, unless the owner names another holder (a public repo never uses a real name the owner has not given). For B, save the text from https://www.apache.org/licenses/LICENSE-2.0.txt, unchanged, as `LICENSE`. For C, add no LICENSE.
+5. Record the answers as the owner's decisions in docs/DECISIONS.md, and add one `decision` row to the project log.
+6. Commit with a noreply identity, run `scripts/session_checkin.sh` (it installs the git hooks), and push.
 
 ## 3. The denylist places (guard on)
 
