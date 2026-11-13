@@ -59,7 +59,7 @@ Commands: `python3 scripts/bloat_check.py --time --record` (before), `--time` (a
 | P2 | Shorten the `.pii-guard` and denylist bullets to a pointer to README "Keep personal data out" and `pii_guard.py --status` | AGENTS.md "Personal data", lines 74–76 | Guard added 2026-11-11 (privacy-guard arc) | Same block list and denylist places in README and pii_guard.py docstring; pre-push and the Action enforce it | ~110 words | Low: the hook blocks regardless | Yes |
 | P3 | Shorten the 2 enforcement bullets to one pointer ("enforced by scripts/git-hooks/pre-push and .claude/settings.json; README Files lists what each blocks") | AGENTS.md "Git safety" | Gap review 2026-11-13, gap 3 | README "Files" lists the same blocks; the hook enforces them | ~90 words | Low | Yes |
 | P4 | Move the GitHub Actions minutes bullet from "Verification" to "Commands" (it is about CI triggers, not verification) | AGENTS.md line 90 | Owner decision 2026-11-11 | Wrong section: a reader looking for CI rules does not find it | 0 words; findability | None | Yes |
-| P5 | New project reports "AUDIT DUE (never audited)" on day one | scripts/bloat_check.py `audit_due` | Design: the first audit creates the file | Trial first use (KIT_LOG row 28): fresh bootstrap prints AUDIT DUE at the first check-in, before any project code | One false alarm per new project | Changes a check: a project could go 14 days without an audit | Option A: count days and commits from the project's first commit when there is no `last_audit` (rec). Option B: keep as is |
+| P5 | New project reports "AUDIT DUE (never audited)" on day one | scripts/bloat_check.py `audit_due` | Design: the first audit creates the file | Trial first use (trial run 2026-11-13; KIT_LOG.md, now in git history only): fresh bootstrap prints AUDIT DUE at the first check-in, before any project code | One false alarm per new project | Changes a check: a project could go 14 days without an audit | Option A: count days and commits from the project's first commit when there is no `last_audit` (rec). Option B: keep as is |
 | P6 | Make CLAUDE.md (`@AGENTS.md`) and GEMINI.md (`@./AGENTS.md`) use one import form | CLAUDE.md, GEMINI.md | not found | 2 forms for one job | 0 | Low; each host's docs accept its form (not tested here) | Keep as is unless tested on Gemini CLI |
 
 Total if P1–P3 are approved: ~530 words, ~22% of AGENTS.md, ~700 start-read tokens per session.
@@ -77,7 +77,7 @@ Total if P1–P3 are approved: ~530 words, ~22% of AGENTS.md, ~700 start-read to
 
 | Assumption | Used in | Source | Confidence |
 |---|---|---|---|
-| A fresh clone bootstraps, checks and pushes with no error | docs/FIRST_USE.md | Trial 2026-11-13 (KIT_LOG row 28): bootstrap 1.3 s, check.sh 12/12 pass, push through pre-push and the guard pass | high |
+| A fresh clone bootstraps, checks and pushes with no error | docs/FIRST_USE.md | Trial 2026-11-13 (trial run 2026-11-13; KIT_LOG.md, now in git history only): bootstrap 1.3 s, check.sh 12/12 pass, push through pre-push and the guard pass | high |
 | The settings.json deny list blocks force-push and hard reset | .claude/settings.json | Observed 2026-11-13: a command with `git push -f` and `git reset --hard` was denied in this session | high |
 | Pre-push blocks force-push, delete main, unfetched remote | scripts/git-hooks/pre-push | `--test`, 9 cases pass | high |
 | The sandbox runs and keeps the hooks path writable for session_checkin.sh | .claude/settings.json | Not tested: this container has no bubblewrap (gap review, Limits) | medium |

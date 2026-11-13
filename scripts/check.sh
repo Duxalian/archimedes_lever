@@ -29,7 +29,6 @@ if [ -f scripts/drift.py ]; then run "drift self-test" python3 scripts/drift.py 
 if [ -f scripts/git-hooks/pre-push ]; then run "pre-push self-test" scripts/git-hooks/pre-push --test; fi
 
 if grep -q '{{PROJECT_NAME}}' AGENTS.md 2>/dev/null; then
-  if [ -f KIT_LOG.md ]; then run "kit log" python3 scripts/log_check.py KIT_LOG.md; fi
   skip "project log" "template placeholders: run first use"
 elif [ -f docs/LOG.md ]; then
   run "project log" python3 scripts/log_check.py docs/LOG.md

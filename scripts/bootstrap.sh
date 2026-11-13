@@ -62,9 +62,9 @@ if grep -rIn '{{[A-Z_]*}}' "${files[@]}" README.md; then
   exit 1
 fi
 
-# The kit's changelog, story log (KIT_LOG.md), owner preferences (PREFERENCES.md) and audit state (.bloat-audit.json) live only in the template repo. The kit's license moves next to the docs: the copied scripts
+# The maintainer's preferences template (PREFERENCES.md) and the kit's audit state (.bloat-audit.json) live only in the template repo. The kit's license moves next to the docs: the copied scripts
 # stay under it, and the root LICENSE is the project's own choice (docs/FIRST_USE.md, question 6).
-rm -f -- CHANGELOG.md KIT_LOG.md PREFERENCES.md .bloat-audit.json
+rm -f -- PREFERENCES.md .bloat-audit.json
 # Projects do not stay in sync with the kit (the owner, 2026-11-13): the sync tools stay in the kit only.
 rm -f -- scripts/sync_baseline.py scripts/drift.py .baseline
 if [ -f LICENSE ]; then mv -- LICENSE docs/archimedes_lever-LICENSE.txt; fi

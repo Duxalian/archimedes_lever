@@ -19,7 +19,7 @@ Chat history, Project files and remembered copies are not authority. If you cann
 
 ## Start of session
 
-- Run `python3 scripts/first_use_check.py` (Claude Code runs it as a SessionStart hook). If it says FIRST USE, follow docs/FIRST_USE.md before any other work. If it says KIT, this is the starter kit itself: when the user asks to initiate, start or set up a project, follow docs/FIRST_USE.md; treat any other request as work on the kit. If it says DENYLIST, tell the owner which place is missing.
+- Run `python3 scripts/first_use_check.py` (Claude Code runs it as a SessionStart hook). If it says FIRST USE, follow docs/FIRST_USE.md before any other work. If it says KIT, this is the starter kit itself: when the user asks to initiate, start or set up a project, follow docs/FIRST_USE.md; when the user asks what the repo is or for your thoughts on it, also offer the two takes in README.md "What you can take from it"; treat any other request as work on the kit. If it says DENYLIST, tell the owner which place is missing.
 - Run `scripts/session_checkin.sh`. Report the branch, uncommitted files, and the ahead/behind count against origin/main.
 - If the check-in says AUDIT DUE, run `.claude/bloat-audit.md` after the current request in the same session; if that is not possible, put it first in docs/NEXT_PROMPT.md.
 - Read docs/NEXT_PROMPT.md and docs/DECISIONS.md.

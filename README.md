@@ -1,8 +1,27 @@
 # archimedes_lever
 
-A starter kit for projects built with AI agents (Claude, GPT/Codex, Gemini and others). It gives each new project the same rules file, safety hooks, checks, decision record and project log, so every agent starts from the same ground and you do not re-teach it in each chat.
+Lessons from making AI assistants (Claude, ChatGPT, Codex and others) reliable and low-effort to work with, in a form you can copy. "Give me a place to stand, and I will move the world": the rules, decisions and history live in files that every agent reads, not in a chat that disappears.
 
-"Give me a place to stand, and I will move the world." The repo is the place to stand: the rules, decisions and history live in files that every agent reads, not in a chat that disappears.
+## First prompt
+
+Paste this into Claude (claude.ai or Claude Code) or another assistant that can read web pages:
+
+```
+Tell me your thoughts about this repo: https://github.com/rhope-ops/archimedes_lever
+```
+
+## What you can take from it
+
+| Take | What it gives you | Effort | Needs |
+|---|---|---|---|
+| 1. [Preferences](PREFERENCES.md) for your own AI account | Every chat asks its questions up front, labels its recommendations, marks its confidence, checks its work before it says "done", and saves you clicks and copying | About 5 minutes: the assistant asks you 4 questions and gives you one block to paste | Any Claude, ChatGPT or Codex account. No GitHub. |
+| 2. A project kit (the rest of this repo) | A new project where every agent follows one rules file, cannot force-push or leak your name or email, checks its own work, and records decisions | About 15 minutes with an agent ("Start here" below) | A free GitHub account and an agent that can run commands |
+
+Take 1 alone gets most of the benefit for most people. To do it, ask your assistant: `Interview me and fill in PREFERENCES.md from https://github.com/rhope-ops/archimedes_lever for Claude` (or ChatGPT, or Codex).
+
+## Lessons behind the rules
+
+LESSONS_PLACEHOLDER
 
 ## What you need
 
@@ -10,7 +29,7 @@ A starter kit for projects built with AI agents (Claude, GPT/Codex, Gemini and o
 - An AI agent that can run commands and edit files: Claude Code (in the browser at claude.ai/code, or the app), Codex, Cursor, Gemini CLI, or another tool that reads AGENTS.md. A chat with no file access (for example a plain ChatGPT or claude.ai chat) cannot set up the project; use the steps "by hand" below with it.
 - For way B only, on your computer: git, Python 3.9 or later, bash and perl. macOS and Linux have bash and perl; on Windows, use Git Bash or WSL. If one is missing, the agent tells you how to install it.
 
-## Start here
+## Start here (take 2: a project)
 
 You do not need to know git: the agent does that part. Pick one way.
 
@@ -101,9 +120,7 @@ The guard runs only in a repo with a `.pii-guard` file at its root. That file al
 | docs/LOG.md | Project log for a timeline and a narrative deck: milestones, breakthroughs, misses, decisions, grouped in arcs; each arc has Problem, Turning point, Outcome and Lesson. A public repo keeps it in a private place named in Project rules. |
 | docs/host-prompts.md | Pointer texts for the claude.ai Project, GPT, Gemini and any other chat. |
 | docs/reviews/ | Detailed evidence. |
-| CHANGELOG.md | Kit versions and decisions about the kit. Template repo only: bootstrap deletes it. |
 | .bloat-audit.json | The kit's own audit state and timing baselines (scripts/bloat_check.py). Template repo only: bootstrap deletes it; a project's first audit makes its own. |
-| KIT_LOG.md | The kit's own project log (story of how the kit got here; same format as docs/LOG.md). Template repo only: bootstrap deletes it. |
 | PREFERENCES.md | The owner's personal preferences for Claude, ChatGPT and Codex, ready to paste. Template repo only: bootstrap deletes it. |
 | LICENSE | The kit's license (MIT). Bootstrap moves it to docs/archimedes_lever-LICENSE.txt; the project picks its own LICENSE. |
 | .claude/settings.json | Claude Code deny list (force-push incl. --force-with-lease, hard reset, clean, reading .env and key files), a sandbox with a network allowlist (GitHub, PyPI, npm), and the Stop hook. Binds Claude Code only. |
@@ -146,7 +163,7 @@ An old AGENTS.md without the kit layout moves under "Project rules" with a revie
 
 ## Limits
 
-- A project does not update by itself. Run the sync after a kit change (see CHANGELOG.md).
+- A project does not update with the kit. The kit keeps no changelog: its history is in git (`git log`).
 - Account-wide preferences (your own settings in Claude, ChatGPT or Codex) reach only that host. Every agent gets the rules from AGENTS.md.
 - Setup needs an agent with file access. A chat that cannot run commands can only give you text to paste: use "Start a new project by hand".
 - Hooks are seat belts, not locks: Claude Code hooks bind Claude Code only, and `--no-verify` skips git hooks.
