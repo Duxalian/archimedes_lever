@@ -12,7 +12,7 @@ Source for a timeline of milestones, breakthroughs and narratives about the kit 
 | project-log | ~2026-11-11 09:00 | The project log is added as the source for a timeline. | - | #2 | AGENTS.md rule, docs/LOG.md template and log_check.py; the renderer waits for a preview. | - |
 | bloat-control | 2026-11-12 18:45–2026-11-13 07:35 | The bloat audit proposes removals instead of making them. | A grep for callers cannot see tools run by hand or requests that live only in chat, so requested features could look dead. | #19 | Removals need the owner's approval in the kit and 4 projects. | - |
 | agent-safety | 2026-11-12 19:27–20:10 | A gap review leads to untrusted-input rules, a sandbox and a check gate on push. | The kit had no rule that repo text and tool output are data, no sandbox baseline and no gate the agent cannot pass by itself. | #14 | Untrusted-input rules, sandbox allowlist and a pre-push check gate on main. | - |
-| project-story | 2026-11-13 07:50– | The project log becomes the source for a narrative deck. | - | - | Open: story columns and outline on a branch. | - |
+| project-story | 2026-11-13 07:50–07:57 | The project log becomes the source for a narrative deck. | CHANGELOG listed changes only, without misses or context, so no history could feed a narrative deck. | #21 | Story fields and --outline on main in the kit and 3 projects; 39 arcs backfilled, each field cited or '-'. 90-161.Z waits for its private log. | - |
 
 ## Log
 
@@ -38,3 +38,4 @@ Source for a timeline of milestones, breakthroughs and narratives about the kit 
 | 18 | 2026-11-12 20:10 | miss | agent-safety | pii-guard Action on actions/checkout v4 warned of Node 20 deprecation | Claude | - | Commit ecfd8a8 | Action moved to actions/checkout v5 (Node 24) |
 | 19 | 2026-11-13 07:34–07:35 | decision | bloat-control | Bloat audit removals need the owner's approval | Claude (explaining the audit to the owner) | The audit's "safe fixes" deleted unreferenced files without asking | Commits f8675a8, bccc1f2; merge 1ce04a8 | Rule on main in the kit and 4 projects |
 | 20 | 2026-11-13 07:50 | decision | project-story | Arcs table gets Problem, Turning point, Lesson; KIT_LOG.md starts | the owner | CHANGELOG lists changes only, without misses or context | Commit 246c557 | On branch claude/story-arcs |
+| 21 | 2026-11-13 07:57 | milestone | project-story | Story fields shipped and history backfilled | the owner | Backfill guessed some 'Raised by' values and times; the owner chose fixes before merge | Merges 761357b, a6474e3; ICF 495f9fe, NMB f59d1cd, TA c43a9c9 | Outlines from timeline.py --outline for 4 repos |
