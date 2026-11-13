@@ -19,7 +19,7 @@ Chat history, Project files and remembered copies are not authority. If you cann
 
 ## Start of session
 
-- Run `python3 scripts/first_use_check.py` (Claude Code runs it as a SessionStart hook). If it says FIRST USE, follow docs/FIRST_USE.md before any other work. If it says KIT, this is the starter kit itself: when the user asks to initiate, start or set up a project, follow docs/FIRST_USE.md; treat any other request as work on the kit. If it says DENYLIST, tell the owner which place is missing.
+- Run `python3 scripts/first_use_check.py` (Claude Code runs it as a SessionStart hook). If it says FIRST USE, follow docs/FIRST_USE.md before any other work. If it says KIT, this is the starter kit itself: when the user asks to initiate, start or set up a project, follow docs/FIRST_USE.md; when the user asks what the repo is or for your thoughts on it, also offer the two takes in README.md "What you can take from it"; treat any other request as work on the kit. If it says DENYLIST, tell the owner which place is missing.
 - Run `scripts/session_checkin.sh`. Report the branch, uncommitted files, and the ahead/behind count against origin/main.
 - If the check-in says AUDIT DUE, run `.claude/bloat-audit.md` after the current request in the same session; if that is not possible, put it first in docs/NEXT_PROMPT.md.
 - Read docs/NEXT_PROMPT.md and docs/DECISIONS.md.
@@ -69,7 +69,7 @@ Chat history, Project files and remembered copies are not authority. If you cann
 
 ## Personal data
 
-- Never commit personal data: real names, email addresses, phone numbers, home or work addresses, ID numbers, or the owner's job details. Use a role (for example "the maintainer") and fake sample data. A private repo may put its owner's real name in the `- Owner:` line (or pass `sync_baseline.py --owner`).
+- Never commit personal data: real names, email addresses, phone numbers, home or work addresses, ID numbers, or the owner's job details. Use a role (for example "the maintainer") and fake sample data. A private repo may put its owner's real name in the `- Owner:` line.
 - Commit with a GitHub noreply address (`ID+USER@users.noreply.github.com`) or the agent's own noreply identity, never a personal email.
 - A `.pii-guard` file at the repo root turns on `scripts/pii_guard.py` in pre-push and the pull-request Action; with it on, a push with no name denylist fails (the owner, 2026-11-11). What it blocks and where the denylist lives: the header of `scripts/pii_guard.py`. Check with `python3 scripts/pii_guard.py --status` (a count, never names).
 - Never ask for the denylist names in chat, and never commit the denylist: the owner adds them in the places docs/FIRST_USE.md lists.
@@ -112,6 +112,7 @@ Chat history, Project files and remembered copies are not authority. If you cann
 - Instruction files and host prompts hold rules only, one line each where possible. A rule a hook or test enforces becomes a pointer to it. Reference text goes in files read on demand, not in start-read files.
 - `scripts/bloat_check.py` (run by the check-in) measures start-read tokens, duplicate lines, big files and the audit due date. Budgets and timed operations live in `.bloat-audit.json`.
 - Full audit (`.claude/bloat-audit.md`): every 14 days or 30 commits to main, whichever comes first; before a release; and when a timed operation is 25% slower than its baseline (defaults; the owner may set other values in `.bloat-audit.json`). Report each number before and after.
+- After a change to the rules in this file or in a host's personal preferences, or a switch to a new model, run the scenarios in `.claude/rule-tests.md`.
 - Assumptions: before work of 3+ steps, state the key assumptions (the ones that change the result if wrong), each with its source and a confidence (high / medium / low). Ask the owner, with options, about each low-confidence key assumption before you build on it. Never present an assumption as a fact.
 
 ## Project log

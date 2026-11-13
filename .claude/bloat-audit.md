@@ -31,7 +31,7 @@ Every item below finds; it does not fix. A fix that removes, shortens, rewords, 
 ### General project hygiene (industry practice)
 
 1. Duplication (DRY, single source of truth): the same fact, rule, value, list or code block in 2+ places. Keep one canonical place; others link to it. Includes copy-pasted code that should be a shared function, and docs that restate other docs.
-2. Drift: copies that started equal and now differ (docs vs code, README vs AGENTS.md, a schema vs the builder, two repos vs the baseline: `python3 scripts/drift.py`). Decide which copy is right from the source of authority, not from the newer date.
+2. Drift: copies that started equal and now differ (docs vs code, README vs AGENTS.md, a schema vs the builder, a project vs the kit it came from). Decide which copy is right from the source of authority, not from the newer date.
 3. Dead code and dead files: functions, scripts, flags, configs, templates, test fixtures and branches nothing calls or reads. Check with grep for every name, and the build and test entry points.
 4. Stale docs: text that describes old behavior, finished plans, closed questions, superseded revisions (r1, r2 when r5 is current), TODOs older than 30 days, broken links.
 5. Layered wrappers: a script that calls a script that calls a script; checks that run the same test twice; retries around retries; config that overrides config. Draw the call chain for each common operation and time each layer.

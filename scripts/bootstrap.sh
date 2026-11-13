@@ -37,13 +37,13 @@ for f in "${files[@]}"; do
   perl -pi -e 's/\{\{PROJECT_NAME\}\}/$ENV{BS_NAME}/g; s/\{\{REPO\}\}/$ENV{BS_REPO}/g; s/\{\{PURPOSE\}\}/$ENV{BS_PURPOSE}/g; s/\{\{DATE\}\}/$ENV{BS_DATE}/g; s/\{\{TIME\}\}/$ENV{BS_TIME}/g; s/\{\{TIMEZONE\}\}/$ENV{BS_TZ}/g; s/\{\{OWNER\}\}/the owner/g' "$f"
 done
 
-# Replace the role word "the owner" / "The owner" (sync_baseline.py keeps the literal: it needs it).
+# Replace the role word "the owner" / "The owner".
 if [ "$BS_OWNER" != "the owner" ]; then
   # The same files sync_baseline.py renames (its COPY_FILES), so a sync right after bootstrap changes nothing.
-  # Not renamed on purpose: docs/FIRST_USE.md, scripts/first_use_check.py and scripts/sync_baseline.py, whose
+  # Not renamed on purpose: docs/FIRST_USE.md and scripts/first_use_check.py, whose
   # "the owner" is an option, a role or a literal the script needs.
-  owner_files=("${files[@]}" .claude/orchestration.md .claude/bloat-audit.md .claude/project-log.md scripts/bloat_check.py scripts/session_checkin.sh scripts/stop_check.py scripts/worker_guard.py
-    scripts/log_check.py scripts/drift.py scripts/timeline.py scripts/pii_guard.py scripts/check.sh scripts/git-hooks/pre-push)
+  owner_files=("${files[@]}" .claude/orchestration.md .claude/bloat-audit.md .claude/project-log.md .claude/rule-tests.md scripts/bloat_check.py scripts/session_checkin.sh scripts/stop_check.py scripts/worker_guard.py
+    scripts/log_check.py scripts/timeline.py scripts/pii_guard.py scripts/check.sh scripts/git-hooks/pre-push)
   for f in "${owner_files[@]}"; do
     perl -pi -e 'my $c = ucfirst $ENV{BS_OWNER}; s/\b([Tt])he owner\b/$1 eq "T" ? $c : $ENV{BS_OWNER}/ge' "$f"
   done
@@ -62,13 +62,11 @@ if grep -rIn '{{[A-Z_]*}}' "${files[@]}" README.md; then
   exit 1
 fi
 
-# Record the baseline commit this project starts from (sync_baseline.py updates it later).
-base_sha="$(git ls-remote https://github.com/rhope-ops/archimedes_lever HEAD 2>/dev/null | cut -f1)" || base_sha=""
-echo "rhope-ops/archimedes_lever ${base_sha:-unknown (ls-remote failed)}" > .baseline
-
-# The kit's changelog, story log (KIT_LOG.md), owner preferences (PREFERENCES.md) and audit state (.bloat-audit.json) live only in the template repo. The kit's license moves next to the docs: the copied scripts
+# The maintainer's preferences template (PREFERENCES.md) and the kit's audit state (.bloat-audit.json) live only in the template repo. The kit's license moves next to the docs: the copied scripts
 # stay under it, and the root LICENSE is the project's own choice (docs/FIRST_USE.md, question 6).
-rm -f -- CHANGELOG.md KIT_LOG.md PREFERENCES.md .bloat-audit.json
+rm -f -- PREFERENCES.md .bloat-audit.json
+# Projects do not stay in sync with the kit (the owner, 2026-11-13): the sync tools stay in the kit only.
+rm -f -- scripts/sync_baseline.py scripts/drift.py .baseline
 if [ -f LICENSE ]; then mv -- LICENSE docs/archimedes_lever-LICENSE.txt; fi
 
 rm -- "$0"
