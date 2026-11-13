@@ -176,20 +176,20 @@ def reason(cmd, branch=None, readonly=False, depth=0):
 
 
 def selftest():
-    block = ['git push origin main', 'git push -u origin HEAD:main', 'git push origin cc/x:main', 'git push --force origin cc/x',
-             'git push -f', 'git push -fu origin cc/x', 'git push origin "+cc/x"', 'git push origin +cc/x',
+    block = ['git push origin main', 'git push -u origin HEAD:main', 'git push origin claude/x:main', 'git push --force origin claude/x',
+             'git push -f', 'git push -fu origin claude/x', 'git push origin "+claude/x"', 'git push origin +claude/x',
              'git rebase origin/main', 'cd x && git rebase -i HEAD~2', 'git -C sub rebase main', 'git reset --hard origin/main',
-             'git push origin --delete cc/x', 'git push origin :cc/x', 'git push --mirror origin', 'git push --all',
-             'git push --force-with-lease origin cc/x', 'git status; git push origin main',
+             'git push origin --delete claude/x', 'git push origin :claude/x', 'git push --mirror origin', 'git push --all',
+             'git push --force-with-lease origin claude/x', 'git status; git push origin main',
              'git push origin master', 'git clean -fd', 'git branch -D x', '(git push origin main)', 'git --no-pager -C r push --force',
-             'git push --prune origin', 'git push origin ">" main', 'git push origin cc/x > /dev/null; git push origin main',
+             'git push --prune origin', 'git push origin ">" main', 'git push origin claude/x > /dev/null; git push origin main',
              'git branch -df x', 'git branch -rd origin/x', 'git branch --dele x', 'git branch --del x']
-    allow = ['git push -u origin cc/t40-slc', 'git push -u origin cc/main-menu', 'git push origin cc/fix-main',
+    allow = ['git push -u origin claude/t40-slc', 'git push -u origin claude/main-menu', 'git push origin claude/fix-main',
              'git merge origin/main', 'git status', 'python3 tools/check.py --no-perf', 'git log --oneline main..HEAD',
              'git fetch origin main', 'git commit -m "push main menu fix"', 'git commit -m "fix rebase of main"',
              'git push', 'git push origin HEAD', 'git commit -m "note; git rebase later"', 'git branch -a', 'git branch -vv',
-             'git push origin cc/x 2>&1', 'git push -u origin cc/x > /dev/null', 'git branch --sort -committerdate', 'git branch --sort=-committerdate', 'git branch -m old new', 'git branch --list']
-    bad = [c for c in block if not reason(c, 'cc/x')] + [c for c in allow if reason(c, 'cc/x')]
+             'git push origin claude/x 2>&1', 'git push -u origin claude/x > /dev/null', 'git branch --sort -committerdate', 'git branch --sort=-committerdate', 'git branch -m old new', 'git branch --list']
+    bad = [c for c in block if not reason(c, 'claude/x')] + [c for c in allow if reason(c, 'claude/x')]
     for c in ['git push', 'git push origin HEAD', 'git push 2>&1', 'git push > /dev/null', 'git push 2> err.txt',
               'git push origin 2>&1']:     # on main these must block
         if not reason(c, 'main'):
@@ -198,11 +198,11 @@ def selftest():
               'bash -c "git checkout main"', 'sh -lc \'git switch main\'', 'eval "git checkout main"', '/bin/bash -c "cd x; git commit -m y"',
               'bash --norc -c "git checkout main"', 'bash --rcfile x -c "git checkout main"', 'bash -c -- "git checkout main"',
               'ksh -c "git checkout main"']:
-        if not reason(c, 'cc/x', readonly=True):
+        if not reason(c, 'claude/x', readonly=True):
             bad.append(c + ' (readonly)')
     for c in ['git diff origin/main...HEAD', 'git log -p', 'git show HEAD:x', 'git status', 'git fetch origin',
               'bash -c "git log --oneline -3"', 'bash scripts/check.sh']:
-        if reason(c, 'cc/x', readonly=True):
+        if reason(c, 'claude/x', readonly=True):
             bad.append(c + ' (readonly allow)')
     for c in bad:
         print('WRONG:', c)
