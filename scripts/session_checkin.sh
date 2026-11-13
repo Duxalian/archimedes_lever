@@ -7,10 +7,11 @@ git fetch --quiet origin main 2>/dev/null || echo "warning: fetch of origin/main
 # Git hooks for every agent (scripts/git-hooks/pre-push blocks force-pushes). Set only when no other hooks path is set.
 # core.hooksPath hides .git/hooks; our pre-push chains to an old .git/hooks/pre-push (Git LFS). Other old hooks: warned below.
 hooks=$(git config --get core.hooksPath || true)
+installed=""
 if [ -d scripts/git-hooks ] && [ -z "$hooks" ]; then
-  git config core.hooksPath scripts/git-hooks && hooks=scripts/git-hooks && echo "hooks:       installed scripts/git-hooks"
+  git config core.hooksPath scripts/git-hooks && hooks=scripts/git-hooks && installed=" (installed now)"
 fi
-echo "hooks:       ${hooks:-none}"
+echo "hooks:       ${hooks:-none}${installed:-}"
 if [ "$hooks" = scripts/git-hooks ]; then
   for h in "$(git rev-parse --git-common-dir)"/hooks/*; do
     case "$h" in *.sample|*/pre-push) continue ;; esac
