@@ -25,8 +25,8 @@ What it changes:
     scripts/log_check.py, scripts/drift.py, scripts/timeline.py, scripts/pii_guard.py, scripts/first_use_check.py,
     scripts/check.sh, scripts/bloat_check.py, scripts/git-hooks/pre-push, .claude/bloat-audit.md
                            Replaced with the baseline copies. (.pii-guard is not copied: a project opts in itself.)
-    .claude/settings.json  Adds the baseline deny rules, and each baseline hook event the project has no hook for.
-                           Keeps all other settings.
+    .claude/settings.json  Adds the baseline deny rules, each baseline hook event the project has no hook for, and the
+                           baseline "sandbox" block when the project has none. Keeps all other settings.
     .gitignore             Adds the baseline lines. Keeps all other lines.
     .baseline              Records the baseline commit that was used.
     docs/archimedes_lever-LICENSE.txt   The kit's license (MIT), which covers the copied files.
@@ -218,6 +218,9 @@ def merge_settings(base_path, proj_path):
         if rule not in deny:
             deny.append(rule)
     # Hooks: add a baseline hook event only when the project has no hook for that event.
+    if "sandbox" in base and "sandbox" not in proj:
+        proj["sandbox"] = base["sandbox"]
+
     base_hooks = base.get("hooks") or {}
     if base_hooks:
         hooks = proj.get("hooks")
