@@ -12,4 +12,4 @@ Source for a timeline of milestones, breakthroughs and narratives. Rules: AGENTS
 
 | # | When | Type | Arc | Topic | Raised by | What the other missed | Evidence | Result |
 |---|---|---|---|---|---|---|---|---|
-| 1 | {{DATE}} {{TIME}} | milestone | setup | Project bootstrapped | the owner | - | .baseline | Repo made from the baseline |
+| 1 | {{DATE}} {{TIME}} | milestone | setup | Project bootstrapped | the owner | - | AGENTS.md | Repo made from the baseline |

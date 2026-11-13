@@ -106,7 +106,7 @@ def check(path):
         ln, head, rows = t["Arcs"]
         if head != ARC_COLS:
             hint = (" (add Problem, Turning point and Lesson; write - until known. A baseline project:"
-                    " python3 scripts/sync_baseline.py --apply adds them)") if head == OLD_ARC_COLS else ""
+                    " add them by hand, or with the kit's scripts/sync_baseline.py --apply)") if head == OLD_ARC_COLS else ""
             found.append(f"{p}:{ln}: Arcs columns must be {' | '.join(ARC_COLS)}{hint}")
         for ln, c in rows:
             if head == ARC_COLS and len(c) != len(ARC_COLS):
