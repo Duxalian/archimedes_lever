@@ -5,7 +5,7 @@ description: Use before any data write (INSERT, UPDATE, DELETE, MERGE, DROP, TRU
 
 # Data change
 
-AGENTS.md "Verification" points here. Other agents (Codex, Gemini) read this file directly.
+AGENTS.md "Verification" points here.
 
 ## Which target is production
 

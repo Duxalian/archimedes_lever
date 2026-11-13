@@ -5,7 +5,7 @@ description: Use before you report a visual or UI change (a page, artifact, comp
 
 # UI verify
 
-AGENTS.md "Verification" points here. Other agents read this file directly.
+AGENTS.md "Verification" points here.
 
 ## Run
 

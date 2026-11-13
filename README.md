@@ -1,6 +1,6 @@
 # archimedes_lever
 
-A starter kit for working with AI assistants (Claude, ChatGPT, Codex and others) so that they are reliable and need little effort from you. It collects lessons from real projects in a form you can copy.
+A starter kit for working with Claude so that it is reliable and needs little effort from you. It collects lessons from real projects in a form you can copy.
 
 The name comes from Archimedes: "Give me a place to stand, and I will move the world." Here, the place to stand is a set of files that every agent reads, so your rules, decisions and history stay put instead of disappearing with each chat.
 
@@ -8,7 +8,7 @@ Status: early. Built from 2026-11-10 to 2026-11-13 by one maintainer. In the mai
 
 ## Try it first
 
-Paste this into Claude (claude.ai or Claude Code), or any assistant that can read web pages:
+Paste this into Claude (claude.ai or Claude Code):
 
 ```
 Tell me your thoughts about this repo: https://github.com/rhope-ops/archimedes_lever
@@ -18,32 +18,26 @@ Tell me your thoughts about this repo: https://github.com/rhope-ops/archimedes_l
 
 | Take | What you get | Time | What you need |
 |---|---|---|---|
-| 1. [Preferences](PREFERENCES.md) for your own AI account | Every chat asks its questions up front, labels its recommendations, says how confident it is, checks its work before it says "done", and saves you clicks and copying | About 5 minutes (our estimate, not timed): the assistant asks you up to 6 questions (including which optional modules you want and where your own copy lives) and gives you one block to paste | Any Claude, ChatGPT or Codex account. No GitHub needed. |
-| 2. A project kit (the rest of this repo) | A new project where every agent follows one rules file, where force-pushes and pushes that contain your listed names or your email are blocked, where agents check their own work, and where decisions are written down | About 15 minutes with an agent (our estimate, not timed); see "Start here" below | A free GitHub account and an agent that can run commands |
+| 1. [Preferences](PREFERENCES.md) for your own Claude account | Every chat asks its questions up front, labels its recommendations, says how confident it is, checks its work before it says "done", and saves you clicks and copying | About 5 minutes (our estimate, not timed): Claude asks you 3 questions and gives you one block to paste | Any Claude account. No GitHub needed. |
+| 2. A project kit (the rest of this repo) | A new project where every agent follows one rules file, where force-pushes and pushes that contain your listed names or your email are blocked, where agents check their own work, and where decisions are written down | About 15 minutes with an agent (our estimate, not timed); see "Start here" below | A free GitHub account and Claude Code |
 
 New to agents? Read [docs/WORKING_WITH_AGENTS.md](docs/WORKING_WITH_AGENTS.md) first: the working habits that matter most, in 5 minutes.
 
-You can take 1 without 2. To do it, ask your assistant:
-
-```
-Interview me and fill in PREFERENCES.md from https://github.com/rhope-ops/archimedes_lever for Claude
-```
-
-Replace "Claude" with "ChatGPT" or "Codex" if that is what you use.
+You can take 1 without 2: [PREFERENCES.md, "How to adopt them"](PREFERENCES.md#how-to-adopt-them-about-5-minutes).
 
 ## The lessons behind the rules
 
-These are things that went wrong across 5 real projects, and the rule each one led to. The reason for every rule is in [docs/DECISIONS.md](docs/DECISIONS.md); the story is in the public [docs/LOG.md](docs/LOG.md). Each rule now lives either in [PREFERENCES.md](PREFERENCES.md) (your account) or in the kit (your projects).
+These are things that went wrong across 5 real projects, and the rule each one led to. The reason for every preference rule is in [PREFERENCES.md](PREFERENCES.md#why-each-rule-exists); the owner's decisions are in [docs/DECISIONS.md](docs/DECISIONS.md); the story is in the public [docs/LOG.md](docs/LOG.md). Each rule now lives either in [PREFERENCES.md](PREFERENCES.md) (your account) or in the kit (your projects).
 
 | Lesson | What happened | Where the rule lives |
 |---|---|---|
 | Ask all questions at the start, with options and a recommendation | A design review found 34 decisions the agent had assumed instead of asking | PREFERENCES.md "Decisions" |
-| A review in a fresh context finds what self-review misses | A self-review checked that 39 notes existed; 30 of them said the opposite of the source | PREFERENCES.md module "Agent work"; the kit's `reviewer` agent |
+| A review in a fresh context finds what self-review misses | A self-review checked that 39 notes existed; 30 of them said the opposite of the source | PREFERENCES.md "Reporting"; the kit's `reviewer` agent |
 | Enforce safety with a hook, not just with written rules | A rule said "never force-push"; only one tool obeyed it | The kit's `scripts/git-hooks/pre-push` |
 | Don't push to main until the checks pass | A commit reached main with a failing check | The kit's pre-push hook runs `scripts/check.sh` |
-| State each rule once; conflicting rules hurt more than long ones | 3 conflicting preference rules made the agent's behavior look random | One rule set for Claude, ChatGPT and Codex; the kit's `.claude/rule-tests.md` |
-| Measure; don't judge by eye | A layout shifted 14 px and no check noticed | PREFERENCES.md module "Builder" |
-| Before you build, ask how the person works and what their setup allows | A solution assumed copy and paste, on a machine where the user had to type everything by hand | PREFERENCES.md "Least effort for me" |
+| State each rule once; conflicting rules hurt more than long ones | 3 conflicting preference rules made the agent's behavior look random | One rule set in PREFERENCES.md; the kit's `.claude/rule-tests.md` |
+| Measure; don't judge by eye | A layout shifted 14 px and no check noticed | The kit's `.claude/skills/ui-verify` |
+| Before you build, ask how the person works and what their setup allows | A solution assumed copy and paste, on a machine where the user had to type everything by hand | PREFERENCES.md "Least Effort for Me" |
 | Build from a real sample and the full source, not from memory | A package built from the docs failed on import; a real export showed the wrong key | Ask for a sample first (not yet a rule) |
 | Change one thing per test, and use a control | A test changed 2 things at once and could not find the cause | Not yet a rule |
 | Keep personal data out of git from the very first commit | An old repo could never go public, because its history held a name and an email | The kit's `scripts/pii_guard.py` |
@@ -55,7 +49,7 @@ Sources: the research figure is from [arXiv 2610.38867](https://arxiv.org/abs/26
 ## What you need
 
 - A free [GitHub account](https://github.com/signup).
-- An AI agent that can run commands and edit files: Claude Code (in the browser at claude.ai/code, or the app), Codex, Cursor, Gemini CLI, or any other tool that reads AGENTS.md. A plain chat with no file access (such as a regular ChatGPT or claude.ai chat) can't set up the project; use "Set up a project by hand" below instead.
+- Claude Code (in the browser at claude.ai/code, or the app). A plain claude.ai chat with no file access can't set up the project; use "Set up a project by hand" below instead.
 - For way B only, on your computer: git, Python 3.9 or later, bash and perl. macOS and Linux already have bash and perl; on Windows, use Git Bash or WSL. If something is missing, the agent tells you how to install it.
 
 ## Start here (take 2: a project)
@@ -71,7 +65,7 @@ You don't need to know git: the agent handles it. Pick one way.
    Please read the repo and initiate.
    ```
 
-**B. With an agent app on your computer** (Claude Code, Codex, Cursor, Gemini CLI)
+**B. With Claude Code on your computer**
 
 1. Open the app in the folder where you keep your projects (your Documents folder is fine).
 2. Type:
@@ -91,24 +85,11 @@ Details for agents: [docs/FIRST_USE.md](docs/FIRST_USE.md).
 
 ## After setup
 
-Open the project with any agent and say what you want to do next. The agent first reads AGENTS.md (the rules) and docs/NEXT_PROMPT.md (where the work stands), so you don't have to explain the project again in every chat.
+Open the project with Claude Code and say what you want to do next. The agent first reads AGENTS.md (the rules) and docs/NEXT_PROMPT.md (where the work stands), so you don't have to explain the project again in every chat.
 
 ## What's in the kit
 
-Two tiers. **Starter** (recommended for a first project): AGENTS.md, the safety hooks, the personal-data guard, one check command, the `reviewer` agent, and memory in files. **Full** adds the parts marked "full only" below. The list of advanced files lives in `scripts/sync_baseline.py` (`ADVANCED_FILES`).
-
-| Part | What it does for you |
-|---|---|
-| AGENTS.md | One rules file for every agent: who decides, how work is delivered and reported, git safety, personal data, decisions, handoff, the project log and delegation. Your own project rules go at the end. |
-| Safety hooks | `scripts/git-hooks/pre-push` blocks force-pushes, deleting main, and pushes that fail `scripts/check.sh`, for every tool (a push with `--no-verify` skips it; see Limits). The Claude Code Stop hook stops a turn from ending while work is unsaved or unpushed. |
-| Personal-data and secret guard | `scripts/pii_guard.py` blocks emails, phone numbers, ID-number patterns, API tokens, private keys and the names on your private list before they reach GitHub. |
-| One check command | `scripts/check.sh` runs every self-test, the project log check and the personal-data scan, plus your own tests in `scripts/check.local.sh`. Until that file exists, check.sh shows SKIP, and agents merge code changes to main only with your approval. It is the default test command in AGENTS.md and runs on every pull request. |
-| Memory in files | docs/DECISIONS.md (dated decisions), docs/NEXT_PROMPT.md (a short handoff note); full only: docs/LOG.md (a timeline of milestones, breakthroughs and misses). A project starts with blank copies; the kit's own files are the maintainer's public record. |
-| Skills | `.claude/skills/data-change` (dry run, approval and row counts before data writes and large queries) and `.claude/skills/ui-verify` (measured screenshots, contrast and target sizes). |
-| Novice guide | docs/WORKING_WITH_AGENTS.md: explore, plan, build, verify; clean context; how to ask. |
-| Multi-agent pack (full only) | `.claude/orchestration.md`: scout, worker and reviewer roles, model tiers (fast, standard, strong) for each host, and fallbacks for hosts without subagents or hooks. |
-| Upkeep checks (full only) | `scripts/bloat_check.py` and the bloat audit; `.claude/rule-tests.md`. |
-| Upkeep (kit only) | `scripts/sync_baseline.py` brings a project up to the current kit by hand; `scripts/drift.py` reports how far a project has drifted. Projects don't get these tools. |
+Two tiers. **Starter** (recommended for a first project): AGENTS.md, the safety hooks, the personal-data guard, one check command, the `reviewer` agent, the skills and memory in files. **Full** adds the parts marked "Full only" in [docs/FILES.md](docs/FILES.md): multi-agent orchestration, the project log and timeline, the bloat audit and rule tests. The list of advanced files lives in `scripts/sync_baseline.py` (`ADVANCED_FILES`). Every file and what it does: [docs/FILES.md](docs/FILES.md).
 
 ## Set up a project by hand
 
@@ -126,28 +107,18 @@ For people who know git and don't want an agent to do the setup, or who only hav
    The 4th argument is what agents call you (default "the owner"). A public repo should use a role, such as `"the maintainer"`. A private repo can use your first name, but only with the guard turned off (delete `.pii-guard`), because the guard blocks every push that contains a name on your list. The 5th argument is your time zone for project log times, as an IANA name (default UTC). The 6th is the tier: `starter` (default) or `full`.
    Bootstrap moves the kit's MIT license to docs/archimedes_lever-LICENSE.txt. Keep that file: it covers the kit's scripts. Add your own `LICENSE` if you want one.
 3. Set up your name list (next section), run `scripts/session_checkin.sh` (it installs the git hooks), then commit and push.
-4. Paste the Project text from `docs/host-prompts.md` into your claude.ai Project instructions (or the ChatGPT or Gemini equivalent).
+4. If you use a claude.ai Project, paste the text from `docs/host-prompts.md` into its instructions.
 
 ## Keep personal data out
 
-With the guard on in the full kit, every push and every pull-request check fails until your name list exists. In the starter kit, `.pii-guard` has the line `denylist: warn`: a push without the list warns, and every other check still runs; delete that line to block. Set it up in each place you work: your computer (step 2), GitHub (step 3), and, for Claude cloud sessions, the cloud environment variable `PII_GUARD_DENYLIST`. `python3 scripts/pii_guard.py --status` shows where the list comes from and how many entries it has, never the names themselves.
+With the guard on in the full kit, every push and every pull-request check fails until your name list exists. In the starter kit, `.pii-guard` has the line `denylist: warn`: a push without the list warns, and every other check still runs; delete that line to block. The guard only runs in a repo that has a `.pii-guard` file at its root; that file also lists exact strings you want to allow. A private repo that names you on purpose can delete it.
 
 1. Commit with your GitHub noreply address. On GitHub, go to **Settings → Emails** and turn on "Keep my email addresses private" and "Block command line pushes that expose my email". Then run:
    ```
    git config --global user.email "ID+USER@users.noreply.github.com"
    ```
-2. Create a name list on your computer, one entry per line (your names, username variants, employer). It never goes into a repo:
-   ```
-   mkdir -p ~/.config/pii-guard && nano ~/.config/pii-guard/denylist.txt
-   ```
-3. Add the same list as an Actions secret named `PII_GUARD_DENYLIST` (repo **Settings → Secrets and variables → Actions**), so the pull-request check also checks names.
-4. Check it: `python3 scripts/pii_guard.py --all`. It prints PII GUARD PASS, or each finding with the value masked.
-
-The guard only runs in a repo that has a `.pii-guard` file at its root. That file also lists exact strings you want to allow. A private repo that names you on purpose can delete it.
-
-## Files
-
-The full list of files and what each one does: [docs/FILES.md](docs/FILES.md).
+2. Add your name list (your names, username variants, employer) in each place you work: [docs/FIRST_USE.md, step 4](docs/FIRST_USE.md#4-the-denylist-then-the-first-push) lists the places and commands. It never goes into a repo.
+3. Check it: `python3 scripts/pii_guard.py --status` shows where the list comes from and how many entries it has, never the names; `python3 scripts/pii_guard.py --all` prints PII GUARD PASS, or each finding with the value masked.
 
 ## Update an existing project
 
@@ -166,11 +137,11 @@ An old AGENTS.md that doesn't follow the kit's layout is moved under "Project ru
 ## Limits
 
 - A project doesn't update when the kit does. The kit keeps no changelog; its history is in git (`git log`).
-- Account-wide preferences (your own settings in Claude, ChatGPT or Codex) only apply in that product. Every agent gets the project rules from AGENTS.md.
+- Account-wide preferences apply only to your own Claude account. Every Claude session in the project gets the project rules from AGENTS.md.
 - Setup needs an agent with file access. A chat that can't run commands can only give you text to paste; use "Set up a project by hand".
 - With the guard on, the pull-request check needs the `PII_GUARD_DENYLIST` secret. GitHub doesn't give secrets to pull requests from forks, so a pull request from a fork always fails the check. The maintainer checks it by hand, or copies it to a branch in the repo.
 - The pull-request check runs the scripts from the pull request itself, so a pull request that edits `scripts/pii_guard.py` or `scripts/check.sh` can change the result. Review changes to those files by hand.
 - Hooks are seat belts, not locks: Claude Code hooks only apply to Claude Code, and `--no-verify` skips git hooks.
 - The Claude Code sandbox (the network allowlist in .claude/settings.json) needs bubblewrap and socat on Linux. Without them, Claude Code warns you and runs commands outside the sandbox; the deny rules and git hooks still apply. Claude cloud containers don't have them, but they sit behind their own network proxy. macOS needs nothing extra.
 - The guard finds patterns and the names on your list. It can't find a name you didn't list, or personal details written out in sentences. Read everything before you publish.
-- Model names in orchestration.md go out of date; the tiers stay the same.
+- Claude model names in orchestration.md go out of date; the tiers stay the same.
