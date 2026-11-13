@@ -12,6 +12,16 @@ Options:
                              "- Time zone:" line (projects synced before 2026-11-11 have none).
     --owner NAME             Name agents use for the decider (default: the project's "- Owner:" line, else "the owner").
                              A public repo sets a role, for example --owner "the maintainer", so no real name is synced in.
+    --tier starter|full      Kit tier (default: the project's "- Tier:" line, else "full", the only tier before 2026-11-13).
+                             --tier full on a starter project adds the advanced parts (ADVANCED_FILES below, and a new
+                             docs/LOG.md unless Project rules name a project log place).
+                             --tier starter on a full project keeps the advanced files and lists them for you to delete.
+    --set-tier starter|full  Bootstrap only: apply the tier to THIS repo in place (AGENTS.md blocks; in starter, delete
+                             ADVANCED_FILES). No baseline, no diff.
+
+Tiers (the owner, 2026-11-13): a starter project has the core rules, hooks and checks only. AGENTS.md marks text
+for one tier with lines "<!-- full -->" ... "<!-- /full -->" and "<!-- starter -->" ... "<!-- /starter -->";
+apply_tier() keeps the blocks for the project's tier and drops the marker lines.
 
 What it changes:
     AGENTS.md              Baseline text above "## Project rules", with this project's header values.
@@ -25,7 +35,7 @@ What it changes:
     scripts/log_check.py, scripts/timeline.py, scripts/pii_guard.py, scripts/first_use_check.py,
     scripts/check.sh, scripts/bloat_check.py, scripts/git-hooks/pre-push, .claude/bloat-audit.md, .claude/project-log.md,
     .claude/rule-tests.md
-                           Replaced with the baseline copies. (.pii-guard is not copied: a project opts in itself.)
+                           Replaced with the baseline copies. A starter project gets none of ADVANCED_FILES. (.pii-guard is not copied: a project opts in itself.)
     .claude/settings.json  Adds the baseline deny rules, each baseline hook event the project has no hook for, and the
                            baseline "sandbox" block when the project has none. Keeps all other settings.
     .gitignore             Adds the baseline lines. Keeps all other lines.
@@ -64,6 +74,11 @@ BASELINE_OWNER = "the owner"  # role word in baseline text; no real name lives i
 # Never rename the owner inside this script: it holds BASELINE_OWNER as a literal.
 # first_use_check.py and docs/FIRST_USE.md use "the owner" as an answer option and a role: keep them as written
 # (bootstrap.sh skips them too).
+# Advanced parts: a starter project has none of these (one list for bootstrap, sync and drift).
+ADVANCED_FILES = [".claude/orchestration.md", ".claude/agents/scout.md", ".claude/agents/worker.md",
+                  ".claude/project-log.md", "docs/LOG.md", "scripts/log_check.py", "scripts/timeline.py",
+                  ".claude/bloat-audit.md", "scripts/bloat_check.py", ".claude/rule-tests.md"]
+TIERS = ("starter", "full")
 NO_OWNER_RENAME = {"scripts/sync_baseline.py", "scripts/first_use_check.py", "docs/FIRST_USE.md"}
 OWNER_RE = r"[A-Za-z0-9 ._,()-]+"  # safe inside Python strings, JSON and Markdown
 
@@ -145,6 +160,46 @@ def header_timezone(text):
     return tz and tz.group(1)
 
 
+def header_tier(text):
+    """The project's "- Tier:" value; "full" for projects made before tiers existed."""
+    tier = re.search(r"^- Tier: (starter|full)\s*$", text or "", re.M | re.I)
+    return tier.group(1).lower() if tier else "full"
+
+
+def apply_tier(text, tier):
+    """Keep the marked blocks for `tier`, drop the other tier's blocks, and drop every marker line."""
+    other = "starter" if tier == "full" else "full"
+    text = re.sub(rf"(?ms)^<!-- {other} -->\n.*?^<!-- /{other} -->\n", "", text)
+    return re.sub(rf"(?m)^<!-- /?{tier} -->\n", "", text)
+
+
+def tier_files(tier):
+    """Files the kit copies for this tier."""
+    skip = set(ADVANCED_FILES) if tier == "starter" else set()
+    return [f for f in COPY_FILES if f not in skip], [f for f in COPY_IF_MISSING if f not in skip]
+
+
+def set_tier(root, tier):
+    """Bootstrap step: apply the tier to this repo in place."""
+    agents = root / "AGENTS.md"
+    agents.write_text(apply_tier(agents.read_text(), tier).replace("{{TIER}}", tier))
+    if tier == "starter":
+        for rel in ADVANCED_FILES:
+            (root / rel).unlink(missing_ok=True)
+    print(f"Tier: {tier}" + (f" ({len(ADVANCED_FILES)} advanced files removed)" if tier == "starter" else ""))
+
+
+def log_stamp(zone):
+    """'YYYY-MM-DD HH:MM' now, in the project time zone (UTC when the zone database is missing)."""
+    import datetime
+    try:
+        import zoneinfo
+        tz = zoneinfo.ZoneInfo(zone)
+    except Exception:
+        tz = datetime.timezone.utc
+    return datetime.datetime.now(tz).strftime("%Y-%m-%d %H:%M")
+
+
 def header_owner(text):
     owner = re.search(r"^- Owner: (.+?)\s*$", text or "", re.M)
     return owner and owner.group(1)
@@ -159,7 +214,7 @@ def apply_owner(text, owner):
     return re.sub(r"\b([Tt])he owner\b", lambda m: cap if m.group(1) == "T" else owner, text)
 
 
-def build_agents(base_text, proj_text, args, owner):
+def build_agents(base_text, proj_text, args, owner, tier="full"):
     found = header_values(proj_text) if proj_text else (None, None, None)
     name = args.name or found[0]
     repo = args.repo or found[1]
@@ -173,8 +228,9 @@ def build_agents(base_text, proj_text, args, owner):
     if cut < 0:
         die(f"the baseline AGENTS.md has no '{RULES_HEADING}' heading")
     head = base_text[:cut]
-    for key, val in (("PROJECT_NAME", name), ("REPO", repo), ("PURPOSE", purpose), ("TIMEZONE", timezone)):
+    for key, val in (("PROJECT_NAME", name), ("REPO", repo), ("PURPOSE", purpose), ("TIMEZONE", timezone), ("TIER", tier)):
         head = head.replace("{{" + key + "}}", val)
+    head = apply_tier(head, tier)
     if "{{OWNER}}" in head:
         head = head.replace("{{OWNER}}", BASELINE_OWNER)
 
@@ -276,6 +332,8 @@ def main():
     ap.add_argument("--purpose")
     ap.add_argument("--owner")
     ap.add_argument("--timezone", help="IANA time zone for project log times, for example Europe/Berlin")
+    ap.add_argument("--tier", choices=TIERS, help="kit tier (default: the project's - Tier: line, else full)")
+    ap.add_argument("--set-tier", choices=TIERS, help="bootstrap only: apply the tier to this repo in place")
     args = ap.parse_args()
     if args.timezone and not valid_timezone(args.timezone):
         die(f"time zone {args.timezone!r} is not a known IANA name (for example UTC, Europe/Berlin)")
@@ -284,6 +342,9 @@ def main():
         root = Path(git("rev-parse", "--show-toplevel"))
     except subprocess.CalledProcessError:
         die("run this inside the project git repo")
+    if args.set_tier:
+        set_tier(root, args.set_tier)
+        return
 
     with tempfile.TemporaryDirectory() as tmp:
         base = get_baseline(args.baseline, tmp)
@@ -308,22 +369,25 @@ def main():
         owner = args.owner or header_owner(proj_agents.read_text() if proj_agents.exists() else "") or BASELINE_OWNER
         if not re.fullmatch(OWNER_RE, owner):
             die(f"owner {owner!r}: use letters, digits, space . _ , ( ) - only")
+        tier = args.tier or header_tier(proj_agents.read_text() if proj_agents.exists() else "")
+        copy_files, copy_if_missing = tier_files(tier)
         new = {}
         new["AGENTS.md"] = build_agents(
             (base / "AGENTS.md").read_text(),
             proj_agents.read_text() if proj_agents.exists() else None,
             args,
             owner,
+            tier,
         )
         claude = root / "CLAUDE.md"
         old_claude = claude.read_text() if claude.exists() else ""
         if not any(l.strip() == "@AGENTS.md" for l in old_claude.splitlines()):
             new["CLAUDE.md"] = "@AGENTS.md\n" + ("\n" + old_claude if old_claude.strip() else "")
-        for rel in COPY_FILES:
+        for rel in copy_files:
             if (base / rel).exists():
                 text = (base / rel).read_text()
                 new[rel] = text if rel in NO_OWNER_RENAME else apply_owner(text, owner)
-        for rel in COPY_IF_MISSING:
+        for rel in copy_if_missing:
             if (base / rel).exists() and not (root / rel).exists():
                 text = (base / rel).read_text()
                 new[rel] = text if rel in NO_OWNER_RENAME else apply_owner(text, owner)
@@ -332,6 +396,17 @@ def main():
         if (base / ".gitignore").exists():
             new[".gitignore"] = merge_lines(base / ".gitignore", root / ".gitignore")
         log = root / "docs/LOG.md"
+        rules = section(proj_agents.read_text(), RULES_HEADING) if proj_agents.exists() else ""
+        upgrading = tier == "full" and header_tier(proj_agents.read_text() if proj_agents.exists() else "") == "starter"
+        if upgrading and not log.is_file() and not re.search(r"(?i)project log", rules or "") and (base / "docs/LOG.md").exists():
+            zone = header_timezone(new["AGENTS.md"]) or "UTC"
+            stamp = log_stamp(zone)
+            text = (base / "docs/LOG.md").read_text()
+            name, _, _ = header_values(new["AGENTS.md"])
+            for key, val in (("PROJECT_NAME", name or "Project"), ("TIMEZONE", zone),
+                             ("DATE", stamp[:10]), ("TIME", stamp[11:])):
+                text = text.replace("{{" + key + "}}", val)
+            new["docs/LOG.md"] = apply_owner(text, owner)
         if log.is_file():
             migrated = migrate_arcs(log.read_text())
             if migrated != log.read_text():
@@ -352,6 +427,10 @@ def main():
             if not text.endswith("\n"):
                 print()
 
+        if tier == "starter":
+            extra = [f for f in ADVANCED_FILES if (root / f).exists()]
+            if extra:
+                print(f"Tier starter: these advanced files are not synced; delete them by hand if you want: {', '.join(extra)}")
         if not changed:
             print("No changes: the project already matches the baseline.")
             return

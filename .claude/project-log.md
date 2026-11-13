@@ -10,7 +10,7 @@ Read this file before you write or change a project log row. AGENTS.md "Project 
   - `miss`: a wrong assumption, failed test or dead end. Record it honestly for both sides.
   - `decision`: the owner decides, or overrules a recommendation. Also record it in docs/DECISIONS.md.
 - Arc: a short kebab-case name for the narrative thread (for example `email-delivery`). Each arc has one row in the Arcs table: Arc | Span | Summary (one sentence) | Problem | Turning point | Outcome | Lesson.
-- Story fields (the owner, 2026-11-13; they feed a narrative deck): Problem = why it mattered and the cost before, with a number where one exists. Turning point = the row(s) that changed direction, as #N. Outcome = the result, before → after. Lesson = what you would tell another team. Each field rests on rows or evidence in the log; write `-` until it is known, never invent. Update the arc row when its arc gets a milestone, breakthrough or miss.
+- Story fields (kit default, 2026-11-13; they feed a narrative deck): Problem = why it mattered and the cost before, with a number where one exists. Turning point = the row(s) that changed direction, as #N. Outcome = the result, before → after. Lesson = what you would tell another team. Each field rests on rows or evidence in the log; write `-` until it is known, never invent. Update the arc row when its arc gets a milestone, breakthrough or miss.
 - Story outline: `python3 scripts/timeline.py --outline story.md` (one section per arc, the source for a deck).
 - Raised by: who first said it (the owner, Claude, a named agent or person). "What the other missed": the gap on the other side, or `-`.
 - Evidence: a commit, file, test or measurement. Never chat text alone.

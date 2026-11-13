@@ -19,6 +19,8 @@ Tell me your thoughts about this repo: https://github.com/rhope-ops/archimedes_l
 | 1. [Preferences](PREFERENCES.md) for your own AI account | Every chat asks its questions up front, labels its recommendations, says how confident it is, checks its work before it says "done", and saves you clicks and copying | About 5 minutes (our estimate, not timed): the assistant asks you 4 questions and gives you one block to paste | Any Claude, ChatGPT or Codex account. No GitHub needed. |
 | 2. A project kit (the rest of this repo) | A new project where every agent follows one rules file, where force-pushes and pushes that contain your listed names or your email are blocked, where agents check their own work, and where decisions are written down | About 15 minutes with an agent (our estimate, not timed); see "Start here" below | A free GitHub account and an agent that can run commands |
 
+New to agents? Read [docs/WORKING_WITH_AGENTS.md](docs/WORKING_WITH_AGENTS.md) first: the working habits that matter most, in 5 minutes.
+
 You can take 1 without 2. To do it, ask your assistant:
 
 ```
@@ -75,9 +77,9 @@ You don't need to know git: the agent handles it. Pick one way.
    Please set up a new project from https://github.com/rhope-ops/archimedes_lever: get the repo, read it, and initiate.
    ```
 
-Either way, the agent asks you 4 questions: the project's name, what it is for, your time zone, and whether to use the recommended settings. It explains each one. If you're not sure, pick the answer it marks as recommended. Then it creates your GitHub repository, fills in the project files and tells you what is left to do.
+Either way, the agent asks you 4 questions: the project's name, what it is for, your time zone, and whether to use the recommended settings. The recommended settings give you the starter kit: the core rules, safety hooks and checks. You can add the advanced parts later. It explains each one. If you're not sure, pick the answer it marks as recommended. Then it creates your GitHub repository, fills in the project files and tells you what is left to do.
 
-One step is yours. The agent asks you to type your own names into a private list. The personal-data guard checks every push against that list, so your names never end up on GitHub by mistake. You never type the names into the chat. In the browser (way A), this means you add a setting and start one new session; the agent gives you a prompt to paste there, so you don't have to answer the questions again.
+One step is yours. The agent asks you to type your own names into a private list. The personal-data guard checks every push against that list, so your names never end up on GitHub by mistake. You never type the names into the chat. In the starter kit, a push without the list only warns (names are not checked until you add it); in the full kit, it is blocked. In the browser (way A), this means you add a setting and start one new session; the agent gives you a prompt to paste there, so you don't have to answer the questions again.
 
 Also in the browser (way A): Claude Code may only be allowed to push to its own branch, not to `main`. If so, the agent tells you the push to `main` is blocked. Type `Please open a pull request`, open the link it gives you, and click **Merge pull request**.
 
@@ -91,14 +93,18 @@ Open the project with any agent and say what you want to do next. The agent firs
 
 ## What's in the kit
 
+Two tiers. **Starter** (recommended for a first project): AGENTS.md, the safety hooks, the personal-data guard, one check command, the `reviewer` agent, and memory in files. **Full** adds the parts marked "full only" below. The list of advanced files lives in `scripts/sync_baseline.py` (`ADVANCED_FILES`).
+
 | Part | What it does for you |
 |---|---|
 | AGENTS.md | One rules file for every agent: who decides, how work is delivered and reported, git safety, personal data, decisions, handoff, the project log and delegation. Your own project rules go at the end. |
 | Safety hooks | `scripts/git-hooks/pre-push` blocks force-pushes, deleting main, and pushes that fail `scripts/check.sh`, for every tool (a push with `--no-verify` skips it; see Limits). The Claude Code Stop hook stops a turn from ending while work is unsaved or unpushed. |
 | Personal-data and secret guard | `scripts/pii_guard.py` blocks emails, phone numbers, ID-number patterns, API tokens, private keys and the names on your private list before they reach GitHub. |
 | One check command | `scripts/check.sh` runs every self-test, the project log check and the personal-data scan, plus your own tests in `scripts/check.local.sh`. Until that file exists, check.sh shows SKIP, and agents merge code changes to main only with your approval. It is the default test command in AGENTS.md and runs on every pull request. |
-| Memory in files | docs/DECISIONS.md (dated decisions), docs/NEXT_PROMPT.md (a short handoff note), docs/LOG.md (a timeline of milestones, breakthroughs and misses). |
-| Multi-agent pack | `.claude/orchestration.md`: scout, worker and reviewer roles, model tiers (fast, standard, strong) for each host, and fallbacks for hosts without subagents or hooks. |
+| Memory in files | docs/DECISIONS.md (dated decisions), docs/NEXT_PROMPT.md (a short handoff note); full only: docs/LOG.md (a timeline of milestones, breakthroughs and misses). |
+| Novice guide | docs/WORKING_WITH_AGENTS.md: explore, plan, build, verify; clean context; how to ask. |
+| Multi-agent pack (full only) | `.claude/orchestration.md`: scout, worker and reviewer roles, model tiers (fast, standard, strong) for each host, and fallbacks for hosts without subagents or hooks. |
+| Upkeep checks (full only) | `scripts/bloat_check.py` and the bloat audit; `.claude/rule-tests.md`. |
 | Upkeep (kit only) | `scripts/sync_baseline.py` brings a project up to the current kit by hand; `scripts/drift.py` reports how far a project has drifted. Projects don't get these tools. |
 
 ## Set up a project by hand
@@ -112,16 +118,16 @@ For people who know git and don't want an agent to do the setup, or who only hav
    Or on GitHub: **Use this template → Create a new repository**, then clone it.
 2. In the new repo, fill in the placeholders:
    ```
-   scripts/bootstrap.sh "Project Name" YOUR_USER/NEW_NAME "One-line purpose" "the owner" "Europe/Berlin"
+   scripts/bootstrap.sh "Project Name" YOUR_USER/NEW_NAME "One-line purpose" "the owner" "Europe/Berlin" starter
    ```
-   The 4th argument is what agents call you (default "the owner"). A public repo should use a role, such as `"the maintainer"`. A private repo can use your first name, but only with the guard turned off (delete `.pii-guard`), because the guard blocks every push that contains a name on your list. The 5th argument is your time zone for project log times, as an IANA name (default UTC).
+   The 4th argument is what agents call you (default "the owner"). A public repo should use a role, such as `"the maintainer"`. A private repo can use your first name, but only with the guard turned off (delete `.pii-guard`), because the guard blocks every push that contains a name on your list. The 5th argument is your time zone for project log times, as an IANA name (default UTC). The 6th is the tier: `starter` (default) or `full`.
    Bootstrap moves the kit's MIT license to docs/archimedes_lever-LICENSE.txt. Keep that file: it covers the kit's scripts. Add your own `LICENSE` if you want one.
 3. Set up your name list (next section), run `scripts/session_checkin.sh` (it installs the git hooks), then commit and push.
 4. Paste the Project text from `docs/host-prompts.md` into your claude.ai Project instructions (or the ChatGPT or Gemini equivalent).
 
 ## Keep personal data out
 
-With the guard on, every push and every pull-request check fails until your name list exists. Set it up in each place you work: your computer (step 2), GitHub (step 3), and, for Claude cloud sessions, the cloud environment variable `PII_GUARD_DENYLIST`. `python3 scripts/pii_guard.py --status` shows where the list comes from and how many entries it has, never the names themselves.
+With the guard on in the full kit, every push and every pull-request check fails until your name list exists. In the starter kit, `.pii-guard` has the line `denylist: warn`: a push without the list warns, and every other check still runs; delete that line to block. Set it up in each place you work: your computer (step 2), GitHub (step 3), and, for Claude cloud sessions, the cloud environment variable `PII_GUARD_DENYLIST`. `python3 scripts/pii_guard.py --status` shows where the list comes from and how many entries it has, never the names themselves.
 
 1. Commit with your GitHub noreply address. On GitHub, go to **Settings → Emails** and turn on "Keep my email addresses private" and "Block command line pushes that expose my email". Then run:
    ```
@@ -145,19 +151,20 @@ The guard only runs in a repo that has a `.pii-guard` file at its root. That fil
 | GEMINI.md | One line that imports AGENTS.md, because Gemini CLI reads GEMINI.md. Codex, Copilot and Cursor read AGENTS.md directly. |
 | docs/NEXT_PROMPT.md | Short handoff: where things stand, open work, and what needs the owner. |
 | docs/DECISIONS.md | Dated decision log, separating owner decisions from agent recommendations. |
-| docs/LOG.md | Project log for a timeline and a story deck: milestones, breakthroughs, misses and decisions, grouped into arcs. Each arc has a Problem, Turning point, Outcome and Lesson. A public repo keeps the log in a private place named in Project rules. |
+| docs/WORKING_WITH_AGENTS.md | For people new to agents: the working loop, clean context, how to ask, what to check. |
+| docs/LOG.md | Full only. Project log for a timeline and a story deck: milestones, breakthroughs, misses and decisions, grouped into arcs. Each arc has a Problem, Turning point, Outcome and Lesson. A public repo keeps the log in a private place named in Project rules. |
 | docs/host-prompts.md | Short pointer texts for a claude.ai Project, ChatGPT, Gemini and any other chat. |
 | docs/reviews/ | Detailed evidence. Bootstrap deletes the kit's own reports, so a project starts with only docs/reviews/README.md. |
 | .bloat-audit.json | The kit's own audit state and timing baselines (scripts/bloat_check.py). Template repo only: bootstrap deletes it, and a project's first audit creates its own. |
 | PREFERENCES.md | The maintainer's personal preferences for Claude, ChatGPT and Codex, as a template ready to fill in and paste. Template repo only: bootstrap deletes it. |
 | LICENSE | The kit's license (MIT). Bootstrap moves it to docs/archimedes_lever-LICENSE.txt; each project picks its own LICENSE. |
 | .claude/settings.json | Claude Code deny list (force-push including --force-with-lease, `--no-verify`, changing core.hooksPath, hard reset, clean, stash, restore, `branch -D`, reading .env and key files), a sandbox with a network allowlist (GitHub, PyPI, npm), and the Stop hook. Applies to Claude Code only. |
-| .claude/orchestration.md | Multi-agent rules: roles, model choice by tier, fallbacks, briefs, review and merge, lanes. Read only when delegating. |
-| .claude/bloat-audit.md | The periodic bloat, drift and assumption audit (AGENTS.md "Bloat, drift and assumptions"). Read only when an audit is due. |
-| .claude/rule-tests.md | 11 scenarios that check whether an agent follows the written rules in AGENTS.md (hooks check the rest). Run after a rule change or a model change. |
-| .claude/project-log.md | How to write a project log row: columns, types, arcs, story fields (AGENTS.md "Project log"). Read only when writing a row. |
-| scripts/bloat_check.py | Quick measurements at each check-in: start-up reading size in tokens, duplicate lines, big files, audit due date. `--time` compares timed operations with their baseline. Settings and state: `.bloat-audit.json`. `--test`. |
-| .claude/agents/ | Claude Code roles: `scout` (fast tier, read-only), `worker` (standard), `reviewer` (standard, read-only). |
+| .claude/orchestration.md | Full only. Multi-agent rules: roles, model choice by tier, fallbacks, briefs, review and merge, lanes. Read only when delegating. |
+| .claude/bloat-audit.md | Full only. The periodic bloat, drift and assumption audit (AGENTS.md "Bloat, drift and assumptions"). Read only when an audit is due. |
+| .claude/rule-tests.md | Full only. 11 scenarios that check whether an agent follows the written rules in AGENTS.md (hooks check the rest). Run after a rule change or a model change. |
+| .claude/project-log.md | Full only. How to write a project log row: columns, types, arcs, story fields (AGENTS.md "Project log"). Read only when writing a row. |
+| scripts/bloat_check.py | Full only. Quick measurements at each check-in: start-up reading size in tokens, duplicate lines, big files, audit due date. `--time` compares timed operations with their baseline. Settings and state: `.bloat-audit.json`. `--test`. |
+| .claude/agents/ | Claude Code roles: `reviewer` (standard, read-only); full only: `scout` (fast tier, read-only), `worker` (standard). |
 | .github/workflows/pii-guard.yml | Pull-request and manual check: `scripts/check.sh`, then the guard on all files and the pull request's commits. Never runs on push (to save Actions minutes). |
 | .pii-guard | Turns the guard on; lists allowed exact strings and `skip:` paths. Only the owner edits it. |
 | docs/FIRST_USE.md | The first-use questions and what the agent does with the answers. |
@@ -169,10 +176,10 @@ The guard only runs in a repo that has a `.pii-guard` file at its root. That fil
 | scripts/pii_guard.py | Personal-data and secret guard (`--all`, `--range A..B`, `--push`, files; `--require-denylist`; `--status`). `--test`. |
 | scripts/stop_check.py | Claude Code Stop hook: stops a turn from ending while work is uncommitted or unpushed. `--test`. |
 | scripts/worker_guard.py | PreToolUse hook that limits what `worker` and `reviewer` may do in git. `--test`. |
-| scripts/log_check.py | Checks docs/LOG.md against the project log rules. `--test`. |
-| scripts/timeline.py | Turns one or more project logs into a single self-contained HTML timeline, or a Markdown story outline per arc for a deck (`--outline FILE`). `--test`. |
+| scripts/log_check.py | Full only. Checks docs/LOG.md against the project log rules. `--test`. |
+| scripts/timeline.py | Full only. Turns one or more project logs into a single self-contained HTML timeline, or a Markdown story outline per arc for a deck (`--outline FILE`). `--test`. |
 | scripts/drift.py | Kit only. Reports how a project differs from this kit; changes nothing. `--project DIR`, `--owner NAME`, `--test`. |
-| scripts/sync_baseline.py | Kit only. Brings an existing project up to the current kit. Dry run by default; `--apply` writes. Keeps Project rules, Commands and docs/. |
+| scripts/sync_baseline.py | Kit only. Brings an existing project up to the current kit. Dry run by default; `--apply` writes. Keeps Project rules, Commands and docs/. `--tier full` adds the advanced parts to a starter project. Holds the `ADVANCED_FILES` list. |
 | scripts/bootstrap.sh | Fills in the placeholders once, then deletes itself. |
 
 ## Update an existing project
@@ -183,7 +190,7 @@ Projects don't stay in sync with the kit automatically, and they don't carry the
    ```
    python3 ../archimedes_lever/scripts/sync_baseline.py --baseline ../archimedes_lever
    ```
-   Add `--name`, `--repo` and `--purpose` if the project's AGENTS.md has no header values, `--owner NAME` if it has no `- Owner:` line, and `--timezone ZONE` (an IANA name) if it has no `- Time zone:` line.
+   To move a starter project to the full kit, add `--tier full` (it adds the advanced files and docs/LOG.md; to make the name guard block, delete the `denylist: warn` line in `.pii-guard` yourself). Add `--name`, `--repo` and `--purpose` if the project's AGENTS.md has no header values, `--owner NAME` if it has no `- Owner:` line, and `--timezone ZONE` (an IANA name) if it has no `- Time zone:` line.
 2. Read the diff. Nothing has been written yet.
 3. Run the same command with `--apply`, review `git diff`, then commit and push.
 

@@ -69,8 +69,15 @@ def messages(root):
         guard_without_list = False
         out.append(f"first_use_check: denylist check skipped ({e})")
     if guard_without_list:
+        try:
+            sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+            import pii_guard
+            warn = pii_guard.warn_mode(root)
+        except Exception:
+            warn = False
+        effect = ("names are not checked (starter tier: pushes only warn)" if warn else "pushes will be blocked")
         out.append("DENYLIST: this repo has the personal-data guard on, but this session has no name denylist, so "
-                   "pushes will be blocked. Ask the owner to add the environment variable PII_GUARD_DENYLIST to this "
+                   + effect + ". Ask the owner to add the environment variable PII_GUARD_DENYLIST to this "
                    "cloud environment (environment menu in the session title bar > Edit > Environment variables; "
                    "names comma separated; a new session picks it up), or, on their own computer, the file "
                    "~/.config/pii-guard/denylist.txt. Never ask for the names in chat. Details: docs/FIRST_USE.md.")
@@ -110,6 +117,10 @@ def self_test():
             agents.write_text("# Demo: agent instructions\n")
             run("remote", "set-url", "origin", "https://github.com/someone/demo")
             expect("set-up project, guard on, no denylist", kinds(), ["DENYLIST"])
+            pathlib.Path(d, ".pii-guard").write_text("denylist: warn\n")
+            good = any("pushes only warn" in m for m in messages(d))
+            print(("ok   " if good else "FAIL ") + "starter warn mode: DENYLIST says pushes only warn")
+            ok = ok and good
             pathlib.Path(d, ".pii-guard").unlink()
             expect("set-up project, guard off", kinds(), [])
     finally:
