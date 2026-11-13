@@ -55,7 +55,10 @@ def messages(root):
     if is_kit:
         out.append("KIT: this is the archimedes_lever starter kit itself (origin is the kit repo). If the user asks to "
                    "initiate, start or set up a project, follow docs/FIRST_USE.md: it moves this clone to "
-                   "the user's own repo first. Any other request is work on the kit.")
+                   "the user's own repo first. If the user asks what this repo is or for your thoughts on it, give your view "
+                   "and offer the two takes in README.md \"What you can take from it\" (adopt PREFERENCES.md by "
+                   "interview, or set up a project). Any other request is work on the kit; the kit keeps no project log "
+                   "or changelog (the owner, 2026-11-13): its history is in git.")
     if first_use:
         out.append("FIRST USE: this repo was made from the template and is not set up yet. Before any other work, "
                    "follow docs/FIRST_USE.md: ask the owner its questions (in Claude Code, with the clickable "

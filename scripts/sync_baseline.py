@@ -18,17 +18,17 @@ What it changes:
                            Keeps this project's "## Commands" section and everything from "## Project rules" on.
                            An AGENTS.md without the baseline layout goes under "## Project rules" as it is.
     CLAUDE.md              Adds "@AGENTS.md" at the top if it is missing. Keeps the rest.
-    scripts/session_checkin.sh, scripts/sync_baseline.py, scripts/stop_check.py, scripts/worker_guard.py,
+    scripts/session_checkin.sh, scripts/stop_check.py, scripts/worker_guard.py,
     .claude/orchestration.md   Replaced with the baseline copies.
     .claude/agents/worker.md, scout.md, reviewer.md, GEMINI.md, docs/FIRST_USE.md   Added only when missing (a project
                            may tune them; FIRST_USE.md holds the denylist places that the session-start check names).
-    scripts/log_check.py, scripts/drift.py, scripts/timeline.py, scripts/pii_guard.py, scripts/first_use_check.py,
-    scripts/check.sh, scripts/bloat_check.py, scripts/git-hooks/pre-push, .claude/bloat-audit.md, .claude/project-log.md
+    scripts/log_check.py, scripts/timeline.py, scripts/pii_guard.py, scripts/first_use_check.py,
+    scripts/check.sh, scripts/bloat_check.py, scripts/git-hooks/pre-push, .claude/bloat-audit.md, .claude/project-log.md,
+    .claude/rule-tests.md
                            Replaced with the baseline copies. (.pii-guard is not copied: a project opts in itself.)
     .claude/settings.json  Adds the baseline deny rules, each baseline hook event the project has no hook for, and the
                            baseline "sandbox" block when the project has none. Keeps all other settings.
     .gitignore             Adds the baseline lines. Keeps all other lines.
-    .baseline              Records the baseline commit that was used.
     docs/LOG.md            An Arcs table with the old columns (Arc | Span | Summary | Outcome) gets the story columns
                            Problem, Turning point and Lesson, each "-" (.claude/project-log.md). Rows are kept.
     docs/archimedes_lever-LICENSE.txt   The kit's license (MIT), which covers the copied files.
@@ -54,10 +54,10 @@ from pathlib import Path
 DEFAULT_BASELINE = "https://github.com/rhope-ops/archimedes_lever"
 RULES_HEADING = "## Project rules"
 COMMANDS_HEADING = "## Commands"
-COPY_FILES = ["scripts/session_checkin.sh", "scripts/sync_baseline.py", "scripts/stop_check.py",
-              "scripts/worker_guard.py", "scripts/log_check.py", "scripts/drift.py", "scripts/timeline.py", "scripts/pii_guard.py", "scripts/first_use_check.py",
+COPY_FILES = ["scripts/session_checkin.sh", "scripts/stop_check.py",
+              "scripts/worker_guard.py", "scripts/log_check.py", "scripts/timeline.py", "scripts/pii_guard.py", "scripts/first_use_check.py",
               "scripts/check.sh", "scripts/bloat_check.py", "scripts/git-hooks/pre-push",
-              ".claude/orchestration.md", ".claude/bloat-audit.md", ".claude/project-log.md", ".github/workflows/pii-guard.yml"]
+              ".claude/orchestration.md", ".claude/bloat-audit.md", ".claude/project-log.md", ".claude/rule-tests.md", ".github/workflows/pii-guard.yml"]
 # Agent definitions: copied only when the project has no file with that name (projects may tune them).
 COPY_IF_MISSING = [".claude/agents/worker.md", ".claude/agents/scout.md", ".claude/agents/reviewer.md", "GEMINI.md",
                    "docs/FIRST_USE.md"]
@@ -298,6 +298,7 @@ def main():
                 base_sha += " (with uncommitted baseline changes)"
         except subprocess.CalledProcessError:
             base_sha = "unknown (baseline folder is not a git repo)"
+        print(f"Kit baseline: {base_sha}. Projects do not keep the sync tools or a .baseline pin (the owner, 2026-11-13).")
 
         for f in [root / "AGENTS.md", root / "README.md", *sorted(root.glob("docs/*.md"))]:
             rel = f.relative_to(root)
@@ -336,7 +337,6 @@ def main():
             migrated = migrate_arcs(log.read_text())
             if migrated != log.read_text():
                 new["docs/LOG.md"] = migrated
-        new[".baseline"] = f"rhope-ops/archimedes_lever {base_sha}\n"
         if (base / "LICENSE").exists():
             new["docs/archimedes_lever-LICENSE.txt"] = (base / "LICENSE").read_text()
         guard = root / ".pii-guard"
