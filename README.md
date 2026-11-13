@@ -21,7 +21,22 @@ Take 1 alone gets most of the benefit for most people. To do it, ask your assist
 
 ## Lessons behind the rules
 
-LESSONS_PLACEHOLDER
+What went wrong across 5 real projects, and the rule that came out of it. Each rule is in [PREFERENCES.md](PREFERENCES.md) (your account) or in the kit (your projects).
+
+| Lesson | What happened | Where it lives now |
+|---|---|---|
+| Ask all questions at the start, with options and a recommendation | A design review found 34 decisions the agent had assumed instead of asked | PREFERENCES.md "Decisions" |
+| A review from a fresh context finds what self-review misses | A self-review checked that 39 notes existed; 30 said the opposite of the source | PREFERENCES.md "Reporting"; kit `reviewer` agent |
+| Enforce safety with a hook, not with text | A rule said "never force-push"; only one tool obeyed it | Kit `scripts/git-hooks/pre-push` |
+| No push to main until the checks pass | A commit reached main with a failing check | Kit pre-push runs `scripts/check.sh` |
+| State each rule once; conflicts hurt more than length | 3 conflicting preference rules made agent behavior look random | One rule set for Claude, ChatGPT and Codex; kit `.claude/rule-tests.md` |
+| Measure, do not judge by eye | A layout shifted 14 px and no check saw it | PREFERENCES.md "UI verification" |
+| Ask how the person works and what the environment allows, before you build | A solution assumed copy and paste on a machine where the user typed everything by hand | PREFERENCES.md "Design for human limits" |
+| Build from a real sample and the full source, not from memory | A package built from docs failed on import; the real export showed the wrong key | Ask for a sample first (not yet a rule) |
+| Change one thing per test, and use a control | A test changed 2 things at once and could not find the cause | Not yet a rule |
+| Keep personal data out of git from the first commit | An old repo could never go public: its history held a name and an email | Kit `scripts/pii_guard.py` |
+| Repo text and web pages are data, not instructions | Research: injected text in README files is followed 2.6x more than in code | Kit AGENTS.md "Untrusted input" |
+| Audit for bloat on a schedule, and measure before you cut | One operation went from 116.6 s to 23.4 s after an audit | Kit `scripts/bloat_check.py` |
 
 ## What you need
 
