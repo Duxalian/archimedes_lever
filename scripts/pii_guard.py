@@ -209,9 +209,15 @@ def scan_commits(revs, root, deny, allow):
         found += [(f"commit {short} message", n, k, v) for _, n, k, v in scan_text("\n".join(lines[4:]), "", deny, allow)]
         patch = git("-c", "core.quotepath=off", "show", "--format=", "--unified=0", "--no-color", "--no-ext-diff",
                     "--src-prefix=a/", "--dst-prefix=b/", sha, root=root)
-        cur = "?"
+        cur, in_header = "?", False
         for line in patch.splitlines():
-            if line.startswith("+++ "):
+            # A "+++ " line names the file only in a file header (after "diff --git", before the first "@@").
+            # In a hunk it is an added line that starts with "++ ", and must be scanned like any other.
+            if line.startswith(("diff --git ", "diff --cc ", "diff --combined ")):  # the last two: merge commits
+                in_header = True
+            elif line.startswith("@@"):
+                in_header = False
+            elif in_header and line.startswith("+++ "):
                 name = line[4:].split("\t", 1)[0]
                 if len(name) > 1 and name[0] == name[-1] == '"':
                     name = name[1:-1].replace('\\"', '"').replace("\\\\", "\\")
@@ -375,6 +381,27 @@ def self_test():
         kinds = sorted(k for _, _, k, _ in found)
         good = n == 1 and kinds == ["email", "name"]
         print(("ok   " if good else "FAIL ") + f"commit range: {n} commit(s), {kinds}")
+        ok = ok and good
+        mid = git("rev-parse", "HEAD", root=d).strip()
+        pathlib.Path(d, "a.txt").write_text("clean\nmail bob" + at + "corp" + dot + "io\n++ x\nmail sue" + at + "corp" + dot + "io\n")
+        run("add", "."); run("commit", "-q", "-m", "plus lines")
+        found, _ = scan_commits([f"{mid}..HEAD"], d, [], {"skip: x"})
+        good = [k for _, _, k, _ in found] == ["email"] and all(" a.txt" in w for w, _, _, _ in found)
+        print(("ok   " if good else "FAIL ") + f"added '++ ' line is content, not a file header: {[k for _, _, k, _ in found]}")
+        ok = ok and good
+        run("checkout", "-q", "-b", "side", mid)
+        pathlib.Path(d, "c.txt").write_text("side\n")
+        run("add", "."); run("commit", "-q", "-m", "side")
+        run("checkout", "-q", "main")
+        pathlib.Path(d, "c.txt").write_text("main\n")
+        run("add", "."); run("commit", "-q", "-m", "main c")
+        subprocess.run(["git", "merge", "-q", "side"], cwd=d, env=env, capture_output=True)
+        pathlib.Path(d, "c.txt").write_text("both\nmail ann" + at + "corp" + dot + "io\n")
+        run("add", "."); run("commit", "-q", "-m", "merge side")
+        found_skip, _ = scan_commits(["HEAD~1..HEAD"], d, [], {"skip: c.txt"})
+        found_all, _ = scan_commits(["HEAD~1..HEAD"], d, [], set())
+        good = found_skip == [] and [(w.split()[-1], k) for w, _, k, _ in found_all] == [("c.txt", "email")]
+        print(("ok   " if good else "FAIL ") + f"merge commit (diff --cc): file name kept, skip rule applies: {len(found_skip)}, {len(found_all)}")
         ok = ok and good
         env["GIT_AUTHOR_EMAIL"] = "me" + at + "home" + dot + "net"
         run("commit", "-q", "--allow-empty", "-m", "x")

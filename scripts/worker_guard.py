@@ -11,8 +11,9 @@ Usage (wired in the .claude/agents/ frontmatter `hooks:`; runs only while that s
 Blocks Bash commands that push to main or master (also a bare push or HEAD while on one), rebase, git clean, branch deletes, force-push (--force, -f in
 grouped flags, +refspec, --force-with-lease), --mirror/--all, reset --hard or delete remote branches. It parses each
 simple command into words (quotes respected), so "main" inside a branch name or a commit message is not a match.
-Exit 2 with the reason on stderr blocks the call; exit 0 lets the normal permission flow decide. A command built at run
-time (eval, a script file) is not seen: it is a seat belt for honest mistakes, not a security boundary.
+Exit 2 with the reason on stderr blocks the call; exit 0 lets the normal permission flow decide. A command string run by
+eval or a shell's -c is checked too; other commands built at run time (a script file, stdin, `$(...)` output) are not
+seen: it is a seat belt for honest mistakes, not a security boundary.
 """
 import argparse
 import json
@@ -95,8 +96,12 @@ def check_git(args, branch, readonly=False):
         return 'no branch deletes; the orchestrator or the owner deletes branches'
     if sub != 'push':
         return None
-    pos = []
+    pos, cut = [], None
     for w in rest:
+        if w and set(w) <= set('<>&|'):  # a redirection such as > or >& (2>&1 splits as 2, >&, 1)
+            if cut is None:
+                cut = len(pos)
+            continue
         if w.startswith('--'):
             if w in ('--force', '--mirror', '--all', '--delete', '--prune') or w.startswith('--force-with-lease'):
                 return f'workers may not push with {w} (AGENTS.md "Git safety")'
@@ -105,7 +110,24 @@ def check_git(args, branch, readonly=False):
                 return f'workers may not push with {w} (force or delete)'
         else:
             pos.append(w)
-    refspecs = pos[1:]               # pos[0] is the remote
+    # With a redirection, check two readings and block if either targets main: all words as refspecs (a quoted ">"
+    # is a real argument), and only the words before it, minus a file-descriptor digit (`git push 2>&1` on main).
+    readings = [pos]
+    if cut is not None:
+        before = pos[:cut]
+        if before and before[-1].isdigit():
+            before = before[:-1]
+        readings.append(before)
+    for words in readings:
+        why = push_target(words, branch)
+        if why:
+            return why
+    return None
+
+
+def push_target(pos, branch):
+    """pos: the push words without options; pos[0] is the remote. Returns a reason to block, or None."""
+    refspecs = pos[1:]
     if not refspecs:
         refspecs = ['HEAD']
     for ref in refspecs:
@@ -120,9 +142,31 @@ def check_git(args, branch, readonly=False):
     return None
 
 
-def reason(cmd, branch=None, readonly=False):
+SHELLS = {'sh', 'bash', 'zsh', 'dash', 'ksh'}
+
+
+def reason(cmd, branch=None, readonly=False, depth=0):
     for seg in segments(cmd):
         for k, w in enumerate(seg):
+            # A command string run by a shell (`bash -c "git checkout main"`, `eval "..."`) is checked as a command too.
+            inner = None
+            if w == 'eval' and depth < 3:
+                inner = ' '.join(seg[k + 1:])
+            elif w.rsplit('/', 1)[-1] in SHELLS and depth < 3:
+                # The command string follows the first short-option group with c (-c, -xc, -lc), past long options
+                # (--norc, --rcfile x) and an optional "--".
+                flags = [j for j in range(k + 1, len(seg)) if re.fullmatch(r'-[A-Za-z]*c[A-Za-z]*', seg[j])]
+                if flags:
+                    j = flags[0] + 1
+                    if j < len(seg) and seg[j] == '--':
+                        j += 1
+                    if j < len(seg):
+                        inner = seg[j]
+            if inner is not None:
+                why = reason(inner, branch, readonly, depth + 1)
+                if why:
+                    return why
+                break
             if w == 'git' or w.endswith('/git'):
                 why = check_git(seg[k + 1:], branch if branch is not None else current_branch(), readonly)
                 if why:
@@ -138,20 +182,26 @@ def selftest():
              'git push origin --delete cc/x', 'git push origin :cc/x', 'git push --mirror origin', 'git push --all',
              'git push --force-with-lease origin cc/x', 'git status; git push origin main',
              'git push origin master', 'git clean -fd', 'git branch -D x', '(git push origin main)', 'git --no-pager -C r push --force',
-             'git push --prune origin', 'git branch -df x', 'git branch -rd origin/x', 'git branch --dele x', 'git branch --del x']
+             'git push --prune origin', 'git push origin ">" main', 'git push origin cc/x > /dev/null; git push origin main',
+             'git branch -df x', 'git branch -rd origin/x', 'git branch --dele x', 'git branch --del x']
     allow = ['git push -u origin cc/t40-slc', 'git push -u origin cc/main-menu', 'git push origin cc/fix-main',
              'git merge origin/main', 'git status', 'python3 tools/check.py --no-perf', 'git log --oneline main..HEAD',
              'git fetch origin main', 'git commit -m "push main menu fix"', 'git commit -m "fix rebase of main"',
              'git push', 'git push origin HEAD', 'git commit -m "note; git rebase later"', 'git branch -a', 'git branch -vv',
-             'git branch --sort -committerdate', 'git branch --sort=-committerdate', 'git branch -m old new', 'git branch --list']
+             'git push origin cc/x 2>&1', 'git push -u origin cc/x > /dev/null', 'git branch --sort -committerdate', 'git branch --sort=-committerdate', 'git branch -m old new', 'git branch --list']
     bad = [c for c in block if not reason(c, 'cc/x')] + [c for c in allow if reason(c, 'cc/x')]
-    for c in ['git push', 'git push origin HEAD']:     # on main these must block
+    for c in ['git push', 'git push origin HEAD', 'git push 2>&1', 'git push > /dev/null', 'git push 2> err.txt',
+              'git push origin 2>&1']:     # on main these must block
         if not reason(c, 'main'):
             bad.append(c + ' (on main)')
-    for c in ['git commit -m x', 'git checkout -b y', 'git add .', 'cd a && git merge origin/main']:
+    for c in ['git commit -m x', 'git checkout -b y', 'git add .', 'cd a && git merge origin/main',
+              'bash -c "git checkout main"', 'sh -lc \'git switch main\'', 'eval "git checkout main"', '/bin/bash -c "cd x; git commit -m y"',
+              'bash --norc -c "git checkout main"', 'bash --rcfile x -c "git checkout main"', 'bash -c -- "git checkout main"',
+              'ksh -c "git checkout main"']:
         if not reason(c, 'cc/x', readonly=True):
             bad.append(c + ' (readonly)')
-    for c in ['git diff origin/main...HEAD', 'git log -p', 'git show HEAD:x', 'git status', 'git fetch origin']:
+    for c in ['git diff origin/main...HEAD', 'git log -p', 'git show HEAD:x', 'git status', 'git fetch origin',
+              'bash -c "git log --oneline -3"', 'bash scripts/check.sh']:
         if reason(c, 'cc/x', readonly=True):
             bad.append(c + ' (readonly allow)')
     for c in bad:
