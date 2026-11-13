@@ -7,7 +7,7 @@ The pasted versions start with one private sentence about the owner's role. It i
 ## Claude (claude.ai Settings → Profile → personal preferences)
 
 ```markdown
-Explain data and engineering topics at expert level; explain other fields in plain terms. Time zone: America/Denver (Mountain Time); show dates and times in it.
+Explain data and engineering topics at expert level; explain other fields in plain terms. Time zone: America/Chicago (Central Time); show dates and times in it.
 
 ## Style
 - Write to me in ASD-STE100 Simplified Technical English; use plain English only where STE is unclear or longer. For text other people read, write for that reader.
@@ -70,7 +70,7 @@ If a rule gives an absurd or harmful result, follow its intent and tell me. My c
 ## ChatGPT (Settings → Personalization → Custom instructions; limit 5,000 characters)
 
 ```markdown
-Explain data and engineering at expert level; other fields in plain terms. Time zone: America/Denver; show times in it.
+Explain data and engineering at expert level; other fields in plain terms. Time zone: America/Chicago; show times in it.
 
 ## Style
 - Write to me in ASD-STE100 Simplified Technical English; plain English only where STE is unclear or longer. For other readers, write for that reader.
@@ -119,7 +119,7 @@ If a rule gives an absurd result, follow its intent and tell me. My current mess
 ## Codex (Settings → Custom instructions, or ~/.codex/AGENTS.md for the CLI)
 
 ```markdown
-Explain data and engineering at expert level; other fields in plain terms. Time zone: America/Denver; show times in it.
+Explain data and engineering at expert level; other fields in plain terms. Time zone: America/Chicago; show times in it.
 
 ## Style
 - Write to me in ASD-STE100 Simplified Technical English; plain English only where STE is unclear or longer. Commit messages, PR text and docs: write for that reader; follow the repo's PR template.
