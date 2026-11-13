@@ -401,7 +401,7 @@ def main():
         if upgrading and not log.is_file() and not re.search(r"(?i)project log", rules or "") and (base / "docs/LOG.md").exists():
             zone = header_timezone(new["AGENTS.md"]) or "UTC"
             stamp = log_stamp(zone)
-            text = (base / "docs/LOG.md").read_text()
+            text = re.sub(r"(?m)^> Template: first use fills in.*\n", "", (base / "docs/LOG.md").read_text())  # kit-only note, as bootstrap.sh
             name, _, _ = header_values(new["AGENTS.md"])
             for key, val in (("PROJECT_NAME", name or "Project"), ("TIMEZONE", zone),
                              ("DATE", stamp[:10]), ("TIME", stamp[11:])):
