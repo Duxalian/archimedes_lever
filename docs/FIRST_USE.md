@@ -22,7 +22,7 @@ Round 1, always:
 |---|---|---|
 | 1 | What is the project called? | Free text |
 | 2 | What is it for, in one line? | Free text |
-| 3 | Which time zone are you in? (for times in the project log) | A your local zone (rec): give a city or the IANA name, for example Europe/Berlin; the agent finds the IANA name · B UTC |
+| 3 | Which time zone are you in? (for the dates and times agents give you) | A your local zone (rec): give a city or the IANA name, for example Europe/Berlin; the agent finds the IANA name · B UTC |
 | 4 | Use the recommended settings for the rest? List them in the question: starter kit (the core rules, hooks and checks; the advanced parts can be added later), private repo, no license, agents call you "the owner", personal-data guard on (it only warns until you add your name list), a new GitHub repo the agent creates (for a clone), project texts for the agent you use now. | A yes (rec) · B choose each one |
 
 With 4A, use the "Recommended" column below for questions 5 to 13 and skip rounds 2 to 4. Exception: ask question 10 alone when the start needs a new repo and this host cannot create one (no GitHub tool and no signed-in `gh`).
