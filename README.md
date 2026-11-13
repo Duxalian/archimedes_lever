@@ -16,7 +16,7 @@ Tell me your thoughts about this repo: https://github.com/rhope-ops/archimedes_l
 
 | Take | What you get | Time | What you need |
 |---|---|---|---|
-| 1. [Preferences](PREFERENCES.md) for your own AI account | Every chat asks its questions up front, labels its recommendations, says how confident it is, checks its work before it says "done", and saves you clicks and copying | About 5 minutes (our estimate, not timed): the assistant asks you 4 questions and gives you one block to paste | Any Claude, ChatGPT or Codex account. No GitHub needed. |
+| 1. [Preferences](PREFERENCES.md) for your own AI account | Every chat asks its questions up front, labels its recommendations, says how confident it is, checks its work before it says "done", and saves you clicks and copying | About 5 minutes (our estimate, not timed): the assistant asks you up to 5 questions (including which optional modules you want) and gives you one block to paste | Any Claude, ChatGPT or Codex account. No GitHub needed. |
 | 2. A project kit (the rest of this repo) | A new project where every agent follows one rules file, where force-pushes and pushes that contain your listed names or your email are blocked, where agents check their own work, and where decisions are written down | About 15 minutes with an agent (our estimate, not timed); see "Start here" below | A free GitHub account and an agent that can run commands |
 
 New to agents? Read [docs/WORKING_WITH_AGENTS.md](docs/WORKING_WITH_AGENTS.md) first: the working habits that matter most, in 5 minutes.
@@ -36,12 +36,12 @@ These are things that went wrong across 5 real projects, and the rule each one l
 | Lesson | What happened | Where the rule lives |
 |---|---|---|
 | Ask all questions at the start, with options and a recommendation | A design review found 34 decisions the agent had assumed instead of asking | PREFERENCES.md "Decisions" |
-| A review in a fresh context finds what self-review misses | A self-review checked that 39 notes existed; 30 of them said the opposite of the source | PREFERENCES.md "Reporting"; the kit's `reviewer` agent |
+| A review in a fresh context finds what self-review misses | A self-review checked that 39 notes existed; 30 of them said the opposite of the source | PREFERENCES.md module "Agent work"; the kit's `reviewer` agent |
 | Enforce safety with a hook, not just with written rules | A rule said "never force-push"; only one tool obeyed it | The kit's `scripts/git-hooks/pre-push` |
 | Don't push to main until the checks pass | A commit reached main with a failing check | The kit's pre-push hook runs `scripts/check.sh` |
 | State each rule once; conflicting rules hurt more than long ones | 3 conflicting preference rules made the agent's behavior look random | One rule set for Claude, ChatGPT and Codex; the kit's `.claude/rule-tests.md` |
-| Measure; don't judge by eye | A layout shifted 14 px and no check noticed | PREFERENCES.md "UI verification" |
-| Before you build, ask how the person works and what their setup allows | A solution assumed copy and paste, on a machine where the user had to type everything by hand | PREFERENCES.md "Design for human limits" |
+| Measure; don't judge by eye | A layout shifted 14 px and no check noticed | PREFERENCES.md module "Builder" |
+| Before you build, ask how the person works and what their setup allows | A solution assumed copy and paste, on a machine where the user had to type everything by hand | PREFERENCES.md "Least effort for me" |
 | Build from a real sample and the full source, not from memory | A package built from the docs failed on import; a real export showed the wrong key | Ask for a sample first (not yet a rule) |
 | Change one thing per test, and use a control | A test changed 2 things at once and could not find the cause | Not yet a rule |
 | Keep personal data out of git from the very first commit | An old repo could never go public, because its history held a name and an email | The kit's `scripts/pii_guard.py` |
@@ -156,7 +156,7 @@ The guard only runs in a repo that has a `.pii-guard` file at its root. That fil
 | docs/host-prompts.md | Short pointer texts for a claude.ai Project, ChatGPT, Gemini and any other chat. |
 | docs/reviews/ | Detailed evidence. Bootstrap deletes the kit's own reports, so a project starts with only docs/reviews/README.md. |
 | .bloat-audit.json | The kit's own audit state and timing baselines (scripts/bloat_check.py). Template repo only: bootstrap deletes it, and a project's first audit creates its own. |
-| PREFERENCES.md | The maintainer's personal preferences for Claude, ChatGPT and Codex, as a template ready to fill in and paste. Template repo only: bootstrap deletes it. |
+| PREFERENCES.md | The maintainer's personal preferences for Claude, ChatGPT and Codex, as a template ready to fill in and paste: a core for everyone, plus Builder, Data and Agent work modules. Template repo only: bootstrap deletes it. |
 | LICENSE | The kit's license (MIT). Bootstrap moves it to docs/archimedes_lever-LICENSE.txt; each project picks its own LICENSE. |
 | .claude/settings.json | Claude Code deny list (force-push including --force-with-lease, `--no-verify`, changing core.hooksPath, hard reset, clean, stash, restore, `branch -D`, reading .env and key files), a sandbox with a network allowlist (GitHub, PyPI, npm), and the Stop hook. Applies to Claude Code only. |
 | .claude/orchestration.md | Full only. Multi-agent rules: roles, model choice by tier, fallbacks, briefs, review and merge, lanes. Read only when delegating. |
