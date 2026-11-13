@@ -128,7 +128,10 @@ def audit_due(root, cfg, today):
     last = cfg.get("last_audit") or {}
     if not last.get("date"):
         # Never audited: due once the repo is every_days or every_commits past its first commit (the owner, 2026-11-13),
-        # so a new project does not report AUDIT DUE on day one. No history readable: due.
+        # so a new project does not report AUDIT DUE on day one. No history readable, or a shallow clone (its oldest
+        # commit is a cut, not the first commit): due.
+        if git(root, "rev-parse", "--is-shallow-repository") == "true":
+            return "never audited"
         first = git(root, "log", "--max-parents=0", "--format=%cs")
         count = git(root, "rev-list", "--count", "HEAD")
         if not first or not count:
@@ -251,6 +254,14 @@ def self_test():
             assert audit_due(Path(n), never, first) == "", "never audited, new repo: not due yet"
             assert audit_due(Path(n), never, first + datetime.timedelta(days=14)).startswith("never audited;"), "due by days"
             assert audit_due(Path(n), {**never, "every_commits": 1}, first).startswith("never audited;"), "due by commits"
+            subprocess.run(["git", "-C", n, "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-q", "--allow-empty",
+                            "-m", "second"], check=True, env=env)
+            s = str(Path(n).parent / (Path(n).name + "-shallow"))
+            subprocess.run(["git", "clone", "-q", "--depth", "1", "file://" + n, s], check=True, capture_output=True)
+            try:
+                assert audit_due(Path(s), never, first) == "never audited", "shallow clone: due"
+            finally:
+                subprocess.run(["rm", "-rf", s], check=True)
         rows, slow = run_timings(root, cfg, record=False)
         assert not slow and "ok" in rows[0], "fast command is ok"
         a = argparse.Namespace(brief=False, time=False, record=False, strict=True)
