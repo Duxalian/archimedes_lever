@@ -65,6 +65,8 @@ fi
 # The maintainer's preferences template (PREFERENCES.md) and the kit's audit state (.bloat-audit.json) live only in the template repo. The kit's license moves next to the docs: the copied scripts
 # stay under it, and the root LICENSE is the project's own choice (docs/FIRST_USE.md, question 6).
 rm -f -- PREFERENCES.md .bloat-audit.json
+# The kit's own review reports describe the kit, not the project; docs/reviews/README.md stays.
+find docs/reviews -maxdepth 1 -name '20*.md' -delete 2>/dev/null || true
 # Projects do not stay in sync with the kit (the owner, 2026-11-13): the sync tools stay in the kit only.
 rm -f -- scripts/sync_baseline.py scripts/drift.py .baseline
 if [ -f LICENSE ]; then mv -- LICENSE docs/archimedes_lever-LICENSE.txt; fi
