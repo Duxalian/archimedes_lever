@@ -11,7 +11,7 @@ Usage:
 
 It measures:
     start read    lines, bytes and ~tokens (bytes / 4) of the files every session reads first
-                  (AGENTS.md, CLAUDE.md, GEMINI.md, docs/NEXT_PROMPT.md, docs/DECISIONS.md, plus "start_read" in the config)
+                  (AGENTS.md, CLAUDE.md, docs/NEXT_PROMPT.md, docs/DECISIONS.md, plus "start_read" in the config)
     handoff       docs/NEXT_PROMPT.md lines
     duplicates    normalized text lines of 80+ characters found in 2 or more tracked files
     big files     tracked files over the size budget
@@ -44,7 +44,7 @@ import time
 from pathlib import Path
 
 CONFIG = ".bloat-audit.json"
-START_READ = ["AGENTS.md", "CLAUDE.md", "GEMINI.md", "docs/NEXT_PROMPT.md", "docs/DECISIONS.md"]
+START_READ = ["AGENTS.md", "CLAUDE.md", "docs/NEXT_PROMPT.md", "docs/DECISIONS.md"]
 DEFAULTS = {"every_days": 14, "every_commits": 300,
             "budgets": {"start_read_tokens": 6000, "start_read_warn_tokens": 4500, "handoff_lines": 40, "file_kb": 500, "duplicate_lines": 20}}
 TEXT_EXT = {".md", ".txt", ".py", ".sh", ".ps1", ".psm1", ".js", ".ts", ".json", ".yml", ".yaml", ".html", ".css",

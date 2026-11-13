@@ -30,7 +30,7 @@ What it changes:
     CLAUDE.md              Adds "@AGENTS.md" at the top if it is missing. Keeps the rest.
     scripts/session_checkin.sh, scripts/stop_check.py, scripts/worker_guard.py,
     .claude/orchestration.md   Replaced with the baseline copies.
-    .claude/agents/worker.md, scout.md, reviewer.md, GEMINI.md, docs/FIRST_USE.md   Added only when missing (a project
+    .claude/agents/worker.md, scout.md, reviewer.md, docs/FIRST_USE.md   Added only when missing (a project
                            may tune them; FIRST_USE.md holds the denylist places that the session-start check names).
     scripts/log_check.py, scripts/timeline.py, scripts/pii_guard.py, scripts/first_use_check.py,
     scripts/check.sh, scripts/bloat_check.py, scripts/git-hooks/pre-push, .claude/bloat-audit.md, .claude/project-log.md,
@@ -69,7 +69,7 @@ COPY_FILES = ["scripts/session_checkin.sh", "scripts/stop_check.py",
               ".claude/orchestration.md", ".claude/bloat-audit.md", ".claude/project-log.md", ".claude/rule-tests.md", ".github/workflows/pii-guard.yml",
               ".claude/skills/data-change/SKILL.md", ".claude/skills/ui-verify/SKILL.md", ".claude/skills/ui-verify/measure.mjs"]
 # Agent definitions: copied only when the project has no file with that name (projects may tune them).
-COPY_IF_MISSING = [".claude/agents/worker.md", ".claude/agents/scout.md", ".claude/agents/reviewer.md", "GEMINI.md",
+COPY_IF_MISSING = [".claude/agents/worker.md", ".claude/agents/scout.md", ".claude/agents/reviewer.md",
                    "docs/FIRST_USE.md"]
 BASELINE_OWNER = "the owner"  # role word in baseline text; no real name lives in the baseline
 # Never rename the owner inside this script: it holds BASELINE_OWNER as a literal.

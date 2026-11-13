@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Git pre-push hook for every agent and tool (Claude, Codex, Gemini, any other, and people).
+# Git pre-push hook for Claude, any git client, and people.
 # Install once per clone: git config core.hooksPath <the folder of this file> (scripts/session_checkin.sh or a SessionStart hook does it).
 # Also runs scripts/check.sh (when present) and scripts/pii_guard.py --push (when the repo root has a .pii-guard file).
 # Blocks: a push that is not a fast-forward (every force-push form, including --force-with-lease),

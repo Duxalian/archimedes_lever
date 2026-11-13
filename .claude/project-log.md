@@ -2,7 +2,7 @@
 
 Read this file before you write or change a project log row. AGENTS.md "Project log" points here; `scripts/log_check.py` checks the format.
 
-- One row per event. Columns, in this order: # | When | Type | Arc | Topic | Raised by | What the other missed | Evidence | Result.
+- One row per story event (the types below). Not a change log: no row per commit, merge or file change; git log holds those. Columns, in this order: # | When | Type | Arc | Topic | Raised by | What the other missed | Evidence | Result.
 - When: `YYYY-MM-DD HH:MM` in the project time zone (the `- Time zone:` line at the top of AGENTS.md). A range: `YYYY-MM-DD HH:MM–HH:MM`. Mark an estimate with `~` before the date or the time.
 - Type, one of:
   - `milestone`: a deliverable exists or a goal is met (first import works, v1 published).

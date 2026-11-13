@@ -1,6 +1,6 @@
 # Bloat, drift and assumption audit
 
-The full periodic audit that AGENTS.md "Bloat, drift and assumptions" calls for. Any agent can run it: Claude, GPT/Codex, Gemini or a person. Read it only when an audit is due or asked for; it is not a start-of-session file.
+The full periodic audit that AGENTS.md "Bloat, drift and assumptions" calls for. Claude or a person can run it. Read it only when an audit is due or asked for; it is not a start-of-session file.
 
 Why: two audits of one project found layered bloat that made a simple operation 5x slower (116.6 s to 23.4 s after the fix). Each layer looked reasonable when an agent added it. Agents add; they seldom remove. This audit finds what to remove and proposes it.
 
@@ -44,10 +44,10 @@ Every item below finds; it does not fix. A fix that removes, shortens, rewords, 
 
 ### Agentic AI carve-outs
 
-12. Instruction bloat: AGENTS.md, CLAUDE.md, GEMINI.md, host prompts, project instructions and personal preferences. Find rules that repeat, conflict, are already enforced by a hook or test (keep the hook, shorten the rule to a pointer), or describe one past incident. Every rule needs a reason a reader can check. Prefer one line per rule.
+12. Instruction bloat: AGENTS.md, CLAUDE.md, host prompts, project instructions and personal preferences. Find rules that repeat, conflict, are already enforced by a hook or test (keep the hook, shorten the rule to a pointer), or describe one past incident. Every rule needs a reason a reader can check. Prefer one line per rule.
 13. Context cost: everything loaded at session start costs tokens on every turn of every session. Move reference text (long tables, history, evidence) out of start-read files into files read on demand. Decision logs grow forever: keep the current decisions in the start-read file and move superseded ones to an archive file.
 14. Rule accretion: rules added after one incident and never retired. Give each such rule a review date; at the date, propose to retire it if it caught nothing.
-15. Cross-host duplication: the same rule in the repo, a claude.ai Project, GPT instructions, personal preferences and memory. The repo is the source; other places hold a pointer only. Personal preferences hold personal style, not project rules.
+15. Cross-host duplication: the same rule in the repo, a claude.ai Project, personal preferences and memory. The repo is the source; other places hold a pointer only. Personal preferences hold personal style, not project rules.
 16. Handoff and memory rot: NEXT_PROMPT.md, memory files and review folders that keep closed items, old links and repeated status. Keep the handoff at its line budget; archive reviews older than 90 days into a single index.
 17. Agent-made helpers: one-off scripts, debug files, scratch copies, "_v2"/"_new"/"_old" files and extra wrappers left by agents. Each needs a caller or a recorded reason; if it has neither, propose its removal.
 18. Defensive layering: try/except, fallbacks, retries, validation and comments added by agents "to be safe" that hide errors or duplicate a check one layer up. Keep the one check at the right layer.

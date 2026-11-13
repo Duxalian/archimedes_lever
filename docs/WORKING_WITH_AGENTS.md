@@ -1,6 +1,6 @@
 # Working with AI agents: the basics
 
-For people. Agents read AGENTS.md; this page is for you. It covers the habits that matter most when you work with a coding agent (Claude Code, Codex, Cursor, Gemini CLI and others). Each habit links to its source.
+For people. Agents read AGENTS.md; this page is for you. It covers the habits that matter most when you work with Claude Code. Each habit links to its source.
 
 ## The loop for each task
 
