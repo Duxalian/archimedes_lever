@@ -29,6 +29,8 @@ What it changes:
                            baseline "sandbox" block when the project has none. Keeps all other settings.
     .gitignore             Adds the baseline lines. Keeps all other lines.
     .baseline              Records the baseline commit that was used.
+    docs/LOG.md            An Arcs table with the old columns (Arc | Span | Summary | Outcome) gets the story columns
+                           Problem, Turning point and Lesson, each "-" (AGENTS.md "Project log"). Rows are kept.
     docs/archimedes_lever-LICENSE.txt   The kit's license (MIT), which covers the copied files.
     Owner name             In baseline text only (AGENTS.md above "## Project rules" and the copied files, not this
                            script), "the owner" becomes the project owner ("The owner" becomes the owner with a capital
@@ -234,6 +236,31 @@ def merge_settings(base_path, proj_path):
     return json.dumps(proj, indent=2, ensure_ascii=False) + "\n"
 
 
+NEW_ARCS = "| Arc | Span | Summary | Problem | Turning point | Outcome | Lesson |"
+
+
+def migrate_arcs(text):
+    """Add the story columns to an old 4-column Arcs table; return the text unchanged when there is none."""
+    lines = text.split("\n")
+    for i, line in enumerate(lines):
+        head = [c.strip().lower() for c in line.strip().strip("|").split("|")]
+        if head != [c.lower() for c in ("Arc", "Span", "Summary", "Outcome")]:
+            continue
+        lines[i] = NEW_ARCS
+        j = i + 1
+        if j < len(lines) and re.fullmatch(r"\s*\|(\s*:?-+:?\s*\|){4}\s*", lines[j]):
+            lines[j] = "|---|---|---|---|---|---|---|"
+            j += 1
+        while j < len(lines) and lines[j].strip().startswith("|"):
+            cells = re.split(r"(?<!\\)\|", lines[j].strip())[1:-1]
+            if len(cells) == 4:
+                a, span, summary, outcome = (c.strip() for c in cells)
+                lines[j] = f"| {a} | {span} | {summary} | - | - | {outcome} | - |"
+            j += 1
+        break
+    return "\n".join(lines)
+
+
 def merge_lines(base_path, proj_path):
     lines = proj_path.read_text().splitlines() if proj_path.exists() else []
     add = [l for l in base_path.read_text().splitlines() if l.strip() and l not in lines]
@@ -304,6 +331,11 @@ def main():
             new[".claude/settings.json"] = merge_settings(base / ".claude/settings.json", root / ".claude/settings.json")
         if (base / ".gitignore").exists():
             new[".gitignore"] = merge_lines(base / ".gitignore", root / ".gitignore")
+        log = root / "docs/LOG.md"
+        if log.is_file():
+            migrated = migrate_arcs(log.read_text())
+            if migrated != log.read_text():
+                new["docs/LOG.md"] = migrated
         new[".baseline"] = f"Duxalian/archimedes_lever {base_sha}\n"
         if (base / "LICENSE").exists():
             new["docs/archimedes_lever-LICENSE.txt"] = (base / "LICENSE").read_text()
