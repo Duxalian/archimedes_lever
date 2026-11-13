@@ -209,9 +209,15 @@ def scan_commits(revs, root, deny, allow):
         found += [(f"commit {short} message", n, k, v) for _, n, k, v in scan_text("\n".join(lines[4:]), "", deny, allow)]
         patch = git("-c", "core.quotepath=off", "show", "--format=", "--unified=0", "--no-color", "--no-ext-diff",
                     "--src-prefix=a/", "--dst-prefix=b/", sha, root=root)
-        cur = "?"
+        cur, in_header = "?", False
         for line in patch.splitlines():
-            if line.startswith("+++ "):
+            # A "+++ " line names the file only in a file header (after "diff --git", before the first "@@").
+            # In a hunk it is an added line that starts with "++ ", and must be scanned like any other.
+            if line.startswith("diff --git "):
+                in_header = True
+            elif line.startswith("@@"):
+                in_header = False
+            elif in_header and line.startswith("+++ "):
                 name = line[4:].split("\t", 1)[0]
                 if len(name) > 1 and name[0] == name[-1] == '"':
                     name = name[1:-1].replace('\\"', '"').replace("\\\\", "\\")
@@ -375,6 +381,13 @@ def self_test():
         kinds = sorted(k for _, _, k, _ in found)
         good = n == 1 and kinds == ["email", "name"]
         print(("ok   " if good else "FAIL ") + f"commit range: {n} commit(s), {kinds}")
+        ok = ok and good
+        mid = git("rev-parse", "HEAD", root=d).strip()
+        pathlib.Path(d, "a.txt").write_text("clean\nmail bob" + at + "corp" + dot + "io\n++ x\nmail sue" + at + "corp" + dot + "io\n")
+        run("add", "."); run("commit", "-q", "-m", "plus lines")
+        found, _ = scan_commits([f"{mid}..HEAD"], d, [], {"skip: x"})
+        good = [k for _, _, k, _ in found] == ["email"] and all(" a.txt" in w for w, _, _, _ in found)
+        print(("ok   " if good else "FAIL ") + f"added '++ ' line is content, not a file header: {[k for _, _, k, _ in found]}")
         ok = ok and good
         env["GIT_AUTHOR_EMAIL"] = "me" + at + "home" + dot + "net"
         run("commit", "-q", "--allow-empty", "-m", "x")
