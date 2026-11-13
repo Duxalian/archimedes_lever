@@ -4,7 +4,7 @@ Template repo only: scripts/bootstrap.sh deletes this file in new projects. Newe
 
 ## 2026-11-13: GitHub account renamed to rhope-ops
 
-- Decided (the owner, 2026-11-13): the GitHub account Duxalian is now rhope-ops. Every reference in the kit and its projects says rhope-ops, history included; the LICENSE holder is rhope-ops. Local Windows paths keep their folder name. The archived standard_project is not changed.
+- Decided (the owner, 2026-11-13): the GitHub account Duxalian is now rhope-ops. Every reference in the kit and its projects says rhope-ops, history included; the LICENSE holder is rhope-ops. Local Windows paths keep their folder name. The archived standard_project repo itself is not changed (links to it now use rhope-ops).
 
 ## 2026-11-13: owner preferences for Claude, ChatGPT and Codex
 
