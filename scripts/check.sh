@@ -2,7 +2,7 @@
 # One check command for the repo (AGENTS.md "Commands": Test). Runs, in order:
 #   1. the self-test of each kit script (--test), 2. the project log check (docs/LOG.md),
 #   3. the personal-data scan of all tracked files (when .pii-guard exists; in GitHub Actions the pii-guard step does it),
-#   4. scripts/check.local.sh, when it exists: this project's own tests (sync_baseline.py never touches that file).
+#   4. scripts/check.local.sh, when it exists: this project's own tests.
 # Prints one PASS/FAIL/SKIP line per check, the output of each failed check, and "CHECK PASS" or "CHECK FAIL" last.
 # Exit 0 only when no check failed. Needs bash, git and python3.
 set -uo pipefail
