@@ -236,7 +236,6 @@ def merge_settings(base_path, proj_path):
     return json.dumps(proj, indent=2, ensure_ascii=False) + "\n"
 
 
-OLD_ARCS = "| Arc | Span | Summary | Outcome |"
 NEW_ARCS = "| Arc | Span | Summary | Problem | Turning point | Outcome | Lesson |"
 
 
@@ -244,7 +243,8 @@ def migrate_arcs(text):
     """Add the story columns to an old 4-column Arcs table; return the text unchanged when there is none."""
     lines = text.split("\n")
     for i, line in enumerate(lines):
-        if line.strip() != OLD_ARCS:
+        head = [c.strip().lower() for c in line.strip().strip("|").split("|")]
+        if head != [c.lower() for c in ("Arc", "Span", "Summary", "Outcome")]:
             continue
         lines[i] = NEW_ARCS
         j = i + 1
