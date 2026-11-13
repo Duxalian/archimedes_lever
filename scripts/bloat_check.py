@@ -127,7 +127,7 @@ def big_files(root, files, kb):
 def audit_due(root, cfg, today):
     last = cfg.get("last_audit") or {}
     if not last.get("date"):
-        # Never audited: due once the repo is every_days or every_commits past its first commit (the owner, 2026-11-13),
+        # Never audited: due once the repo is every_days or every_commits past its first commit (kit default, 2026-11-13),
         # so a new project does not report AUDIT DUE on day one. No history readable, or a shallow clone (its oldest
         # commit is a cut, not the first commit): due.
         if git(root, "rev-parse", "--is-shallow-repository") == "true":
@@ -187,7 +187,7 @@ def report(root, args, today=None):
     over = []
     if s_tok > b["start_read_tokens"]:
         over.append("start read")
-    # Early warning only (never fails --strict): rule growth shows before the hard cap (the owner, 2026-11-13).
+    # Early warning only (never fails --strict): rule growth shows before the hard cap (kit default, 2026-11-13).
     warn = "start read over warning" if b.get("start_read_warn_tokens", 0) < s_tok <= b["start_read_tokens"] else ""
     if h_lines > b["handoff_lines"]:
         over.append("handoff")
