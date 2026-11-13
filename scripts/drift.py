@@ -12,7 +12,8 @@ applied as sync_baseline.py would; --owner NAME for a repo with no "- Owner:" li
                "missing lines" = baseline lines not found anywhere in the project AGENTS.md
     missing    no section with that heading
 "## Commands" is project-owned and only checked for presence.
-For each file sync_baseline.py copies: same, differs or missing. It also checks the .claude/settings.json deny rules
+The project's "- Tier:" line (sync_baseline.header_tier) picks the baseline text and files: a starter project is not
+compared with the advanced parts. For each file sync_baseline.py copies: same, differs or missing. It also checks the .claude/settings.json deny rules
 and hook events, the .baseline pin, and docs/LOG.md (present, and "LOG CHECK PASS" from scripts/log_check.py).
 
 The numbers say where a repo has drifted, not which side is right: a project may keep its own wording on purpose
@@ -55,11 +56,12 @@ def baseline_head(base_text, proj_text, owner):
     cut = sb.find_heading(base_text, sb.RULES_HEADING)
     head = base_text[:cut] if cut >= 0 else base_text
     name, repo, purpose = sb.header_values(proj_text or "")
+    tier = sb.header_tier(proj_text or "")
     for key, val in (("PROJECT_NAME", name), ("REPO", repo), ("PURPOSE", purpose), ("OWNER", sb.BASELINE_OWNER),
-                     ("TIMEZONE", sb.header_timezone(proj_text or ""))):
+                     ("TIMEZONE", sb.header_timezone(proj_text or "")), ("TIER", tier)):
         if val:
             head = head.replace("{{" + key + "}}", val)
-    return sb.apply_owner(head, owner)
+    return sb.apply_owner(sb.apply_tier(head, tier), owner)
 
 
 def report(project, base, owner=None):
@@ -93,7 +95,9 @@ def report(project, base, owner=None):
     if sb.find_heading(proj_text, sb.RULES_HEADING) < 0 and proj_text:
         rows.append(("AGENTS.md", "Project rules", "missing", "no baseline layout; sync would migrate the whole file"))
 
-    for rel in sb.COPY_FILES + sb.COPY_IF_MISSING:
+    tier = sb.header_tier(proj_text)
+    copy_files, copy_if_missing = sb.tier_files(tier)
+    for rel in copy_files + copy_if_missing:
         src, dst = base / rel, project / rel
         if not src.exists():
             continue
@@ -139,7 +143,9 @@ def report(project, base, owner=None):
     log = project / "docs/LOG.md"
     checker = base / "scripts/log_check.py"
     rules = sb.section(proj_text, sb.RULES_HEADING) or ""
-    if not log.exists() and re.search(r"(?i)project log location", rules):
+    if tier == "starter":
+        pass  # no project log in the starter tier
+    elif not log.exists() and re.search(r"(?i)project log location", rules):
         rows.append(("log", "docs/LOG.md", "same", "kept elsewhere, named in Project rules"))
     elif not log.exists():
         rows.append(("log", "docs/LOG.md", "missing", "Project rules name no other place"))
@@ -188,7 +194,7 @@ def self_test():
         for k, v in (("PROJECT_NAME", "Demo"), ("REPO", "D/d"), ("PURPOSE", "P"), ("OWNER", "the maintainer"),
                      ("TIMEZONE", "Europe/Berlin")):
             text = text.replace("{{" + k + "}}", v)
-        (proj / "AGENTS.md").write_text(sb.apply_owner(text, "the maintainer"))
+        (proj / "AGENTS.md").write_text(sb.apply_owner(sb.apply_tier(text.replace("{{TIER}}", "full"), "full"), "the maintainer"))
         expect("synced section, owner renamed", get(("AGENTS.md", "Delegation")), "same")
         expect("Project rules present", get(("AGENTS.md", "Project rules")), "absent")
         (proj / "scripts").mkdir()
@@ -200,6 +206,19 @@ def self_test():
         (proj / "AGENTS.md").write_text(sb.apply_owner(text, "Sam"))
         rows, _ = report(proj, base, "Sam")
         expect("no Owner line, --owner Sam", {(a, i): (s, d) for a, i, s, d in rows}[("AGENTS.md", "Order of authority")], "same")
+        text = (base / "AGENTS.md").read_text()
+        for k, v in (("PROJECT_NAME", "Demo"), ("REPO", "D/d"), ("PURPOSE", "P"), ("OWNER", "the owner"), ("TIMEZONE", "UTC"),
+                     ("TIER", "starter")):
+            text = text.replace("{{" + k + "}}", v)
+        (proj / "AGENTS.md").write_text(sb.apply_tier(text, "starter"))
+        expect("starter: no Project log section expected", get(("AGENTS.md", "Project log")), "absent")
+        expect("starter: Delegation same", get(("AGENTS.md", "Delegation")), "same")
+        expect("starter: advanced file not expected", get(("file", ".claude/orchestration.md")), "absent")
+        expect("starter: no log row", get(("log", "docs/LOG.md")), "absent")
+        full = sb.apply_tier(text.replace("- Tier: starter", "- Tier: full"), "full")
+        good = "<!--" not in full.replace("<!-- Fill in", "").replace("<!-- Add rules", "") and "## Project log" in full
+        print(("ok   " if good else "FAIL ") + "apply_tier full: markers gone, Project log kept")
+        ok = ok and good
     print("DRIFT TEST " + ("PASS" if ok else "FAIL"))
     return 0 if ok else 1
 

@@ -8,12 +8,14 @@ Usage:
     python3 scripts/pii_guard.py --push            # pre-push hook mode: reads the hook's stdin lines
     python3 scripts/pii_guard.py FILE ...          # these files
     python3 scripts/pii_guard.py --status          # where the denylist comes from and how many entries (never the names)
-    --require-denylist                             # fail when no denylist is found (the hook and the Action use it)
+    --require-denylist                             # fail when no denylist is found (the hook and the Action use it),
+                                                   # or only warn when .pii-guard has the line `denylist: warn`
     python3 scripts/pii_guard.py --test            # self-test; prints PII GUARD TEST PASS
 
 Opt-in: the guard runs only in a repo with a `.pii-guard` file at its root (the hook and the Action check for it).
 That file lists exact strings that are allowed (one per line, `#` comments), and paths to skip as
-`skip: <path or glob>` lines (for example a public reference text that quotes office contacts). Only the owner adds entries;
+`skip: <path or glob>` lines (for example a public reference text that quotes office contacts), and the option line
+`denylist: warn` (starter tier; kit default since 2026-11-13): with no denylist, --require-denylist warns instead of failing. Only the owner adds entries;
 agents never add one to get past a block (AGENTS.md "Personal data").
 
 Name denylist (never committed): one name or word per line, `#` comments, matched whole-word, any case.
@@ -113,6 +115,14 @@ MISSING_HELP = ("no denylist found. Add your names (comma or newline separated),
                 "a cloud session: environment variable PII_GUARD_DENYLIST in the cloud environment's settings; "
                 "GitHub Actions: repository secret PII_GUARD_DENYLIST; your computer: ~/.config/pii-guard/denylist.txt. "
                 "See docs/FIRST_USE.md.")
+
+
+WARN_OPTION = "denylist: warn"  # .pii-guard option line; first_use_check.py reads it too
+
+
+def warn_mode(root):
+    """True when .pii-guard in the working tree has the option line `denylist: warn`."""
+    return WARN_OPTION in load_allow(root)
 
 
 def load_denylist():
@@ -338,6 +348,15 @@ def self_test():
         good = r.returncode == 0
         print(("ok   " if good else "FAIL ") + "branch delete with no denylist: passes")
         ok = ok and good
+        pathlib.Path(d, ".pii-guard").write_text("# starter\ndenylist: warn\n")
+        r = subprocess.run(me + ["--all", "--require-denylist"], cwd=d, env=env, capture_output=True, text=True)
+        good = r.returncode == 0 and "WARNING" in r.stdout and warn_mode(d)
+        pathlib.Path(d, "a.txt").write_text("mail bob" + at + "corp" + dot + "io\n")
+        subprocess.run(["git", "add", "a.txt"], cwd=d, check=True, capture_output=True)
+        r = subprocess.run(me + ["--all", "--require-denylist"], cwd=d, env=env, capture_output=True, text=True)
+        good = good and r.returncode == 1
+        print(("ok   " if good else "FAIL ") + "denylist: warn: no denylist only warns; an email still blocks")
+        ok = ok and good
     with tempfile.TemporaryDirectory() as d:
         env = {**os.environ, "GIT_AUTHOR_NAME": "Sam", "GIT_COMMITTER_NAME": "Sam",
                "GIT_AUTHOR_EMAIL": "1+s" + at + "users.noreply.github" + dot + "com",
@@ -398,13 +417,18 @@ def main():
     except (subprocess.CalledProcessError, FileNotFoundError):
         root = "."
     deny, allow = load_denylist(), load_allow(root, a.allow_from)
+    warn_only = WARN_OPTION in allow
+    allow = {v for v in allow if not v.startswith("denylist:")}
     revsets = [[a.range]] if a.range else []
     if a.push:
         revsets += push_revs(sys.stdin.read(), root)
     deletes_only = a.push and not revsets and not (a.all or a.files or a.range)
     if a.require_denylist and not deny and not deletes_only:
-        print("PII GUARD FAIL: " + MISSING_HELP)
-        return 1
+        if not warn_only:
+            print("PII GUARD FAIL: " + MISSING_HELP)
+            return 1
+        print("PII GUARD WARNING: names are not checked (.pii-guard has 'denylist: warn'); every other check runs. "
+              + MISSING_HELP)
     found, what = [], []
     if a.all:
         files = git("ls-files", "-z", root=root).split("\0")
