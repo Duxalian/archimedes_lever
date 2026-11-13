@@ -1,4 +1,5 @@
 # Next prompt: {{PROJECT_NAME}}
+> Template: first use fills in the {{...}} values and deletes this line.
 
 Updated: {{DATE}} by bootstrap. Keep this file at 40 lines or fewer. The current request overrides it.
 

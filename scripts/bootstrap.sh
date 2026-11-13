@@ -39,7 +39,7 @@ BS_TIME="${BS_STAMP#* }"
 
 files=(AGENTS.md docs/NEXT_PROMPT.md docs/DECISIONS.md docs/host-prompts.md docs/LOG.md)
 for f in "${files[@]}"; do
-  perl -pi -e 's/\{\{PROJECT_NAME\}\}/$ENV{BS_NAME}/g; s/\{\{REPO\}\}/$ENV{BS_REPO}/g; s/\{\{PURPOSE\}\}/$ENV{BS_PURPOSE}/g; s/\{\{DATE\}\}/$ENV{BS_DATE}/g; s/\{\{TIME\}\}/$ENV{BS_TIME}/g; s/\{\{TIMEZONE\}\}/$ENV{BS_TZ}/g; s/\{\{OWNER\}\}/the owner/g' "$f"
+  perl -pi -e 's/\{\{PROJECT_NAME\}\}/$ENV{BS_NAME}/g; s/\{\{REPO\}\}/$ENV{BS_REPO}/g; s/\{\{PURPOSE\}\}/$ENV{BS_PURPOSE}/g; s/\{\{DATE\}\}/$ENV{BS_DATE}/g; s/\{\{TIME\}\}/$ENV{BS_TIME}/g; s/\{\{TIMEZONE\}\}/$ENV{BS_TZ}/g; s/\{\{OWNER\}\}/the owner/g; $_ = "" if /^> Template: first use fills in/' "$f"
 done
 
 # Replace the role word "the owner" / "The owner".

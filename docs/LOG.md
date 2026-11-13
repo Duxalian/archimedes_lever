@@ -1,4 +1,5 @@
 # Project log: {{PROJECT_NAME}}
+> Template: first use fills in the {{...}} values and deletes this line.
 
 Source for a timeline of milestones, breakthroughs and narratives. Rules: AGENTS.md "Project log" and .claude/project-log.md. Newest last. Times are {{TIMEZONE}}.
 

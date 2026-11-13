@@ -1,4 +1,5 @@
 # Host prompts: {{PROJECT_NAME}}
+> Template: first use fills in the {{...}} values and deletes this line.
 
 Text for places outside the repo. Keep each text a pointer. Put rules in AGENTS.md, not here.
 

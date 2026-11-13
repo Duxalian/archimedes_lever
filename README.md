@@ -4,6 +4,8 @@ A starter kit for working with AI assistants (Claude, ChatGPT, Codex and others)
 
 The name comes from Archimedes: "Give me a place to stand, and I will move the world." Here, the place to stand is a set of files that every agent reads, so your rules, decisions and history stay put instead of disappearing with each chat.
 
+Status: early. Built from 2026-11-10 to 2026-11-13 by one maintainer. Agents followed the written rules in 27 of 30 test scenarios ([rule tests](docs/reviews/2026-11-13-rule-tests.md)). Files that contain `{{...}}` values are templates: first use fills them in.
+
 ## Try it first
 
 Paste this into Claude (claude.ai or Claude Code), or any assistant that can read web pages:
