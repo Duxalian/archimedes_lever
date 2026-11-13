@@ -2,6 +2,13 @@
 
 Template repo only: scripts/bootstrap.sh deletes this file in new projects. Newest first. "Decided" = decision by the owner. "Rec" = agent recommendation that the owner has not approved.
 
+## 2026-11-13: host limits, first audit, trial project
+
+- Decided (the owner, 2026-11-13): AGENTS.md "Delivery" gets one rule: a host limit (a required branch, a push or merge the host does not allow) wins; agents do the allowed steps and report the rest as blocked.
+- Added: first full bloat audit (docs/reviews/2026-11-13-bloat-audit.md): 6 proposals for the owner, 0 removals. `.bloat-audit.json` holds the kit's audit state and timing baselines; scripts/bootstrap.sh deletes it in new projects.
+- Trial: a fake project from a clone of the kit bootstraps, passes check.sh (12 of 12) and pushes through pre-push and the guard.
+- Decided (the owner, 2026-11-13): audit proposals P1–P5 approved. Changed: AGENTS.md (project log detail moved to the new .claude/project-log.md; personal-data and git-safety enforcement bullets are pointers; the GitHub Actions rule moves to "Checks"); scripts/bloat_check.py (never audited: due 14 days or 30 commits after the first commit); scripts/sync_baseline.py and scripts/bootstrap.sh copy and rename .claude/project-log.md; bootstrap.sh also renames the owner in .claude/bloat-audit.md and scripts/bloat_check.py, as sync does. Start read 3,799 → 3,256 tokens.
+
 ## 2026-11-13: GitHub account renamed to rhope-ops
 
 - Decided (the owner, 2026-11-13): the GitHub account [old handle] is now rhope-ops. Every reference in the kit and its projects says rhope-ops, history included; the LICENSE holder is rhope-ops. Local Windows paths keep their folder name. The archived standard_project repo itself is not changed (links to it now use rhope-ops).

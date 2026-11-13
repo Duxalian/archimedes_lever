@@ -1,6 +1,6 @@
 # Project log: {{PROJECT_NAME}}
 
-Source for a timeline of milestones, breakthroughs and narratives. Rules: AGENTS.md, "Project log". Newest last. Times are {{TIMEZONE}}.
+Source for a timeline of milestones, breakthroughs and narratives. Rules: AGENTS.md "Project log" and .claude/project-log.md. Newest last. Times are {{TIMEZONE}}.
 
 ## Arcs
 
