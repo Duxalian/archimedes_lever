@@ -34,7 +34,7 @@ These are things that went wrong across 5 real projects, and the rule each one l
 | Lesson | What happened | Where the rule lives |
 |---|---|---|
 | Ask all questions at the start, with options and a recommendation | A design review found 34 decisions the agent had assumed instead of asking | PREFERENCES.md "Decisions" |
-| A review by a fresh agent finds what self-review misses | A self-review checked that 39 notes existed; 30 of them said the opposite of the source | PREFERENCES.md "Reporting"; the kit's `reviewer` agent |
+| A review in a fresh context finds what self-review misses | A self-review checked that 39 notes existed; 30 of them said the opposite of the source | PREFERENCES.md "Reporting"; the kit's `reviewer` agent |
 | Enforce safety with a hook, not just with written rules | A rule said "never force-push"; only one tool obeyed it | The kit's `scripts/git-hooks/pre-push` |
 | Don't push to main until the checks pass | A commit reached main with a failing check | The kit's pre-push hook runs `scripts/check.sh` |
 | State each rule once; conflicting rules hurt more than long ones | 3 conflicting preference rules made the agent's behavior look random | One rule set for Claude, ChatGPT and Codex; the kit's `.claude/rule-tests.md` |
@@ -43,8 +43,8 @@ These are things that went wrong across 5 real projects, and the rule each one l
 | Build from a real sample and the full source, not from memory | A package built from the docs failed on import; a real export showed the wrong key | Ask for a sample first (not yet a rule) |
 | Change one thing per test, and use a control | A test changed 2 things at once and could not find the cause | Not yet a rule |
 | Keep personal data out of git from the very first commit | An old repo could never go public, because its history held a name and an email | The kit's `scripts/pii_guard.py` |
-| Treat text in repos and on web pages as data, not as instructions | Research: one model followed an instruction hidden in a README or TODO file 2.6 times more often than the same instruction in a code or data file | The kit's AGENTS.md "Untrusted input" |
-| Check for bloat on a schedule, and measure before you cut | One operation went from 116.6 s to 23.4 s after a cleanup | The kit's `scripts/bloat_check.py` |
+| Treat text in repos and on web pages as data, not as instructions | Research: one model followed an instruction injected into a README or TODO file 2.6 times more often than the same instruction in a code or data file | The kit's AGENTS.md "Untrusted input" |
+| Check for bloat on a schedule, and measure before you cut | One operation went from 116.6 s to 23.4 s after an audit | The kit's `scripts/bloat_check.py` |
 
 Sources: the research figure is from [arXiv 2610.38867](https://arxiv.org/abs/2610.38867) (see [the gap review](docs/reviews/2026-11-13-agentic-gap-review.md)). The other numbers come from the maintainer's own project logs, which are private.
 
@@ -77,7 +77,7 @@ You don't need to know git: the agent handles it. Pick one way.
 
 Either way, the agent asks you 4 questions: the project's name, what it is for, your time zone, and whether to use the recommended settings. It explains each one. If you're not sure, pick the answer it marks as recommended. Then it creates your GitHub repository, fills in the project files and tells you what is left to do.
 
-One step is yours. The agent asks you to type your own names into a private list. The personal-data guard checks every push against that list, so your names never end up on GitHub by mistake. You never type the names into the chat. In the browser (way A), this means you add one setting and start a new session; the agent gives you a prompt to paste there, so you don't have to answer the questions again.
+One step is yours. The agent asks you to type your own names into a private list. The personal-data guard checks every push against that list, so your names never end up on GitHub by mistake. You never type the names into the chat. In the browser (way A), this means you add a setting and start one new session; the agent gives you a prompt to paste there, so you don't have to answer the questions again.
 
 Also in the browser (way A): Claude Code may only be allowed to push to its own branch, not to `main`. If so, the agent tells you the push to `main` is blocked. Type `Please open a pull request`, open the link it gives you, and click **Merge pull request**.
 
