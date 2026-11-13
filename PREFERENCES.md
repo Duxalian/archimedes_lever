@@ -54,7 +54,7 @@ Show dates and times in [[TIME_ZONE]]. My current message overrides these rules.
 - Data writes (INSERT/UPDATE/DELETE/MERGE, DROP/TRUNCATE, schema changes, backfills): first show the statement and a dry run or a SELECT of the affected rows with counts. Report row counts before and after.
 - Treat personal data as sensitive: never put raw rows with PII in chat, artifacts, docs or external tools. Aggregate or mask (hash, truncate) unless I ask for raw rows.
 - Save each deliverable where it survives (repo, doc, artifact) as soon as it exists. Short text to paste: Copy block. Long text or text to review: editable doc.
-- Batch related changes into one pass. Before you publish, merge or ship, ask "any more changes?" and for the approval in the same dialog. Run work in parallel only when the parts touch different files.
+- Batch related changes into one pass. Before you publish or ship live, ask "any more changes?" and for the approval in the same dialog. Run work in parallel only when the parts touch different files.
 - For tasks with 3+ steps, keep a task list and update it.
 - Outside a repo: no duplicated text, one place per fact. Inside a repo: follow its AGENTS.md.
 
@@ -62,9 +62,9 @@ Show dates and times in [[TIME_ZONE]]. My current message overrides these rules.
 - Start new work on a new branch from the latest default branch. Never push, commit or merge directly to the default branch.
 - Never force-push, rewrite history on a shared branch, or delete a branch that has unmerged work.
 - When the work is done: run the repo's tests and checks yourself, push, open a pull request, and give me its link. This is my standing request for a PR.
-- Merge a PR only after I approve that specific PR in chat, and only after its checks pass. One approval covers one PR. A new commit after my approval needs a new approval.
-- Before you merge, show: the PR link, check status (CI result, or the local test command and its result if there is no CI), and a one-line summary of the change.
-- After the merge: delete the branch on GitHub and confirm both the merge and the deletion.
+- Merge the PR yourself when its checks pass and an independent review in a fresh context finds no MAJOR finding. Ask me first only for a UI change, a live or irreversible effect, or a MAJOR finding.
+- After the merge, show: the PR link, check status (CI result, or the local test command and its result if there is no CI), the review result, and a one-line summary of the change.
+- After the merge: delete the branch on GitHub if the repo does not do it itself, and confirm both the merge and the deletion.
 - After a merge, start new work on a new branch from the latest default branch.
 
 ## Usage
@@ -119,7 +119,7 @@ Show dates and times in [[TIME_ZONE]]. My current message overrides these rules.
 | Changes: save at once; batch, then ask for approval with "any more changes?" | Chats end and containers are reclaimed; each publish costs the owner a review. | Agent draft |
 | Changes: parallel only on disjoint files | Parallel edits to one file conflict at merge. | Agent draft |
 | Changes: one place per fact | Conflicting rules made agent behaviour look random. | README lesson "State each rule once", log #22 |
-| Git: branch, PR, approval per PR, checks pass, no force-push | Enable branch protection where possible: a written rule is not a control. | README lessons "Enforce safety with a hook" and "Don't push to main until the checks pass" |
+| Git: branch, PR, merge when checks pass and a fresh review finds no MAJOR; ask only for UI, live or irreversible effects, or a MAJOR finding; no force-push | Approval per PR cost 1–2 extra turns per PR and repeated what the checks and the review had already checked (the owner, 2026-11-13). Enable branch protection where possible: a written rule is not a control. | README lessons "Enforce safety with a hook" and "Don't push to main until the checks pass" |
 | Usage: models, agent count and hours before heavy work | A usage status line and hook was a dead end; the owner estimates usage from these 3 numbers. | log #25 |
 | Reporting: done, published, verified; self-review is not independent review | Self-review misses what a fresh context finds. | README lesson "A review in a fresh context" |
 | Reporting: fresh review for 100+ lines, data writes or anything going live | Same lesson. | README lesson "A review in a fresh context" |

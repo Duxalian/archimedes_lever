@@ -40,7 +40,7 @@ Chat history, Project files and remembered copies are not authority. If you cann
 - A host limit wins over this section (for example a required branch, or a push or merge the host does not allow without the owner): do the steps it allows, then report each other step as blocked, with its cause and what unblocks it.
 - Exception: for a UI or design change that the owner has not approved, show a preview first (a preview artifact or a branch). Merge after the owner approves. Delete previews after they ship.
 - For changes that are not UI or design, this rule overrides the personal "preview first" rule.
-- Exception: while `scripts/check.local.sh` does not exist (check.sh says SKIP project checks), deliver changes to code, checks or scripts on a branch and merge after the owner approves (with no project tests, only the owner can catch a broken change). At the first code change, propose a `scripts/check.local.sh` that runs this project's tests or a smoke test.
+- Exception: while `scripts/check.local.sh` does not exist (check.sh says SKIP project checks), deliver changes to code, checks or scripts through a pull request; merge it when check.sh passes and the fresh review ("Delegation") finds no MAJOR finding, else ask the owner (with no project tests, the review is the only gate; the owner, 2026-11-13). At the first code change, propose a `scripts/check.local.sh` that runs this project's tests or a smoke test.
 - If a step is blocked, name the step and the cause. If permissions block a step, give the exact commands to paste, one code block for each command.
 - Put every deliverable where it survives (repo, doc, artifact) as soon as it exists.
 
