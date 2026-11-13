@@ -36,6 +36,7 @@ Chat history, Project files and remembered copies are not authority. If you cann
 ## Delivery
 
 - Deliver every change without being asked: commit, merge to main, push, verify that origin/main has the commit, and republish the affected artifacts.
+- A host limit wins over this section (for example a required branch, or a push or merge the host does not allow without the owner): do the steps it allows, then report each other step as blocked, with its cause and what unblocks it.
 - Exception: for a UI or design change that the owner has not approved, show a preview first (a preview artifact or a branch). Merge after the owner approves. Delete previews after they ship.
 - For changes that are not UI or design, this rule overrides the personal "preview first" rule.
 - If a step is blocked, name the step and the cause. If permissions block a step, give the exact commands to paste, one code block for each command.
