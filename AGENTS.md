@@ -140,7 +140,7 @@ The project log records how the project got there (milestones, breakthroughs, mi
 <!-- /full -->
 - Delegate only substantial independent work (about 30 minutes or more) with bounded files and measurable done criteria. Give parallel agents disjoint files.
 - Ask for concise findings with evidence paths.
-- Before a merge of changes to code, checks or scripts, a fresh reviewer gets only the diff and the brief, not the author's conclusions (a fresh context finds what self-review misses): the `reviewer` subagent where the host has subagents, else a new session given only the diff and the brief, on a model tier no lower than the author's; if neither is possible, review it yourself and call it "self-review". Docs-only changes skip this review.
+- Before a merge of changes to code, checks or scripts, a fresh reviewer gets only the diff and the brief, not the author's conclusions (a fresh context finds what self-review misses): the `reviewer` subagent where the host has subagents, else a new session given only the diff and the brief, on a model tier no lower than the author's; if neither is possible, review it yourself and call it "self-review". Docs-only changes skip this review. The review covers the head commit you merge: a fix made after a review gets its own review (the owner, 2026-11-13).
 - Check delegated output (diff, touched files, no approval or exemption changes) before you report it as done.
 
 ## Unattended work
