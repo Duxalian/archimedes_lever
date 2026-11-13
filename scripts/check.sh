@@ -2,7 +2,7 @@
 # One check command for the repo (AGENTS.md "Commands": Test). Runs, in order:
 #   1. the self-test of each kit script (--test), 2. the project log check (docs/LOG.md),
 #   3. the personal-data scan of all tracked files (when .pii-guard exists; in GitHub Actions the pii-guard step does it),
-#   4. scripts/check.local.sh, when it exists: this project's own tests.
+#   4. scripts/check.local.sh, when it exists: this project's own tests (SKIP when missing: AGENTS.md Delivery then gates main).
 # Prints one PASS/FAIL/SKIP line per check, the output of each failed check, and "CHECK PASS" or "CHECK FAIL" last.
 # Exit 0 only when no check failed. Needs bash, git and python3.
 set -uo pipefail
@@ -44,7 +44,11 @@ else
   run "personal-data scan" python3 scripts/pii_guard.py --all
 fi
 
-if [ -f scripts/check.local.sh ]; then run "project checks (check.local.sh)" bash scripts/check.local.sh; fi
+if [ -f scripts/check.local.sh ]; then
+  run "project checks (check.local.sh)" bash scripts/check.local.sh
+else
+  skip "project checks" "no scripts/check.local.sh: no project tests yet; AGENTS.md Delivery gates main"
+fi
 
 total=$((pass + fail + skip))
 if [ "$fail" -eq 0 ]; then
