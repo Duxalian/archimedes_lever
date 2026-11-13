@@ -37,10 +37,10 @@ for f in "${files[@]}"; do
   perl -pi -e 's/\{\{PROJECT_NAME\}\}/$ENV{BS_NAME}/g; s/\{\{REPO\}\}/$ENV{BS_REPO}/g; s/\{\{PURPOSE\}\}/$ENV{BS_PURPOSE}/g; s/\{\{DATE\}\}/$ENV{BS_DATE}/g; s/\{\{TIME\}\}/$ENV{BS_TIME}/g; s/\{\{TIMEZONE\}\}/$ENV{BS_TZ}/g; s/\{\{OWNER\}\}/the owner/g' "$f"
 done
 
-# Replace the role word "the owner" / "The owner" (sync_baseline.py keeps the literal: it needs it).
+# Replace the role word "the owner" / "The owner".
 if [ "$BS_OWNER" != "the owner" ]; then
   # The same files sync_baseline.py renames (its COPY_FILES), so a sync right after bootstrap changes nothing.
-  # Not renamed on purpose: docs/FIRST_USE.md, scripts/first_use_check.py and scripts/sync_baseline.py, whose
+  # Not renamed on purpose: docs/FIRST_USE.md and scripts/first_use_check.py, whose
   # "the owner" is an option, a role or a literal the script needs.
   owner_files=("${files[@]}" .claude/orchestration.md .claude/bloat-audit.md .claude/project-log.md .claude/rule-tests.md scripts/bloat_check.py scripts/session_checkin.sh scripts/stop_check.py scripts/worker_guard.py
     scripts/log_check.py scripts/timeline.py scripts/pii_guard.py scripts/check.sh scripts/git-hooks/pre-push)
