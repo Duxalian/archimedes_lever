@@ -87,11 +87,13 @@ Chat history, Project files and remembered copies are not authority. If you cann
 - Build: not set yet.
 - Test: `scripts/check.sh` (the kit's self-tests, the personal-data scan and this project's own tests in `scripts/check.local.sh`, which check.sh runs last).
 - Lint: not set yet.
+- Production data: not set yet (until it is set, agents treat every data target as production).
 
 ## Verification
 
 - Before you report "verified", run the checks in Commands and report the results (a check that returns pass or fail is the most reliable way to know work is done).
-- For UI work, verify by measuring, not by looking: screenshots at 375 px and 1440 px width, light and dark, measured spacing, and contrast against WCAG AA (4.5:1 text, 3:1 large text and UI parts). Report the numbers.
+- For UI work, verify by measuring, not by looking: follow `.claude/skills/ui-verify/SKILL.md` and report the numbers.
+- Before a data write or a query that can scan a large table: follow `.claude/skills/data-change/SKILL.md`.
 
 ## Checks
 

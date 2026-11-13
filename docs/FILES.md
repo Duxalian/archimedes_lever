@@ -8,14 +8,16 @@ Every file in the archimedes_lever kit and what it does. Kit only: `scripts/boot
 | CLAUDE.md | One line that imports AGENTS.md, because Claude Code reads CLAUDE.md. |
 | GEMINI.md | One line that imports AGENTS.md, because Gemini CLI reads GEMINI.md. Codex, Copilot and Cursor read AGENTS.md directly. |
 | docs/NEXT_PROMPT.md | Short handoff: where things stand, open work, and what needs the owner. |
-| docs/DECISIONS.md | Dated decision log, separating owner decisions from agent recommendations. |
+| docs/DECISIONS.md | The maintainer's own decisions and the reason for each rule in PREFERENCES.md. Public. A project gets the blank copy from docs/templates/ instead. |
+| docs/templates/ | Blank DECISIONS.md and LOG.md for a new project. Bootstrap moves them into docs/ and deletes this folder; sync uses the LOG.md copy. |
+| .claude/skills/ | Claude Code skills, synced to projects: `data-change` (dry run, approval and counts for data writes and large queries) and `ui-verify` (measure.mjs: screenshots at 375 and 1440 px, light and dark, contrast, targets, overflow). Other agents read the SKILL.md files through AGENTS.md "Verification". |
 | docs/WORKING_WITH_AGENTS.md | For people new to agents: the working loop, clean context, how to ask, what to check. |
-| docs/LOG.md | Full only. Project log for a timeline and a story deck: milestones, breakthroughs, misses and decisions, grouped into arcs. Each arc has a Problem, Turning point, Outcome and Lesson. A public repo keeps the log in a private place named in Project rules. |
+| docs/LOG.md | The kit's own public log (the owner, 2026-11-13). In a project (full only): the project log for a timeline and a story deck, from docs/templates/LOG.md: milestones, breakthroughs, misses and decisions, grouped into arcs. A public project keeps its log in a private place named in Project rules. |
 | docs/host-prompts.md | Short pointer texts for a claude.ai Project, ChatGPT, Gemini and any other chat. |
 | docs/FILES.md | This list. Kit only: bootstrap deletes it. |
 | docs/reviews/ | Detailed evidence. Bootstrap deletes the kit's own reports, so a project starts with only docs/reviews/README.md. |
 | .bloat-audit.json | The kit's own audit state and timing baselines (scripts/bloat_check.py). Template repo only: bootstrap deletes it, and a project's first audit creates its own. |
-| PREFERENCES.md | The maintainer's personal preferences for Claude, ChatGPT and Codex, as a template ready to fill in and paste: a core for everyone, plus Builder, Data and Agent work modules. Template repo only: bootstrap deletes it. |
+| PREFERENCES.md | The maintainer's current personal preferences for Claude, ChatGPT and Codex, and the source for the maintainer's account settings; also a template ready to fill in and paste: a core for everyone, plus Builder, Data, Agent work and Git modules. Reasons: docs/DECISIONS.md. Template repo only: bootstrap deletes it. |
 | LICENSE | The kit's license (MIT). Bootstrap moves it to docs/archimedes_lever-LICENSE.txt; each project picks its own LICENSE. |
 | .claude/settings.json | Claude Code deny list (force-push including --force-with-lease, `--no-verify`, changing core.hooksPath, hard reset, clean, stash, restore, `branch -D`, reading .env and key files), a sandbox with a network allowlist (GitHub, PyPI, npm), and the Stop hook. Applies to Claude Code only. |
 | .claude/orchestration.md | Full only. Multi-agent rules: roles, model choice by tier, fallbacks, briefs, review and merge, lanes. Read only when delegating. |

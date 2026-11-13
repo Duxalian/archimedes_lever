@@ -37,6 +37,13 @@ BS_STAMP="$(TZ="$BS_TZ" date '+%F %H:%M')"
 BS_DATE="${BS_STAMP% *}"
 BS_TIME="${BS_STAMP#* }"
 
+# The kit's docs/DECISIONS.md and docs/LOG.md are the maintainer's own, public record (2026-11-13): a project starts from
+# the blank copies in docs/templates/ instead.
+for f in DECISIONS.md LOG.md; do
+  if [ -f "docs/templates/$f" ]; then mv -f -- "docs/templates/$f" "docs/$f"; fi
+done
+rm -rf -- docs/templates
+
 files=(AGENTS.md docs/NEXT_PROMPT.md docs/DECISIONS.md docs/host-prompts.md docs/LOG.md)
 for f in "${files[@]}"; do
   perl -pi -e 's/\{\{PROJECT_NAME\}\}/$ENV{BS_NAME}/g; s/\{\{REPO\}\}/$ENV{BS_REPO}/g; s/\{\{PURPOSE\}\}/$ENV{BS_PURPOSE}/g; s/\{\{DATE\}\}/$ENV{BS_DATE}/g; s/\{\{TIME\}\}/$ENV{BS_TIME}/g; s/\{\{TIMEZONE\}\}/$ENV{BS_TZ}/g; s/\{\{OWNER\}\}/the owner/g; $_ = "" if /^> Template: first use fills in/' "$f"
@@ -44,7 +51,7 @@ done
 
 # Replace the role word "the owner" / "The owner".
 if [ "$BS_OWNER" != "the owner" ]; then
-  # The same files sync_baseline.py renames (its COPY_FILES), so a sync right after bootstrap changes nothing.
+  # The same files sync_baseline.py renames (its COPY_FILES, minus .claude/skills/, which hold no owner word), so a sync right after bootstrap changes nothing.
   # Not renamed on purpose: docs/FIRST_USE.md and scripts/first_use_check.py, whose
   # "the owner" is an option, a role or a literal the script needs.
   owner_files=("${files[@]}" .claude/orchestration.md .claude/bloat-audit.md .claude/project-log.md .claude/rule-tests.md scripts/bloat_check.py scripts/session_checkin.sh scripts/stop_check.py scripts/worker_guard.py

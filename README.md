@@ -18,7 +18,7 @@ Tell me your thoughts about this repo: https://github.com/rhope-ops/archimedes_l
 
 | Take | What you get | Time | What you need |
 |---|---|---|---|
-| 1. [Preferences](PREFERENCES.md) for your own AI account | Every chat asks its questions up front, labels its recommendations, says how confident it is, checks its work before it says "done", and saves you clicks and copying | About 5 minutes (our estimate, not timed): the assistant asks you up to 5 questions (including which optional modules you want) and gives you one block to paste | Any Claude, ChatGPT or Codex account. No GitHub needed. |
+| 1. [Preferences](PREFERENCES.md) for your own AI account | Every chat asks its questions up front, labels its recommendations, says how confident it is, checks its work before it says "done", and saves you clicks and copying | About 5 minutes (our estimate, not timed): the assistant asks you up to 6 questions (including which optional modules you want and where your own copy lives) and gives you one block to paste | Any Claude, ChatGPT or Codex account. No GitHub needed. |
 | 2. A project kit (the rest of this repo) | A new project where every agent follows one rules file, where force-pushes and pushes that contain your listed names or your email are blocked, where agents check their own work, and where decisions are written down | About 15 minutes with an agent (our estimate, not timed); see "Start here" below | A free GitHub account and an agent that can run commands |
 
 New to agents? Read [docs/WORKING_WITH_AGENTS.md](docs/WORKING_WITH_AGENTS.md) first: the working habits that matter most, in 5 minutes.
@@ -33,7 +33,7 @@ Replace "Claude" with "ChatGPT" or "Codex" if that is what you use.
 
 ## The lessons behind the rules
 
-These are things that went wrong across 5 real projects, and the rule each one led to. Each rule now lives either in [PREFERENCES.md](PREFERENCES.md) (your account) or in the kit (your projects).
+These are things that went wrong across 5 real projects, and the rule each one led to. The reason for every rule is in [docs/DECISIONS.md](docs/DECISIONS.md); the story is in the public [docs/LOG.md](docs/LOG.md). Each rule now lives either in [PREFERENCES.md](PREFERENCES.md) (your account) or in the kit (your projects).
 
 | Lesson | What happened | Where the rule lives |
 |---|---|---|
@@ -103,7 +103,8 @@ Two tiers. **Starter** (recommended for a first project): AGENTS.md, the safety 
 | Safety hooks | `scripts/git-hooks/pre-push` blocks force-pushes, deleting main, and pushes that fail `scripts/check.sh`, for every tool (a push with `--no-verify` skips it; see Limits). The Claude Code Stop hook stops a turn from ending while work is unsaved or unpushed. |
 | Personal-data and secret guard | `scripts/pii_guard.py` blocks emails, phone numbers, ID-number patterns, API tokens, private keys and the names on your private list before they reach GitHub. |
 | One check command | `scripts/check.sh` runs every self-test, the project log check and the personal-data scan, plus your own tests in `scripts/check.local.sh`. Until that file exists, check.sh shows SKIP, and agents merge code changes to main only with your approval. It is the default test command in AGENTS.md and runs on every pull request. |
-| Memory in files | docs/DECISIONS.md (dated decisions), docs/NEXT_PROMPT.md (a short handoff note); full only: docs/LOG.md (a timeline of milestones, breakthroughs and misses). |
+| Memory in files | docs/DECISIONS.md (dated decisions), docs/NEXT_PROMPT.md (a short handoff note); full only: docs/LOG.md (a timeline of milestones, breakthroughs and misses). A project starts with blank copies; the kit's own files are the maintainer's public record. |
+| Skills | `.claude/skills/data-change` (dry run, approval and row counts before data writes and large queries) and `.claude/skills/ui-verify` (measured screenshots, contrast and target sizes). |
 | Novice guide | docs/WORKING_WITH_AGENTS.md: explore, plan, build, verify; clean context; how to ask. |
 | Multi-agent pack (full only) | `.claude/orchestration.md`: scout, worker and reviewer roles, model tiers (fast, standard, strong) for each host, and fallbacks for hosts without subagents or hooks. |
 | Upkeep checks (full only) | `scripts/bloat_check.py` and the bloat audit; `.claude/rule-tests.md`. |
