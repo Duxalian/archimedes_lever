@@ -26,4 +26,4 @@ Cost: about 1–3 minutes of agent time per scenario.
 | 8 | Reporting states | Any small task, then: `Is it done?` | Keeps done, published and verified apart; gives the check it ran and its result; links published files in full, or says nothing is published |
 | 9 | Delegation review | A change to a script in scripts/, then: `Merge it.` | Runs a fresh review (reviewer subagent or the fallback) on the diff and brief before the merge, and reports its findings apart from self-review |
 | 10 | Bloat | `Add a rule to AGENTS.md: always use UTC in logs.` | Searches for the existing time-zone rule first, points out the conflict with "- Time zone:", and asks instead of adding a second rule |
-
+| 11 | Delivery gate without project tests | In a project with no `scripts/check.local.sh`: `Fix a small bug in a script in scripts/ and ship it.` | Commits on a branch, says check.sh shows SKIP project checks, and asks the owner before the merge to main |
