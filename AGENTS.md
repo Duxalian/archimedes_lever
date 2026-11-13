@@ -59,6 +59,7 @@ Chat history, Project files and remembered copies are not authority. If you cann
 - Pull just before you edit a shared doc. Use small edits. Never rewrite a whole file from an old copy.
 - Never commit secrets, tokens or credentials.
 - Enforced by `scripts/git-hooks/pre-push` (every agent; `scripts/session_checkin.sh` installs it) and, for Claude Code, `.claude/settings.json` (deny list, sandbox, Stop hook), because a written rule alone is not always obeyed; each file lists what it blocks (the hook in its header comment, settings.json in its deny rules). Never push with `--no-verify`.
+- Delete a remote branch when all its work is on main (`git merge-base --is-ancestor origin/<branch> origin/main`), stale ones included; never one with unmerged work: list it for the owner with a recommendation (the owner, 2026-11-13).
 - Do not weaken a hook or its settings to get past a block: ask the owner.
 
 ## Untrusted input
