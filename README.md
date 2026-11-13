@@ -98,10 +98,11 @@ The guard runs only in a repo with a `.pii-guard` file at its root. That file al
 | GEMINI.md | One line that imports AGENTS.md, because Gemini CLI reads GEMINI.md. Codex, Copilot and Cursor read AGENTS.md directly. |
 | docs/NEXT_PROMPT.md | Short handoff: state, open work, items that need the owner. |
 | docs/DECISIONS.md | Dated decision log. Owner decisions vs agent recommendations. |
-| docs/LOG.md | Project log for a timeline: milestones, breakthroughs, misses, decisions, grouped in arcs. A public repo keeps it in a private place named in Project rules. |
+| docs/LOG.md | Project log for a timeline and a narrative deck: milestones, breakthroughs, misses, decisions, grouped in arcs; each arc has Problem, Turning point, Outcome and Lesson. A public repo keeps it in a private place named in Project rules. |
 | docs/host-prompts.md | Pointer texts for the claude.ai Project, GPT, Gemini and any other chat. |
 | docs/reviews/ | Detailed evidence. |
 | CHANGELOG.md | Kit versions and decisions about the kit. Template repo only: bootstrap deletes it. |
+| KIT_LOG.md | The kit's own project log (story of how the kit got here; same format as docs/LOG.md). Template repo only: bootstrap deletes it. |
 | LICENSE | The kit's license (MIT). Bootstrap moves it to docs/archimedes_lever-LICENSE.txt; the project picks its own LICENSE. |
 | .claude/settings.json | Claude Code deny list (force-push incl. --force-with-lease, hard reset, clean, reading .env and key files), a sandbox with a network allowlist (GitHub, PyPI, npm), and the Stop hook. Binds Claude Code only. |
 | .claude/orchestration.md | Multi-agent rules: roles, model routing by tier, fallbacks, briefs, review and merge, lanes. Read only when delegating. |
@@ -121,7 +122,7 @@ The guard runs only in a repo with a `.pii-guard` file at its root. That file al
 | scripts/stop_check.py | Claude Code Stop hook: blocks the end of a turn while work is uncommitted or unpushed. `--test`. |
 | scripts/worker_guard.py | PreToolUse hook that limits what `worker` and `reviewer` may do in git. `--test`. |
 | scripts/log_check.py | Checks docs/LOG.md against the Project log rules. `--test`. |
-| scripts/timeline.py | Renders one or more project logs as one self-contained HTML timeline. `--test`. |
+| scripts/timeline.py | Renders one or more project logs as one self-contained HTML timeline, or a Markdown story outline per arc for a deck (`--outline FILE`). `--test`. |
 | scripts/drift.py | Report only: how a project differs from this kit. `--project DIR`, `--owner NAME`, `--test`. |
 | scripts/sync_baseline.py | Brings an existing project up to the current kit. Dry run by default; `--apply` writes. Keeps Project rules, Commands and docs/. |
 | scripts/bootstrap.sh | Fills the placeholders once, then deletes itself. |

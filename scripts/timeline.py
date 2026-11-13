@@ -5,9 +5,10 @@ Usage:
     python3 scripts/timeline.py [LOG ...] [-o timeline.html] [--title TEXT]
     LOG = path, or LABEL=path, or LABEL=path@owner/repo (commit hashes in Evidence become GitHub links)
     Default: docs/LOG.md
+    python3 scripts/timeline.py --outline story.md [LOG ...]   # Markdown story outline per arc, the source for a deck
     python3 scripts/timeline.py --test      # self-test; prints TIMELINE TEST PASS
 
-The page has: a summary (counts by type and project), the arcs (narratives) with their spans and outcomes, and the
+The page has: a summary (counts by type and project), the arcs (narratives) with their spans, problem, turning point, outcome and lesson, and the
 events newest-first grouped by day, with filters by project, type and arc. Light and dark follow the system and a
 toggle. Each type has a shape and a label, not only a color (milestone square, breakthrough triangle, miss circle,
 decision diamond). No scripts or fonts load from the network.
@@ -169,7 +170,9 @@ def render(title, arcs, events, zones=()):
     for a in arcs:
         n = sum(1 for x in events if x["project"] == a["project"] and x["arc"] == a["Arc"])
         out.append(f"<div class='arc'><h3>{e(a['Arc'])} <span class='meta'>· {e(a['project'])} · {n} event{'s' if n != 1 else ''} · {e(a['Span'])}</span></h3>"
-                   f"<p>{e(a['Summary'])} Outcome: {e(a['Outcome'])}</p></div>")
+                   f"<p>{e(a['Summary'])}</p>"
+                   + "".join(f"<p><b>{k}:</b> {e(a.get(k, '-'))}</p>" for k in STORY if a.get(k, "-") not in ("", "-"))
+                   + "</div>")
     out.append("</div></details><h2>Events</h2><div class='bar' role='group' aria-label='Filters'>")
     for p in projects:
         out.append(f"<button type='button' data-filter='project' data-value='{e(p)}' aria-pressed='true'>{e(p)}</button>")
@@ -196,7 +199,39 @@ def render(title, arcs, events, zones=()):
     return "".join(out)
 
 
-def build(specs, title, force=False):
+STORY = ["Problem", "Turning point", "Outcome", "Lesson"]
+
+
+def outline(arcs, events):
+    """Markdown story outline: one section per arc, oldest arc first, ready to turn into 3-4 slides each."""
+    rows = {(x["project"], x["num"]): x for x in events}
+    first = {}
+    for x in events:
+        k = (x["project"], x["arc"])
+        first[k] = min(first.get(k, x["sort"]), x["sort"])
+    out = ["# Story outline", "", "One section per arc, oldest first. Slides: Problem, Turning point, Outcome, Lesson.", ""]
+    for a in sorted(arcs, key=lambda a: first.get((a["project"], a["Arc"]), "~")):  # an arc with no events goes last
+        mine = [x for x in events if x["project"] == a["project"] and x["arc"] == a["Arc"]]
+        counts = ", ".join(f"{sum(1 for x in mine if x['type'] == ty)} {ty}" for ty in sorted(log_check.TYPES))
+        out += [f"## {a['project']}: {a['Arc']}", "", f"{a['Summary']} ({a['Span']}; {counts})", ""]
+        for k in STORY:
+            v = a.get(k, "-")
+            if v in ("", "-"):
+                continue
+            out.append(f"- **{k}:** {v}")
+            if k == "Turning point":
+                for n in log_check.ROW_REF.findall(v):
+                    x = rows.get((a["project"], n))
+                    if x:
+                        out.append(f"  - #{n} ({x['when']}, {x['type']}): {x['topic']}. Result: {x['result']}. Evidence: {x['evidence']}")
+        misses = [x for x in mine if x["type"] == "miss"]
+        if misses:
+            out.append("- **Misses:** " + "; ".join(f"#{x['num']} {x['topic']}" for x in misses))
+        out.append("")
+    return "\n".join(out)
+
+
+def build(specs, title, force=False, as_outline=False):
     arcs, events, problems, zones = [], [], [], []
     for spec in specs:
         label, path, repo = parse_spec(spec)
@@ -208,7 +243,9 @@ def build(specs, title, force=False):
         zones.append(log_zone(path))
         arcs += a
         events += ev
-    return (render(title, arcs, events, zones) if not problems else None), problems
+    if problems:
+        return None, problems
+    return (outline(arcs, events) if as_outline else render(title, arcs, events, zones)), problems
 
 
 def self_test():
@@ -230,6 +267,11 @@ def self_test():
              and zone_note(["UTC", "Asia/Tokyo"]) == " Times are each project's local time." and zone_note([]) == ""),
             ("no network", page and not re.search(r"(src|href)=['\"]?https?://(?!github\.com/)", page)),
         ]
+        story, _ = build([f"Demo={f}"], "Test", as_outline=True)
+        checks.append(("outline has story fields", story and "**Problem:** Manual import took 2 h." in story
+                       and "#2 (2026-11-11 07:57–08:20, breakthrough)" in story and "**Misses:** #1" in story
+                       and "setup" in story and story.index("setup") < story.index("flow-import")))
+        checks.append(("arc card shows lesson", page and "Lesson:</b> Test the import first" in page))
         bad = pathlib.Path(d, "BAD.md")
         bad.write_text(log_check.GOOD.replace("| miss |", "| oops |"), encoding="utf-8")
         _, probs = build([str(bad)], "Test")
@@ -247,17 +289,19 @@ def main():
     ap.add_argument("-o", "--output", default="timeline.html")
     ap.add_argument("--title", default="Project timeline")
     ap.add_argument("--force", action="store_true", help="render even when log_check finds problems")
+    ap.add_argument("--outline", metavar="FILE", help="write a Markdown story outline per arc instead of the HTML page")
     ap.add_argument("--test", action="store_true")
     a = ap.parse_args()
     if a.test:
         return self_test()
-    page, problems = build(a.logs, a.title, a.force)
+    page, problems = build(a.logs, a.title, a.force, as_outline=bool(a.outline))
     if problems:
         print("\n".join(problems))
         print("TIMELINE: refused; fix the log or pass --force")
         return 1
-    pathlib.Path(a.output).write_text(page, encoding="utf-8")
-    print(f"TIMELINE: wrote {a.output}")
+    target = a.outline or a.output
+    pathlib.Path(target).write_text(page, encoding="utf-8")
+    print(f"TIMELINE: wrote {target}")
     return 0
 
 

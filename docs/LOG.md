@@ -4,9 +4,9 @@ Source for a timeline of milestones, breakthroughs and narratives. Rules: AGENTS
 
 ## Arcs
 
-| Arc | Span | Summary | Outcome |
-|---|---|---|---|
-| setup | {{DATE}} | Project made from the [old handle]/archimedes_lever baseline. | Repo ready |
+| Arc | Span | Summary | Problem | Turning point | Outcome | Lesson |
+|---|---|---|---|---|---|---|
+| setup | {{DATE}} | Project made from the [old handle]/archimedes_lever baseline. | - | - | Repo ready | - |
 
 ## Log
 
