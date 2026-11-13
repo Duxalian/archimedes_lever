@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Git pre-push hook for every agent and tool (Claude, Codex, Gemini, any other, and people).
 # Install once per clone: git config core.hooksPath <the folder of this file> (scripts/session_checkin.sh or a SessionStart hook does it).
-# Also runs scripts/pii_guard.py --push when the repo root has a .pii-guard file.
+# Also runs scripts/check.sh (when present) and scripts/pii_guard.py --push (when the repo root has a .pii-guard file).
 # Blocks: a push that is not a fast-forward (every force-push form, including --force-with-lease),
 # deleting main or master on the remote, and pushing a remote commit this clone has not fetched.
 # A person who truly needs to override runs the push with --no-verify; agents never do (AGENTS.md "Git safety").
@@ -60,8 +60,20 @@ input=$(cat)
 out=$(printf '%s\n' "$input" | check) || { echo "$out" >&2; exit 1; }
 [ -n "$out" ] && echo "$out" >&2
 
-# Personal-data guard: runs only in a repo that opts in with a .pii-guard file at its root (AGENTS.md "Personal data").
 top="$(git rev-parse --show-toplevel)"
+
+# Repo checks: a push that carries commits runs scripts/check.sh on this checkout and is blocked when it fails,
+# so an agent cannot sign off its own work (AGENTS.md "Git safety"). A push that only deletes branches skips it.
+if [ -f "$top/scripts/check.sh" ] && printf '%s\n' "$input" | awk 'NF>=4 && $2 !~ /^0+$/ {f=1} END {exit !f}'; then
+  cout=$(bash "$top/scripts/check.sh" 2>&1); crc=$?
+  if [ "$crc" -ne 0 ]; then
+    printf '%s\n' "$cout" >&2
+    echo "pre-push: blocked: scripts/check.sh failed (output above). Fix the cause, then push again." >&2
+    exit 1
+  fi
+fi
+
+# Personal-data guard: runs only in a repo that opts in with a .pii-guard file at its root (AGENTS.md "Personal data").
 if [ -f "$top/.pii-guard" ]; then
   guard=""
   for g in "$(cd "$(dirname "$0")/.." && pwd -P)/pii_guard.py" "$top/scripts/pii_guard.py" "$top/tools/pii_guard.py"; do

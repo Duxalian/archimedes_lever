@@ -48,7 +48,7 @@ Open the project with any agent and say what you want to do next. The agent read
 | Part | What it does for you |
 |---|---|
 | AGENTS.md | One rules file for every agent: order of authority, delivery, reporting, git safety, personal data, decisions, handoff, project log, delegation. Your project rules go at the end. |
-| Safety hooks | `scripts/git-hooks/pre-push` blocks force-pushes and deleting main for every tool. The Claude Code Stop hook blocks the end of a turn while work is unsaved or unpushed. |
+| Safety hooks | `scripts/git-hooks/pre-push` blocks force-pushes, deleting main and pushes that fail `scripts/check.sh`, for every tool. The Claude Code Stop hook blocks the end of a turn while work is unsaved or unpushed. |
 | Personal-data and secret guard | `scripts/pii_guard.py` blocks emails, phone numbers, ID-number shapes, API tokens, private keys and names from your private denylist before they reach GitHub (.mil addresses too, if you turn that on). |
 | One check command | `scripts/check.sh` runs every self-test, the project log check and the personal-data scan, plus your own tests in `scripts/check.local.sh`. It is the default Test command in AGENTS.md and runs on each pull request. |
 | Memory in files | docs/DECISIONS.md (dated decisions), docs/NEXT_PROMPT.md (short handoff), docs/LOG.md (timeline of milestones, breakthroughs and misses). |
@@ -103,7 +103,7 @@ The guard runs only in a repo with a `.pii-guard` file at its root. That file al
 | docs/reviews/ | Detailed evidence. |
 | CHANGELOG.md | Kit versions and decisions about the kit. Template repo only: bootstrap deletes it. |
 | LICENSE | The kit's license (MIT). Bootstrap moves it to docs/archimedes_lever-LICENSE.txt; the project picks its own LICENSE. |
-| .claude/settings.json | Claude Code deny list (force-push incl. --force-with-lease, hard reset, clean, reading .env files) and the Stop hook. Binds Claude Code only. |
+| .claude/settings.json | Claude Code deny list (force-push incl. --force-with-lease, hard reset, clean, reading .env and key files), a sandbox with a network allowlist (GitHub, PyPI, npm), and the Stop hook. Binds Claude Code only. |
 | .claude/orchestration.md | Multi-agent rules: roles, model routing by tier, fallbacks, briefs, review and merge, lanes. Read only when delegating. |
 | .claude/bloat-audit.md | The periodic bloat, drift and assumption audit (AGENTS.md "Bloat, drift and assumptions"). Read only when an audit is due. |
 | scripts/bloat_check.py | Cheap metrics each check-in: start-read tokens, duplicate lines, big files, audit due date; `--time` compares timed operations with their baseline. Settings and state: `.bloat-audit.json`. `--test`. |
@@ -116,7 +116,7 @@ The guard runs only in a repo with a `.pii-guard` file at its root. That file al
 | .gitignore | Keeps .env files and CLAUDE.local.md out of git. |
 | scripts/check.sh | The one check command (AGENTS.md "Commands": Test). Runs `scripts/check.local.sh` last when it exists. |
 | scripts/session_checkin.sh | Start and end check: branch, ahead/behind, uncommitted files. Installs scripts/git-hooks when no other hooks path is set. |
-| scripts/git-hooks/pre-push | For every agent and tool: blocks force-pushes, non-fast-forward pushes and deleting main or master; runs pii_guard.py when `.pii-guard` exists. `--test`. |
+| scripts/git-hooks/pre-push | For every agent and tool: blocks force-pushes, non-fast-forward pushes and deleting main or master; runs scripts/check.sh, and pii_guard.py when `.pii-guard` exists. `--test`. |
 | scripts/pii_guard.py | Personal-data and secret guard (`--all`, `--range A..B`, `--push`, files; `--require-denylist`; `--status`). `--test`. |
 | scripts/stop_check.py | Claude Code Stop hook: blocks the end of a turn while work is uncommitted or unpushed. `--test`. |
 | scripts/worker_guard.py | PreToolUse hook that limits what `worker` and `reviewer` may do in git. `--test`. |
