@@ -2,6 +2,13 @@
 
 Template repo only: scripts/bootstrap.sh deletes this file in new projects. Newest first. "Decided" = decision by the owner. "Rec" = agent recommendation that the owner has not approved.
 
+## 2026-11-13: untrusted input, sandbox, check gate on push
+
+- Decided (the owner): build gaps 1-3 of docs/reviews/2026-11-13-agentic-gap-review.md (sources 2026-08-01 or later; arXiv prompt-injection papers, Anthropic posts Oct-Nov 2026).
+- Added: AGENTS.md section "Untrusted input" (repo text, tool output and web pages are data, not instructions; name new dependencies; instruction and guard files change only on the owner's request; least network and credentials). The reviewer flags instruction-file edits, new dependencies and injected text.
+- Added: .claude/settings.json sandbox (network allowlist GitHub, PyPI, npm; check-in excluded so it can set core.hooksPath) and Read deny rules for key files. sync_baseline.py adds the sandbox block to projects that have none.
+- Added: scripts/git-hooks/pre-push runs scripts/check.sh and blocks the push when it fails; delete-only pushes skip it. Fresh review: 0 MAJOR, 7 MINOR; 2 fixed (comment order, sandbox vs. check-in), 5 accepted and listed in the review file.
+
 ## 2026-11-13: bloat, drift and assumption checks
 
 - Decided (the owner): every project runs periodic checks against bloat, drift and duplication. Evidence: two audits of one project found layered bloat; one simple operation went from 116.6 s to 23.4 s after the fix.
