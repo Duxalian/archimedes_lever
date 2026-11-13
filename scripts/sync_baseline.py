@@ -217,10 +217,10 @@ def merge_settings(base_path, proj_path):
     for rule in base.get("permissions", {}).get("deny", []):
         if rule not in deny:
             deny.append(rule)
-    # Hooks: add a baseline hook event only when the project has no hook for that event.
+    # Sandbox: add the baseline block only when the project has none (a project's own block is kept whole).
     if "sandbox" in base and "sandbox" not in proj:
         proj["sandbox"] = base["sandbox"]
-
+    # Hooks: add a baseline hook event only when the project has no hook for that event.
     base_hooks = base.get("hooks") or {}
     if base_hooks:
         hooks = proj.get("hooks")

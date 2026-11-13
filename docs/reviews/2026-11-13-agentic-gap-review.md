@@ -53,6 +53,8 @@ Handoff file with a size cap; dated decision record; separate reviewer with diff
 ## Limits
 
 - arXiv numbers come from abstracts, not full papers.
+- The sandbox write-protects git config and hooks, so `scripts/session_checkin.sh` (it sets core.hooksPath) is in `sandbox.excludedCommands`; not yet tested on a machine where the sandbox runs (medium confidence).
+- Bash `cat` of a key file is blocked only when the sandbox runs; the Read deny rules cover the Read tool only.
 - The sandbox does not start where bubblewrap and socat are missing (this cloud container); Claude Code then warns and runs commands unsandboxed.
 - claude.com/blog: only the first page (11 of 318 items) was read.
 - The date filter removes the most cited earlier sources (ETH AGENTS.md study, Feb 2026; Anthropic evals guide, Jan 2026; Karpathy, Mar-Apr 2026).
