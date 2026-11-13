@@ -8,6 +8,8 @@ These are the maintainer's own personal preferences for each AI host, made into 
 2. The assistant asks the 4 questions below, all at once, and gives you the filled block in one code block. It changes nothing else.
 3. Paste the block into the place named in the block's heading, then start a new chat (preferences load when a chat starts).
 
+If the assistant gives only the changed lines (some web tools copy only short quotes), do it by hand: on GitHub, use the copy button of the block for your host, paste it, and replace the 4 `[[...]]` words with your answers. This file is under the MIT license (LICENSE): you may copy it whole.
+
 | # | Fill-in | Question | Options (first one recommended) |
 |---|---|---|---|
 | 1 | `[[FIELD]]` | Which field do you know well, so the assistant can skip the basics there? | Your field in a few words (for example "finance", "law", "nursing") · none |
