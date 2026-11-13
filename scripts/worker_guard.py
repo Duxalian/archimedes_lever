@@ -11,8 +11,9 @@ Usage (wired in the .claude/agents/ frontmatter `hooks:`; runs only while that s
 Blocks Bash commands that push to main or master (also a bare push or HEAD while on one), rebase, git clean, branch deletes, force-push (--force, -f in
 grouped flags, +refspec, --force-with-lease), --mirror/--all, reset --hard or delete remote branches. It parses each
 simple command into words (quotes respected), so "main" inside a branch name or a commit message is not a match.
-Exit 2 with the reason on stderr blocks the call; exit 0 lets the normal permission flow decide. A command built at run
-time (eval, a script file) is not seen: it is a seat belt for honest mistakes, not a security boundary.
+Exit 2 with the reason on stderr blocks the call; exit 0 lets the normal permission flow decide. A command string run by
+eval or a shell's -c is checked too; other commands built at run time (a script file, stdin, `$(...)` output) are not
+seen: it is a seat belt for honest mistakes, not a security boundary.
 """
 import argparse
 import json
@@ -141,7 +142,7 @@ def push_target(pos, branch):
     return None
 
 
-SHELLS = {'sh', 'bash', 'zsh', 'dash'}
+SHELLS = {'sh', 'bash', 'zsh', 'dash', 'ksh'}
 
 
 def reason(cmd, branch=None, readonly=False, depth=0):
@@ -152,9 +153,15 @@ def reason(cmd, branch=None, readonly=False, depth=0):
             if w == 'eval' and depth < 3:
                 inner = ' '.join(seg[k + 1:])
             elif w.rsplit('/', 1)[-1] in SHELLS and depth < 3:
-                flags = [j for j in range(k + 1, len(seg)) if seg[j].startswith('-') and 'c' in seg[j][1:]]
-                if flags and flags[0] + 1 < len(seg):
-                    inner = seg[flags[0] + 1]
+                # The command string follows the first short-option group with c (-c, -xc, -lc), past long options
+                # (--norc, --rcfile x) and an optional "--".
+                flags = [j for j in range(k + 1, len(seg)) if re.fullmatch(r'-[A-Za-z]*c[A-Za-z]*', seg[j])]
+                if flags:
+                    j = flags[0] + 1
+                    if j < len(seg) and seg[j] == '--':
+                        j += 1
+                    if j < len(seg):
+                        inner = seg[j]
             if inner is not None:
                 why = reason(inner, branch, readonly, depth + 1)
                 if why:
@@ -188,7 +195,9 @@ def selftest():
         if not reason(c, 'main'):
             bad.append(c + ' (on main)')
     for c in ['git commit -m x', 'git checkout -b y', 'git add .', 'cd a && git merge origin/main',
-              'bash -c "git checkout main"', 'sh -lc \'git switch main\'', 'eval "git checkout main"', '/bin/bash -c "cd x; git commit -m y"']:
+              'bash -c "git checkout main"', 'sh -lc \'git switch main\'', 'eval "git checkout main"', '/bin/bash -c "cd x; git commit -m y"',
+              'bash --norc -c "git checkout main"', 'bash --rcfile x -c "git checkout main"', 'bash -c -- "git checkout main"',
+              'ksh -c "git checkout main"']:
         if not reason(c, 'cc/x', readonly=True):
             bad.append(c + ' (readonly)')
     for c in ['git diff origin/main...HEAD', 'git log -p', 'git show HEAD:x', 'git status', 'git fetch origin',

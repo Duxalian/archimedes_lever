@@ -213,7 +213,7 @@ def scan_commits(revs, root, deny, allow):
         for line in patch.splitlines():
             # A "+++ " line names the file only in a file header (after "diff --git", before the first "@@").
             # In a hunk it is an added line that starts with "++ ", and must be scanned like any other.
-            if line.startswith("diff --git "):
+            if line.startswith(("diff --git ", "diff --cc ", "diff --combined ")):  # the last two: merge commits
                 in_header = True
             elif line.startswith("@@"):
                 in_header = False
@@ -388,6 +388,20 @@ def self_test():
         found, _ = scan_commits([f"{mid}..HEAD"], d, [], {"skip: x"})
         good = [k for _, _, k, _ in found] == ["email"] and all(" a.txt" in w for w, _, _, _ in found)
         print(("ok   " if good else "FAIL ") + f"added '++ ' line is content, not a file header: {[k for _, _, k, _ in found]}")
+        ok = ok and good
+        run("checkout", "-q", "-b", "side", mid)
+        pathlib.Path(d, "c.txt").write_text("side\n")
+        run("add", "."); run("commit", "-q", "-m", "side")
+        run("checkout", "-q", "main")
+        pathlib.Path(d, "c.txt").write_text("main\n")
+        run("add", "."); run("commit", "-q", "-m", "main c")
+        subprocess.run(["git", "merge", "-q", "side"], cwd=d, env=env, capture_output=True)
+        pathlib.Path(d, "c.txt").write_text("both\nmail ann" + at + "corp" + dot + "io\n")
+        run("add", "."); run("commit", "-q", "-m", "merge side")
+        found_skip, _ = scan_commits(["HEAD~1..HEAD"], d, [], {"skip: c.txt"})
+        found_all, _ = scan_commits(["HEAD~1..HEAD"], d, [], set())
+        good = found_skip == [] and [(w.split()[-1], k) for w, _, k, _ in found_all] == [("c.txt", "email")]
+        print(("ok   " if good else "FAIL ") + f"merge commit (diff --cc): file name kept, skip rule applies: {len(found_skip)}, {len(found_all)}")
         ok = ok and good
         env["GIT_AUTHOR_EMAIL"] = "me" + at + "home" + dot + "net"
         run("commit", "-q", "--allow-empty", "-m", "x")
