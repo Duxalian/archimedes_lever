@@ -186,7 +186,7 @@ An old AGENTS.md without the kit layout moves under "Project rules" with a revie
 - A project does not update with the kit. The kit keeps no changelog: its history is in git (`git log`).
 - Account-wide preferences (your own settings in Claude, ChatGPT or Codex) reach only that host. Every agent gets the rules from AGENTS.md.
 - Setup needs an agent with file access. A chat that cannot run commands can only give you text to paste: use "Start a new project by hand".
-- The pull-request check needs the `PII_GUARD_DENYLIST` secret. GitHub does not give secrets to pull requests from forks, so a pull request from a fork always fails the check. The maintainer checks it by hand, or copies it to a branch in the repo.
+- With the guard on, the pull-request check needs the `PII_GUARD_DENYLIST` secret. GitHub does not give secrets to pull requests from forks, so a pull request from a fork always fails the check. The maintainer checks it by hand, or copies it to a branch in the repo.
 - The pull-request check runs the scripts from the pull request itself, so a pull request that edits `scripts/pii_guard.py` or `scripts/check.sh` can change the result. Review changes to those files by hand.
 - Hooks are seat belts, not locks: Claude Code hooks bind Claude Code only, and `--no-verify` skips git hooks.
 - The Claude Code sandbox (network allowlist in .claude/settings.json) needs bubblewrap and socat on Linux; without them Claude Code warns and runs commands unboxed, while deny rules and git hooks still apply. Claude cloud containers lack them but sit behind their own network proxy. macOS needs nothing extra.
