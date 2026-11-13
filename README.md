@@ -184,5 +184,6 @@ An old AGENTS.md without the kit layout moves under "Project rules" with a revie
 - Account-wide preferences (your own settings in Claude, ChatGPT or Codex) reach only that host. Every agent gets the rules from AGENTS.md.
 - Setup needs an agent with file access. A chat that cannot run commands can only give you text to paste: use "Start a new project by hand".
 - Hooks are seat belts, not locks: Claude Code hooks bind Claude Code only, and `--no-verify` skips git hooks.
+- The Claude Code sandbox (network allowlist in .claude/settings.json) needs bubblewrap and socat on Linux; without them Claude Code warns and runs commands unboxed, while deny rules and git hooks still apply. Claude cloud containers lack them but sit behind their own network proxy. macOS needs nothing extra.
 - The guard finds shapes and listed names. It does not find a name you did not list, or personal facts written in prose. Read before you publish.
 - Model names in orchestration.md go stale; the tiers stay.
