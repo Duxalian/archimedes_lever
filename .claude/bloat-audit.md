@@ -2,7 +2,7 @@
 
 The full periodic audit that AGENTS.md "Bloat, drift and assumptions" calls for. Any agent can run it: Claude, GPT/Codex, Gemini or a person. Read it only when an audit is due or asked for; it is not a start-of-session file.
 
-Why: two audits of one project found layered bloat that made a simple operation 5x slower (116.6 s to 23.4 s after the fix). Each layer looked reasonable when an agent added it. Agents add; they seldom remove. This audit is the removal step.
+Why: two audits of one project found layered bloat that made a simple operation 5x slower (116.6 s to 23.4 s after the fix). Each layer looked reasonable when an agent added it. Agents add; they seldom remove. This audit finds what to remove and proposes it.
 
 ## Rules for the auditor
 
@@ -10,7 +10,7 @@ Why: two audits of one project found layered bloat that made a simple operation 
 - Fix the cause, then apply the same fix everywhere the pattern appears.
 - Removals need the owner's approval (the owner, 2026-11-13). Do not remove, shorten or reword code, a script, a flag, a config, a template, a doc section, a rule, a decision, a test or a feature until the owner approves. Propose it with evidence and options (Step 5.4).
 - "Nothing in the repo calls it" does not prove a thing is unused. People run tools by hand, from other repos or devices, and from pasted prompts. Agents read only the repo, so a request that lives only in chat is invisible to them.
-- Exceptions (no approval): files this audit made; generated files rebuilt from their source; scratch files (debug output, "_old"/"_v2" copies) that have no reference and whose adding commit names no request or decision. List each in the report.
+- Exceptions (no approval), the only list: (a) files made on this audit's own branch; (b) generated files rebuilt from their source; (c) agent scratch files (debug output, "_old"/"_v2" copies) that nothing references AND whose adding commit names no request or decision; (d) exact duplicates merged into the canonical copy, text kept word for word; (e) reference text moved out of start-read files unchanged, except from instruction and guard files (AGENTS.md "Untrusted input"), where every change is a proposal. List each in the report.
 - Chesterton's fence: before you propose a removal, find why the thing exists (git log -S, DECISIONS, the commit that added it) and put the reason, or "not found", in the proposal.
 - Never weaken a check, hook, test or guard to make a number smaller.
 - Generated files: fix the source and rebuild. Never hand-edit the output.
@@ -26,7 +26,7 @@ Why: two audits of one project found layered bloat that made a simple operation 
 
 ## Step 2: find bloat, by category
 
-For each category, list findings as: what, where (path:line), evidence (number), cost (time, tokens, files, minutes of a person), proposed fix, risk.
+Every item below finds; it does not fix. A fix that removes, shortens, rewords, archives or condenses anything outside the exceptions in "Rules for the auditor" is a proposal (Step 5.4). For each category, list findings as: what, where (path:line), evidence (number), cost (time, tokens, files, minutes of a person), proposed fix, risk.
 
 ### General project hygiene (industry practice)
 
@@ -67,7 +67,7 @@ Assumptions that nobody checked are drift that has not happened yet.
 
 ## Step 4: fix and measure again
 
-1. Make the fixes that need no approval: delete the exceptions listed in "Rules for the auditor", merge exact duplicates into the canonical place (the text stays word for word), rebuild stale generated files from source, and move reference text out of start-read files without changing it. Every other removal, shortening or rewording is a proposal for the owner (Step 5.4); make it only after the owner approves.
+1. Make only the fixes in the exceptions list in "Rules for the auditor". Every other removal, shortening or rewording is a proposal for the owner (Step 5.4); make it only after the owner approves.
 2. Run the project's checks (AGENTS.md "Commands"). All must pass as before.
 3. Run `python3 scripts/bloat_check.py --time` again. Report before → after for each number.
 4. Changes to code, checks or scripts get the fresh review that AGENTS.md "Delegation" requires before merge.
@@ -75,7 +75,7 @@ Assumptions that nobody checked are drift that has not happened yet.
 ## Step 5: record
 
 1. Write `docs/reviews/YYYY-MM-DD-bloat-audit.md` (or the place AGENTS.md "Project rules" names): the before/after table, findings by category with evidence, fixes made, proposals for the owner, the assumption table, the tech-debt register.
-2. Update `.bloat-audit.json`: `last_audit` (date, commit on main after the fixes, report path), new `timings` baselines (`--time --record`), and `ignore` globs for generated or reference files that the duplicate scan should skip (only with a reason in the report).
+2. Update `.bloat-audit.json`: `last_audit` (date, commit on main after the fixes, report path), new `timings` baselines (`--time --record`), and `ignore` globs for generated or reference files that the duplicate scan should skip (each new glob is a proposal: it hides files from the scan).
 3. Log the audit in the project log (milestone; a breakthrough when a fix removes a blocker or saves 25%+ time).
 4. Ask the owner the open questions together, each with options and a recommendation. Group removal proposals in one table: what, where, why it exists (or "not found"), evidence it is unused, saving, risk, REC.
 
