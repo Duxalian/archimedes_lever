@@ -54,14 +54,17 @@ function audit() {
 
   const TEXT_BLOCKS = new Set(['P', 'LI', 'TD', 'TH', 'DD', 'DT', 'BLOCKQUOTE', 'FIGCAPTION']);
   // WCAG 2.5.8 exempts a link inside a sentence: climb inline ancestors to the nearest block; it must be a text block,
-  // outside navigation, with at least 3 characters of text outside links.
+  // outside navigation, with at least 3 letters or digits outside links, script and style; never a link around an image.
   const inSentence = (a) => {
     if (getComputedStyle(a).display !== 'inline') return false;
     let b = a.parentElement;
     while (b && getComputedStyle(b).display === 'inline') b = b.parentElement;
     if (!b || !TEXT_BLOCKS.has(b.tagName) || b.closest('nav,[role=navigation],menu')) return false;
-    const own = [...b.querySelectorAll('a')].reduce((s, x) => s - x.textContent.trim().length, b.textContent.trim().length);
-    return own >= 3;
+    if (a.querySelector('img,svg,picture')) return false;  // an image link is sized by the image, not the line
+    const tw = document.createTreeWalker(b, NodeFilter.SHOW_TEXT);
+    let txt = '';
+    for (let n = tw.nextNode(); n; n = tw.nextNode()) if (!n.parentElement.closest('a,script,style')) txt += n.textContent;
+    return (txt.match(/[\p{L}\p{N}]/gu) || []).length >= 3;  // letters or digits, not separators like " | " 
   };
   const contrast = [], unchecked = [], targets = [];
   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
