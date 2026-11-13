@@ -4,7 +4,7 @@ The agent runs this once, before any other work. It starts in one of three ways:
 
 | Start | How the agent knows | What to do |
 |---|---|---|
-| The user asks to set up a project from the kit's URL (https://github.com/[old handle]/archimedes_lever), and the agent is not in a clone of it | The user's message | Step 1, round 1. Then `git clone https://github.com/[old handle]/archimedes_lever <name>`, where `<name>` is answer 1 in lower case with hyphens for spaces. Work inside that folder from now on and read its AGENTS.md. Then the rest of step 1, and step 2. If git is missing, tell the user how to install it (https://git-scm.com/downloads), or point to way A in README.md "Start here" |
+| The user asks to set up a project from the kit's URL (https://github.com/rhope-ops/archimedes_lever), and the agent is not in a clone of it | The user's message | Step 1, round 1. Then `git clone https://github.com/rhope-ops/archimedes_lever <name>`, where `<name>` is answer 1 in lower case with hyphens for spaces. Work inside that folder from now on and read its AGENTS.md. Then the rest of step 1, and step 2. If git is missing, tell the user how to install it (https://git-scm.com/downloads), or point to way A in README.md "Start here" |
 | A plain clone of the kit, and the user says "initiate" (or start, or set up) | `scripts/first_use_check.py` says KIT. If it did not run: `git remote get-url origin` ends in `archimedes_lever` | Step 1, then step 2 |
 | A repo made with GitHub's "Use this template" | `scripts/first_use_check.py` says FIRST USE: AGENTS.md still has template placeholders | Step 1, then step 3 (skip step 2) |
 

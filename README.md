@@ -28,14 +28,14 @@ You do not need to know git: the agent does that part. Pick one way.
 1. Open the app in the folder where you keep projects (your Documents folder is fine).
 2. Type:
    ```
-   Please set up a new project from https://github.com/[old handle]/archimedes_lever: get the repo, read it, and initiate.
+   Please set up a new project from https://github.com/rhope-ops/archimedes_lever: get the repo, read it, and initiate.
    ```
 
 Either way, the agent asks 4 questions: the name, what it is for, your time zone, and whether to use the recommended settings. It explains each one; when you are not sure, take the answer it marks as recommended. Then it makes your own GitHub repository, fills in the project files and tells you what is left to do.
 
 One step is yours: the agent asks you to type your own names into a private list (the personal-data guard checks every push against it, so your names never land on GitHub by mistake). You never type them into the chat. In the browser (way A), this means you add a setting and start one new session; the agent gives you a prompt to paste there, so you do not answer the questions again.
 
-If you know git: `git clone https://github.com/[old handle]/archimedes_lever my-project`, open the folder with your agent and type `Please read the repo and initiate.`
+If you know git: `git clone https://github.com/rhope-ops/archimedes_lever my-project`, open the folder with your agent and type `Please read the repo and initiate.`
 
 Details for agents: [docs/FIRST_USE.md](docs/FIRST_USE.md).
 
@@ -61,7 +61,7 @@ For people who use git and want no agent in the setup, or who use a chat with no
 
 1. Make the repo from this template:
    ```
-   gh repo create YOUR_USER/NEW_NAME --private --template [old handle]/archimedes_lever --clone
+   gh repo create YOUR_USER/NEW_NAME --private --template rhope-ops/archimedes_lever --clone
    ```
    Or, on GitHub: **Use this template → Create a new repository**, then clone it.
 2. In the new repo, fill the placeholders:

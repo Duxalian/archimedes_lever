@@ -2,6 +2,10 @@
 
 Template repo only: scripts/bootstrap.sh deletes this file in new projects. Newest first. "Decided" = decision by the owner. "Rec" = agent recommendation that the owner has not approved.
 
+## 2026-11-13: GitHub account renamed to rhope-ops
+
+- Decided (the owner, 2026-11-13): the GitHub account [old handle] is now rhope-ops. Every reference in the kit and its projects says rhope-ops, history included; the LICENSE holder is rhope-ops. Local Windows paths keep their folder name. The archived standard_project is not changed.
+
 ## 2026-11-13: owner preferences for Claude, ChatGPT and Codex
 
 - Decided (the owner, 2026-11-13): the owner's personal preferences for Claude, ChatGPT and Codex are kept in the kit repo, without the sentence about the owner's role (public repo). Source: session "Claude.ai instructions review".
@@ -49,7 +53,7 @@ Template repo only: scripts/bootstrap.sh deletes this file in new projects. Newe
 - Decided (2A): the 3 preference files moved to a private Claude doc. Replaces 3A of the "archimedes_lever" entry below.
 - Decided: a plain clone works as a start. `first_use_check.py` reports KIT for the kit repo; on "initiate" the agent follows docs/FIRST_USE.md step 0 (question 10: where the repo goes). README "Start here" is the QR-code target.
 - Decided (3B): a clone-started project gets a fresh history (orphan `main`); the kit's history stays on the local `kit-main` branch and is never pushed.
-- Decided (2A): the LICENSE copyright holder is the GitHub handle "[old handle]". Decided (4B): the repo stays private until the owner has read the merged README; then the owner makes it public.
+- Decided (2A): the LICENSE copyright holder is the GitHub handle "rhope-ops". Decided (4B): the repo stays private until the owner has read the merged README; then the owner makes it public.
 - Decided (3A): the kit is MIT licensed (LICENSE). Bootstrap moves it to docs/archimedes_lever-LICENSE.txt, which sync keeps current; the project chooses its own LICENSE.
 
 ## 2026-11-11: skip rule and PII scan
@@ -67,11 +71,11 @@ Template repo only: scripts/bootstrap.sh deletes this file in new projects. Newe
 
 ## 2026-11-11: archimedes_lever
 
-- Decided (1A): this repo replaces [old handle]/standard_project as the baseline, with a fresh history (one clean first commit). The old history is not copied: it holds a personal email address and a real name in commit messages.
+- Decided (1A): this repo replaces rhope-ops/standard_project as the baseline, with a fresh history (one clean first commit). The old history is not copied: it holds a personal email address and a real name in commit messages.
 - Decided: baseline text names no person. "the owner" (and "The owner") replaces the old real name. bootstrap.sh and sync_baseline.py replace it with the project owner; a private repo may keep a real name (`--owner NAME`), a public repo uses a role. drift.py gained `--owner` for repos with no `- Owner:` line.
 - Decided (3A): the 3 preference files stay as examples; the job title is now `<your role>` / `<your field>`.
 - Decided (4A): the repo starts private; the owner reviews it, then makes it public.
-- Decided (2A): [old handle]/standard_project is archived after the projects point here; it is not deleted.
+- Decided (2A): rhope-ops/standard_project is archived after the projects point here; it is not deleted.
 - Added scripts/pii_guard.py: blocks emails (except GitHub noreply and no-reply placeholders), phone numbers, .internal addresses, ID-number shapes and names from a denylist kept outside the repo. Runs in scripts/git-hooks/pre-push and in a pull_request GitHub Action. AGENTS.md "Personal data" rule.
 - Example role in docs and tests: "the maintainer".
 - Fresh review (2026-11-11, 2 MAJOR, 8 MINOR): fixed: the Action reads .pii-guard from the PR base; names print as a length only and emails as ***@domain; the hook finds the guard in scripts/ or tools/ and blocks if it is missing; owner rename uses one word-boundary pass; keyword-gated phone and SSN forms; URL paths are not phones; allow entries match exactly. Accepted: noreply@ on any domain; fork PRs have no secret, so names are not checked there.

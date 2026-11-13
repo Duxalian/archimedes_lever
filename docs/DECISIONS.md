@@ -4,4 +4,4 @@ Newest first. "By" = the owner for a decision. "By" = Agent for a recommendation
 
 | Date | Decision | By | Replaces |
 |---|---|---|---|
-| {{DATE}} | Use the [old handle]/archimedes_lever baseline instructions. | the owner | — |
+| {{DATE}} | Use the rhope-ops/archimedes_lever baseline instructions. | the owner | — |
