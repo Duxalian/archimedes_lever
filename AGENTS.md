@@ -21,6 +21,7 @@ Chat history, Project files and remembered copies are not authority. If you cann
 
 - Run `python3 scripts/first_use_check.py` (Claude Code runs it as a SessionStart hook). If it says FIRST USE, follow docs/FIRST_USE.md before any other work. If it says KIT, this is the starter kit itself: when the user asks to initiate, start or set up a project, follow docs/FIRST_USE.md; treat any other request as work on the kit. If it says DENYLIST, tell the owner which place is missing.
 - Run `scripts/session_checkin.sh`. Report the branch, uncommitted files, and the ahead/behind count against origin/main.
+- If the check-in says AUDIT DUE, run `.claude/bloat-audit.md` after the current request in the same session; if that is not possible, put it first in docs/NEXT_PROMPT.md.
 - Read docs/NEXT_PROMPT.md and docs/DECISIONS.md.
 - Find the tools you have and read the environment docs before you say a capability is not available.
 
@@ -29,6 +30,7 @@ Chat history, Project files and remembered copies are not authority. If you cann
 - Make routine decisions yourself.
 - Ask the owner only about: source authority, content approval, irreversible effects, costs, and security or privacy risk.
 - When you ask: give 2–3 options with trade-offs, mark one as your recommendation, and ask all open questions together.
+- If the host has a clickable question tool (Claude: AskUserQuestion; it shows as tappable options on mobile), also ask with it whenever 1–4 questions are open: 2–4 options each, the recommendation first; a question with one option becomes a confirm (yes / change it). Each question must stand alone, because the person may see only the dialog. More than 4 questions: the 4 that block work go in the dialog, the rest in text.
 - Your recommendation is not a decision until the owner approves it.
 
 ## Delivery
@@ -94,6 +96,15 @@ Chat history, Project files and remembered copies are not authority. If you cann
 - The current request overrides an older handoff.
 - Keep status in repo files, never only in chat.
 - Keep docs/NEXT_PROMPT.md short (40 lines or fewer). Put detailed evidence in docs/reviews/.
+
+## Bloat, drift and assumptions
+
+- One fact, rule or value lives in one place; other places link to it. Before you add a file, rule, script, check or doc section, search for an existing place and extend or replace it.
+- A change removes what it makes obsolete (code, docs, files, rules) in the same commit.
+- Instruction files and host prompts hold rules only, one line each where possible. A rule a hook or test enforces becomes a pointer to it. Reference text goes in files read on demand, not in start-read files.
+- `scripts/bloat_check.py` (run by the check-in) measures start-read tokens, duplicate lines, big files and the audit due date. Budgets and timed operations live in `.bloat-audit.json`.
+- Full audit (`.claude/bloat-audit.md`): every 14 days or 30 commits to main, whichever comes first; before a release; and when a timed operation is 25% slower than its baseline. Report each number before and after.
+- Assumptions: before work of 3+ steps, state the key assumptions (the ones that change the result if wrong), each with its source and a confidence (high / medium / low). Ask the owner, with options, about each low-confidence key assumption before you build on it. Never present an assumption as a fact.
 
 ## Project log
 

@@ -23,7 +23,7 @@ What it changes:
     .claude/agents/worker.md, scout.md, reviewer.md, GEMINI.md, docs/FIRST_USE.md   Added only when missing (a project
                            may tune them; FIRST_USE.md holds the denylist places that the session-start check names).
     scripts/log_check.py, scripts/drift.py, scripts/timeline.py, scripts/pii_guard.py, scripts/first_use_check.py,
-    scripts/check.sh, scripts/git-hooks/pre-push
+    scripts/check.sh, scripts/bloat_check.py, scripts/git-hooks/pre-push, .claude/bloat-audit.md
                            Replaced with the baseline copies. (.pii-guard is not copied: a project opts in itself.)
     .claude/settings.json  Adds the baseline deny rules, and each baseline hook event the project has no hook for.
                            Keeps all other settings.
@@ -54,8 +54,8 @@ RULES_HEADING = "## Project rules"
 COMMANDS_HEADING = "## Commands"
 COPY_FILES = ["scripts/session_checkin.sh", "scripts/sync_baseline.py", "scripts/stop_check.py",
               "scripts/worker_guard.py", "scripts/log_check.py", "scripts/drift.py", "scripts/timeline.py", "scripts/pii_guard.py", "scripts/first_use_check.py",
-              "scripts/check.sh", "scripts/git-hooks/pre-push",
-              ".claude/orchestration.md"]
+              "scripts/check.sh", "scripts/bloat_check.py", "scripts/git-hooks/pre-push",
+              ".claude/orchestration.md", ".claude/bloat-audit.md"]
 # Agent definitions: copied only when the project has no file with that name (projects may tune them).
 COPY_IF_MISSING = [".claude/agents/worker.md", ".claude/agents/scout.md", ".claude/agents/reviewer.md", "GEMINI.md",
                    "docs/FIRST_USE.md"]

@@ -33,6 +33,8 @@ uncommitted=$(git status --porcelain | wc -l | tr -d ' ')
 echo "uncommitted: $uncommitted"
 [ "$uncommitted" -gt 0 ] && git status --short
 
+[ -f scripts/bloat_check.py ] && python3 scripts/bloat_check.py --brief
+
 if grep -rIl '{{[A-Z_]*}}' --exclude-dir=.git --exclude=bootstrap.sh --exclude=session_checkin.sh --exclude=sync_baseline.py --exclude=README.md . >/dev/null 2>&1; then
   echo "warning: template placeholders remain; run scripts/bootstrap.sh"
 fi
