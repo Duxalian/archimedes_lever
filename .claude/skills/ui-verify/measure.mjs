@@ -35,7 +35,8 @@ function audit() {
   const alpha = (c) => c[3];
   const meta = document.querySelector('meta[name="color-scheme"]');
   const dark = matchMedia('(prefers-color-scheme: dark)').matches &&
-    (/dark/.test(getComputedStyle(document.documentElement).colorScheme) || /dark/.test(meta ? meta.content : ''));
+    (/dark/.test(getComputedStyle(document.documentElement).colorScheme) ||
+     (getComputedStyle(document.documentElement).colorScheme === 'normal' && /dark/.test(meta ? meta.content : '')));  // CSS wins over the meta tag
   const canvasBg = dark ? [18, 18, 18, 1] : [255, 255, 255, 1];
   const lum = ([r, g, b]) => { const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); };
   const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
@@ -51,7 +52,17 @@ function audit() {
   const visible = (el) => { const r = el.getBoundingClientRect(); const s = getComputedStyle(el); return r.width > 0 && r.height > 0 && s.visibility !== 'hidden' && s.display !== 'none' && Number(s.opacity) > 0; };
   const name = (el) => el.tagName.toLowerCase() + (el.id ? '#' + el.id : '') + (el.className && typeof el.className === 'string' ? '.' + el.className.trim().split(/\s+/).join('.') : '');
 
-  const TEXT_BLOCKS = new Set(['P', 'LI', 'TD', 'TH', 'DD', 'DT', 'BLOCKQUOTE', 'FIGCAPTION', 'LABEL', 'SPAN', 'EM', 'STRONG', 'SMALL']);
+  const TEXT_BLOCKS = new Set(['P', 'LI', 'TD', 'TH', 'DD', 'DT', 'BLOCKQUOTE', 'FIGCAPTION']);
+  // WCAG 2.5.8 exempts a link inside a sentence: climb inline ancestors to the nearest block; it must be a text block,
+  // outside navigation, with at least 3 characters of text outside links.
+  const inSentence = (a) => {
+    if (getComputedStyle(a).display !== 'inline') return false;
+    let b = a.parentElement;
+    while (b && getComputedStyle(b).display === 'inline') b = b.parentElement;
+    if (!b || !TEXT_BLOCKS.has(b.tagName) || b.closest('nav,[role=navigation],menu')) return false;
+    const own = [...b.querySelectorAll('a')].reduce((s, x) => s - x.textContent.trim().length, b.textContent.trim().length);
+    return own >= 3;
+  };
   const contrast = [], unchecked = [], targets = [];
   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
   const seen = new Set();
@@ -70,10 +81,7 @@ function audit() {
   }
   for (const el of document.querySelectorAll('a[href], button, input:not([type=hidden]), select, textarea, [role=button], [tabindex]:not([tabindex="-1"])')) {
     if (!visible(el)) continue;
-    // WCAG 2.5.8 exempts a link inside a sentence: an inline link in a text block (p, li, td, ...) that has its own text.
-    const par = el.parentElement;
-    if (el.tagName === 'A' && getComputedStyle(el).display === 'inline' && par && TEXT_BLOCKS.has(par.tagName) &&
-        [...par.childNodes].some((n) => n.nodeType === Node.TEXT_NODE && n.textContent.trim().length >= 3)) continue;
+    if (el.tagName === 'A' && inSentence(el)) continue;
     const r = el.getBoundingClientRect();
     if (r.width < 24 || r.height < 24) targets.push({ el: name(el), w: Math.round(r.width), h: Math.round(r.height) });
   }

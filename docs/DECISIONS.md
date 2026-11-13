@@ -19,7 +19,7 @@ Newest first. "By" = the owner for a decision; "Agent" for a recommendation the 
 
 | Rule | Why | Reason by |
 |---|---|---|
-| Source line: the account copy names its source in the repo | A pointer alone fails silently in chats that cannot fetch it; the full text plus its source keeps the rules loaded and makes drift visible. | Agent draft |
+| Source line: the account copy names its source in the repo | A pointer alone fails silently in chats that cannot fetch it; the full text plus its source keeps the rules loaded and makes drift visible. ChatGPT has no Source line: its 5,000-character limit leaves no room. | Agent draft |
 | Style: expert level in my field, plain terms elsewhere | Skips basics the owner knows; keeps other fields readable. | Agent draft |
 | Style: show times in my time zone | Times compare without conversion, in chat and in logs. | Agent draft |
 | Style: my current message overrides; follow a rule's intent if it gives an absurd result | No rule set foresees every case; a literal result that hurts is worse than a stated exception. | Agent draft |
