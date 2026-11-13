@@ -18,7 +18,7 @@ Tell me your thoughts about this repo: https://github.com/rhope-ops/archimedes_l
 
 | Take | What you get | Time | What you need |
 |---|---|---|---|
-| 1. [Preferences](PREFERENCES.md) for your own AI account | Every chat asks its questions up front, labels its recommendations, says how confident it is, checks its work before it says "done", and saves you clicks and copying | About 5 minutes (our estimate, not timed): the assistant asks you up to 5 questions (including which optional modules you want) and gives you one block to paste | Any Claude, ChatGPT or Codex account. No GitHub needed. |
+| 1. [Preferences](PREFERENCES.md) for your own AI account | Every chat asks its questions up front, labels its recommendations, says how confident it is, checks its work before it says "done", and saves you clicks and copying | About 5 minutes (our estimate, not timed): the assistant asks you up to 6 questions (including which optional modules you want and where your own copy lives) and gives you one block to paste | Any Claude, ChatGPT or Codex account. No GitHub needed. |
 | 2. A project kit (the rest of this repo) | A new project where every agent follows one rules file, where force-pushes and pushes that contain your listed names or your email are blocked, where agents check their own work, and where decisions are written down | About 15 minutes with an agent (our estimate, not timed); see "Start here" below | A free GitHub account and an agent that can run commands |
 
 New to agents? Read [docs/WORKING_WITH_AGENTS.md](docs/WORKING_WITH_AGENTS.md) first: the working habits that matter most, in 5 minutes.

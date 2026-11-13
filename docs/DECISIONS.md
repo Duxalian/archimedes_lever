@@ -11,7 +11,7 @@ Newest first. "By" = the owner for a decision; "Agent" for a recommendation the 
 | 2026-11-13 | The kit is the living, public source of the owner's rules: PREFERENCES.md is current, each rule has a reason below, the log is public, and the repo is the source for the account settings (change here first, then paste). New projects get blank DECISIONS.md and LOG.md with a link here. | the owner | The erased kit log (commit 44569f4); for the kit only, the AGENTS.md rule that a public repo keeps its log private |
 | 2026-11-13 | Git rules split by repo: a repo with AGENTS.md follows its "Delivery"; other repos follow the Git module (branch, PR, approval per PR). | the owner | The account Git rule that applied everywhere |
 | 2026-11-13 | Procedures that only some tasks need live in kit skills (`.claude/skills/data-change`, `.claude/skills/ui-verify`), synced to projects. | the owner | The UI measuring detail in AGENTS.md "Verification" |
-| 2026-11-13 | Preference fixes: one place for questions (dialog, else Decide); "small turn" defined; save drafts at once, publish after the batch; approved work runs while the owner is away; confidence on claims the owner would act on; unnamed data targets count as production; dry run before large queries. | Agent (approved when the owner merges the PR that adds it) | 5 conflicting or vague rules (log #31) |
+| 2026-11-13 | Preference fixes: "small turn" defined; each account copy names its source; save drafts at once, publish after the batch; approved work runs while the owner is away; confidence on claims the owner would act on; unnamed data targets count as production; dry run before large queries. | Agent (approved when the owner merges the PR that adds it) | 5 conflicting or vague rules (log #31) |
 
 ## Why each preference rule exists
 
@@ -19,6 +19,7 @@ Newest first. "By" = the owner for a decision; "Agent" for a recommendation the 
 
 | Rule | Why | Reason by |
 |---|---|---|
+| Source line: the account copy names its source in the repo | A pointer alone fails silently in chats that cannot fetch it; the full text plus its source keeps the rules loaded and makes drift visible. | Agent draft |
 | Style: expert level in my field, plain terms elsewhere | Skips basics the owner knows; keeps other fields readable. | Agent draft |
 | Style: show times in my time zone | Times compare without conversion, in chat and in logs. | Agent draft |
 | Style: my current message overrides; follow a rule's intent if it gives an absurd result | No rule set foresees every case; a literal result that hurts is worse than a stated exception. | Agent draft |
@@ -27,7 +28,7 @@ Newest first. "By" = the owner for a decision; "Agent" for a recommendation the 
 | Style: confidence marks and cited sources | The owner can tell what to check before acting on it. | Agent draft |
 | Style: state key assumptions before 3+ steps | A design review found 34 decisions that the agent had assumed, not asked. | README lesson |
 | Decisions: REC vs DECIDED labels | Keeps a proposal apart from an approval, so nothing ships on a recommendation alone; "REC" and "Rec" had both been in use. | log #22 |
-| Decisions: ask all questions at the start, in the dialog | 34 assumed decisions (README lesson); the dialog was skipped for 2 turns when the wording allowed a list instead (log #23). | README lesson, log #23 |
+| Decisions: ask all questions at the start, in the dialog, and also list them in Decide | 34 assumed decisions (README lesson); the dialog was skipped for 2 turns when the wording allowed a list instead (log #23). | README lesson, log #23 |
 | Least effort: count clicks, copies, pastes, typing | A solution assumed copy and paste where the person had to type by hand; "least effort" became countable rules. | README lesson, log #22 |
 | Changes: make the change in a preview; ship after approval | The owner reviews a working result, not a description of one. | Agent draft |
 | Changes: ask which place when a thing exists in more than one | A change to the wrong copy (live, preview, repo) is a silent miss. | Agent draft |
