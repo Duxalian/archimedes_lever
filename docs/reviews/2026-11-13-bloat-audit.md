@@ -43,7 +43,7 @@ Commands: `python3 scripts/bloat_check.py --time --record` (before), `--time` (a
 - P1: the detail moved to `.claude/project-log.md`, not to docs/LOG.md: sync_baseline.py keeps a project's docs/, so existing projects would not get it. sync_baseline.py and bootstrap.sh copy and rename it.
 - P2, P3: pointers go to the file headers of `scripts/pii_guard.py` and the enforcing files, not to README: bootstrap replaces README in projects.
 - P4: the rule moved to "Checks", not "Commands": sync_baseline.py keeps a project's own Commands section, so the rule would not reach existing projects.
-- P5: `audit_due` counts from the first commit when there is no `last_audit`; 4 new self-test cases.
+- P5: `audit_due` counts from the first commit when there is no `last_audit`; a shallow clone stays due (its oldest commit is a cut); 5 new self-test cases.
 - Found on the way: bootstrap.sh did not rename the owner in `.claude/bloat-audit.md` and `scripts/bloat_check.py`, which sync_baseline.py renames, so the first sync after a bootstrap with an owner name changed them. Fixed; a bootstrap with owner "Sam" followed by a sync now changes only `.baseline`.
 - Verified: kit check.sh 11 pass, 1 skip; new trial project (owner "Sam") check.sh 11 of 11, audit not due on day one; a project made from 6f5f4f1 and synced with `--apply` gets `.claude/project-log.md` and passes check.sh 11 of 11.
 
@@ -91,3 +91,8 @@ Total if P1–P3 are approved: ~530 words, ~22% of AGENTS.md, ~700 start-read to
 |---|---|---|
 | Duplicate env-var helper in 2 self-tests | the owner | 2026-12-13 |
 | Sandbox untested on a machine with bubblewrap | the owner | 2026-12-13 |
+
+## Fresh reviews
+
+- Audit commit (eab8b98): 0 MAJOR, 5 MINOR (wrong before/after numbers, last_audit commit, no after-timings), 2 NIT. All 5 MINOR fixed in abf8055.
+- P1–P5 (abf8055..7a307b7): 0 MAJOR, 3 MINOR, 2 NIT. Fixed: the settings.json pointer wording; a shallow clone is now due (it understated the age). No change: a project cloned with the kit's full history counts from the kit's first commit, but docs/FIRST_USE.md step 2 and "Use this template" both start a fresh one-commit history.

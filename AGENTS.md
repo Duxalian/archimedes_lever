@@ -55,7 +55,7 @@ Chat history, Project files and remembered copies are not authority. If you cann
 - Never force-push, rewrite published history, reset, clean, stash or discard work to make the state look synchronized. Update branches by merge.
 - Pull just before you edit a shared doc. Use small edits. Never rewrite a whole file from an old copy.
 - Never commit secrets, tokens or credentials.
-- Enforced by `scripts/git-hooks/pre-push` (every agent; `scripts/session_checkin.sh` installs it) and, for Claude Code, `.claude/settings.json` (deny list, sandbox, Stop hook); the header comment of each file lists what it blocks. Never push with `--no-verify`.
+- Enforced by `scripts/git-hooks/pre-push` (every agent; `scripts/session_checkin.sh` installs it) and, for Claude Code, `.claude/settings.json` (deny list, sandbox, Stop hook); each file lists what it blocks (the hook in its header comment, settings.json in its deny rules). Never push with `--no-verify`.
 - Agents without a Stop hook run `echo '{}' | python3 scripts/stop_check.py` before they end a turn and fix what it reports (exit 2 = not done).
 - Do not weaken a hook or its settings to get past a block: ask the owner.
 
