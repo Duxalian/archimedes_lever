@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Session check-in: run at the start and the end of each session.
 set -uo pipefail
+top=$(git rev-parse --show-toplevel) && cd "$top" || exit 1  # paths below are repo-relative; a run from a subfolder must still find them
 
 git fetch --quiet origin main 2>/dev/null || echo "warning: fetch of origin/main failed"
 

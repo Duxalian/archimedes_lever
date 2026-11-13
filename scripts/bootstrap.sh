@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
 # Fill the template placeholders in a new project made from rhope-ops/archimedes_lever.
-# Usage: scripts/bootstrap.sh "Project Name" Owner/repo "One-line purpose" ["Owner name"] ["Time zone"]
+# Usage: scripts/bootstrap.sh "Project Name" Owner/repo "One-line purpose" ["Owner name"] ["Time zone"] [starter|full]
 # Owner name: what agents call the decider (default "the owner"). A private repo may use your name; a public repo uses a role,
 # for example "the maintainer".
 # Time zone: an IANA name for project log times, for example Europe/Berlin or America/New_York (default UTC).
+# Tier (default starter): starter keeps the core rules, hooks and checks, and the name denylist only warns when missing;
+# full adds orchestration, the project log, the bloat audit and the rule tests (scripts/sync_baseline.py ADVANCED_FILES).
 # The script deletes itself when it finishes. Review the result, then commit and push.
 set -euo pipefail
 
-if [ $# -lt 3 ] || [ $# -gt 5 ]; then
-  echo 'usage: scripts/bootstrap.sh "Project Name" Owner/repo "One-line purpose" ["Owner name"] ["Time zone"]' >&2
+if [ $# -lt 3 ] || [ $# -gt 6 ]; then
+  echo 'usage: scripts/bootstrap.sh "Project Name" Owner/repo "One-line purpose" ["Owner name"] ["Time zone"] [starter|full]' >&2
   exit 1
 fi
 
@@ -17,6 +19,9 @@ if [ $# -ge 4 ] && ! [[ "$4" =~ $owner_re ]]; then
   echo 'error: owner name: use letters, digits, space . _ , ( ) - only' >&2
   exit 1
 fi
+
+BS_TIER="${6:-starter}"
+case "$BS_TIER" in starter|full) ;; *) echo "error: tier '$BS_TIER': use starter or full" >&2; exit 1 ;; esac
 
 BS_TZ="${5:-UTC}"
 if ! [[ "$BS_TZ" =~ ^[A-Za-z0-9_+/-]+$ ]] || { [ "$BS_TZ" != UTC ] && ! python3 -c 'import sys, zoneinfo; zoneinfo.ZoneInfo(sys.argv[1])' "$BS_TZ" 2>/dev/null; }; then
@@ -49,15 +54,26 @@ if [ "$BS_OWNER" != "the owner" ]; then
   done
 fi
 
+# Tier: AGENTS.md blocks, and in starter the advanced files go (one list: scripts/sync_baseline.py ADVANCED_FILES).
+python3 scripts/sync_baseline.py --set-tier "$BS_TIER"
+if [ "$BS_TIER" = starter ] && [ -f .pii-guard ] && ! grep -qx 'denylist: warn' .pii-guard; then
+  printf '%s\n' '# Starter tier: a missing name denylist warns instead of blocking. Delete this line to block (full tier default).' 'denylist: warn' >> .pii-guard
+fi
+
+log_link=""
+[ -f docs/LOG.md ] && log_link=" Log: [docs/LOG.md](docs/LOG.md)."
 cat > README.md <<EOF
 # $BS_NAME
 
 $BS_PURPOSE
 
-Agents: read [AGENTS.md](AGENTS.md) first. Status: [docs/NEXT_PROMPT.md](docs/NEXT_PROMPT.md). Decisions: [docs/DECISIONS.md](docs/DECISIONS.md). Log: [docs/LOG.md](docs/LOG.md).
+Agents: read [AGENTS.md](AGENTS.md) first. Status: [docs/NEXT_PROMPT.md](docs/NEXT_PROMPT.md). Decisions: [docs/DECISIONS.md](docs/DECISIONS.md).$log_link
+
+New to working with AI agents? Read [docs/WORKING_WITH_AGENTS.md](docs/WORKING_WITH_AGENTS.md).
 EOF
 
-if grep -rIn '{{[A-Z_]*}}' "${files[@]}" README.md; then
+present=(); for f in "${files[@]}" README.md; do [ -f "$f" ] && present+=("$f"); done
+if grep -rIn '{{[A-Z_]*}}' "${present[@]}"; then
   echo "error: placeholders remain (listed above)" >&2
   exit 1
 fi

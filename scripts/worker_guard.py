@@ -54,6 +54,27 @@ def current_branch():
     return r.stdout.strip()
 
 
+BRANCH_OPTS_WITH_VALUE = {'--sort', '--format', '--contains', '--no-contains', '--merged', '--no-merged', '--points-at'}
+
+
+def branch_delete(rest):
+    """True for any delete form of `git branch`: -d/-D alone or grouped (-rd, -df), and --delete or its prefixes
+    (git accepts an unambiguous prefix such as --del). A value after --sort and the like is skipped."""
+    skip = False
+    for w in rest:
+        if skip:
+            skip = False
+            continue
+        if w in BRANCH_OPTS_WITH_VALUE:
+            skip = True
+        elif w.startswith('--'):
+            if len(w) >= 3 and '--delete'.startswith(w):
+                return True
+        elif w.startswith('-') and ('d' in w or 'D' in w):
+            return True
+    return False
+
+
 def check_git(args, branch, readonly=False):
     """args: the words after `git`. Returns a reason to block, or None."""
     i = 0
@@ -70,7 +91,7 @@ def check_git(args, branch, readonly=False):
         return 'no reset --hard; ask the orchestrator'
     if sub == 'clean':
         return 'no git clean; ask the orchestrator'
-    if sub == 'branch' and any(w in ('-D', '-d', '--delete') or (w.startswith('-') and not w.startswith('--') and 'D' in w) for w in rest):
+    if sub == 'branch' and branch_delete(rest):
         return 'no branch deletes; the orchestrator or the owner deletes branches'
     if sub != 'push':
         return None
@@ -117,11 +138,12 @@ def selftest():
              'git push origin --delete cc/x', 'git push origin :cc/x', 'git push --mirror origin', 'git push --all',
              'git push --force-with-lease origin cc/x', 'git status; git push origin main',
              'git push origin master', 'git clean -fd', 'git branch -D x', '(git push origin main)', 'git --no-pager -C r push --force',
-             'git push --prune origin']
+             'git push --prune origin', 'git branch -df x', 'git branch -rd origin/x', 'git branch --dele x', 'git branch --del x']
     allow = ['git push -u origin cc/t40-slc', 'git push -u origin cc/main-menu', 'git push origin cc/fix-main',
              'git merge origin/main', 'git status', 'python3 tools/check.py --no-perf', 'git log --oneline main..HEAD',
              'git fetch origin main', 'git commit -m "push main menu fix"', 'git commit -m "fix rebase of main"',
-             'git push', 'git push origin HEAD', 'git commit -m "note; git rebase later"', 'git branch -a']
+             'git push', 'git push origin HEAD', 'git commit -m "note; git rebase later"', 'git branch -a', 'git branch -vv',
+             'git branch --sort -committerdate', 'git branch --sort=-committerdate', 'git branch -m old new', 'git branch --list']
     bad = [c for c in block if not reason(c, 'cc/x')] + [c for c in allow if reason(c, 'cc/x')]
     for c in ['git push', 'git push origin HEAD']:     # on main these must block
         if not reason(c, 'main'):
