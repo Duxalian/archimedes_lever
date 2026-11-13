@@ -2,6 +2,10 @@
 
 Template repo only: scripts/bootstrap.sh deletes this file in new projects. Newest first. "Decided" = decision by the owner. "Rec" = agent recommendation that the owner has not approved.
 
+## 2026-11-13: bloat audit removals need approval
+
+- Decided (the owner, 2026-11-13): the bloat audit removes, shortens or rewords nothing (code, scripts, flags, configs, templates, doc sections, rules, decisions, tests, features) without the owner's approval. Reason: a grep for callers cannot see tools a person runs by hand, from another repo or device, or a request that lives only in chat. No-approval exceptions: files the audit made, generated files rebuilt from source, unreferenced scratch files whose adding commit names no request. Exact-duplicate merges keep the text word for word. Changed: .claude/bloat-audit.md (rules with one exceptions list, Step 2 lead-in, items 14 and 17, Step 4.1, Step 5.2 ignore globs, Step 5.4, report table). Fresh review: 2 MAJOR, 5 MINOR, 3 NIT; 6 fixed (Step 2 items now proposals, tighter exceptions in one list, instruction and guard files proposals only, ignore globs proposals, intro wording), 3 no change (canonical copy already named; AGENTS.md "removes what it makes obsolete" covers the owner's own requested changes; per-category commits still let approved removals revert alone).
+
 ## 2026-11-13: untrusted input, sandbox, check gate on push
 
 - Decided (the owner, 2026-11-13): keep the 12,000-token start-read cap and add an early warning at 6,000 (`start_read_warn_tokens` in scripts/bloat_check.py; warns only). Fresh review: 0 MAJOR, 2 MINOR (edge cases untested; 0 means always warn, now documented).
