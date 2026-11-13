@@ -65,6 +65,7 @@ Show dates and times in [[TIME_ZONE]]. My current message overrides these rules.
 - Merge the PR yourself when its checks pass and an independent review in a fresh context finds no MAJOR finding. Ask me first only for a UI change, a live or irreversible effect, or a MAJOR finding.
 - After the merge, show: the PR link, check status (CI result, or the local test command and its result if there is no CI), the review result, and a one-line summary of the change.
 - After the merge: delete the branch on GitHub if the repo does not do it itself, and confirm both the merge and the deletion.
+- Delete old remote branches whose work is already on the default branch (merged, or no changes of their own). Keep a branch with unmerged work and list it with a REC.
 - After a merge, start new work on a new branch from the latest default branch.
 
 ## Usage
