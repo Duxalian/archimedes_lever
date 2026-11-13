@@ -2,6 +2,13 @@
 
 Template repo only: scripts/bootstrap.sh deletes this file in new projects. Newest first. "Decided" = decision by the owner. "Rec" = agent recommendation that the owner has not approved.
 
+## 2026-11-13: bloat, drift and assumption checks
+
+- Decided (the owner): every project runs periodic checks against bloat, drift and duplication. Evidence: two audits of one project found layered bloat; one simple operation went from 116.6 s to 23.4 s after the fix.
+- Added: AGENTS.md section "Bloat, drift and assumptions" (one place per fact; a change removes what it makes obsolete; state key assumptions with source and confidence, ask on low confidence); `scripts/bloat_check.py` (run by the check-in, self-test in check.sh); `.claude/bloat-audit.md` (the full audit prompt, general and agentic-AI categories). sync_baseline.py copies both.
+- Decided (the owner): when the host has a clickable question tool, agents also ask with it for 1–4 open questions (AGENTS.md "Authority").
+- Rec (not approved yet): audit every 14 days or 30 commits to main; start-read budget 12,000 tokens; timing alarm at +25%. Fresh review: 0 MAJOR, 9 MINOR; 8 fixed (bad config, encoding, shallow clone, no git, 0.0 s and failed-command baselines, quiet self-test, first-sync note), 1 needed no change (sync carries the new AGENTS.md section).
+
 ## 2026-11-11: beginner start
 
 - Decided: README "Start here" has two ways with no git for the user: A, "Use this template" plus Claude Code on the web; B, an agent app that clones the kit from its URL. `git clone` stays as one line for people who know git.
