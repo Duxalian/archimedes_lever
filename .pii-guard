@@ -1,5 +1,4 @@
 # Opt-in file for scripts/pii_guard.py (pre-push hook and the pii-guard GitHub Action).
 # Below: exact strings that are allowed although they look like personal data, one per line.
-# `skip: <path or glob>` excludes a path; `check: mil` also blocks .mil addresses (remove the "# " below to turn it on).
-# check: mil
+# `skip: <path or glob>` excludes a path.
 # Only the owner adds entries. Agents never add one to get past a block (AGENTS.md "Personal data").

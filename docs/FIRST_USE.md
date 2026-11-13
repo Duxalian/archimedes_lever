@@ -34,7 +34,7 @@ Round 2, only with 4B:
 | 5 | Is the repo public or private? | A private · B public | A |
 | 6 | Which license for the project? | A MIT · B Apache-2.0 · C none: all rights reserved | C for a private repo, A for a public repo |
 | 7 | What should agents call you in the repo files? | A "the owner" · B a role, for example "the maintainer" · C your first name (private repos only; with the guard on, a name on your denylist blocks every push, so choose C only with the guard off) | A |
-| 8 | Turn on the personal-data guard? It blocks emails, phone numbers, ID numbers, API tokens, private keys and your listed names before a push. | A on · B on, and also block .mil addresses (for US government or military work) · C off | A |
+| 8 | Turn on the personal-data guard? It blocks emails, phone numbers, ID numbers, API tokens, private keys and your listed names before a push. | A on · B off | A |
 
 Round 3, only with 4B; ask only the questions that apply:
 
@@ -60,14 +60,14 @@ Rules for the asking agent:
 
 1. Run `scripts/bootstrap.sh "<1>" <owner/repo from git remote get-url origin> "<2>" "<7>" "<3>"`. Give "the owner" as the 4th argument when that is the answer. The 5th argument is the IANA time zone name (UTC for 3B). The script deletes itself when done; keep this file, because step 4 is also what an agent shows when a session reports DENYLIST. It moves the kit's license to docs/archimedes_lever-LICENSE.txt: keep that file, because it covers the kit's scripts.
 2. Project log (answer 12, public repos only): for A, make a private Claude doc named "<1> project log" with the Arcs and Log tables of docs/LOG.md, delete docs/LOG.md, and add to AGENTS.md "Project rules": "Project log: <doc link> (the owner, YYYY-MM-DD)". For B, keep docs/LOG.md. For C, delete docs/LOG.md and add to "Project rules": "No project log (the owner, YYYY-MM-DD)".
-3. Guard (answer 8): for B, remove the "# " in front of the line `# check: mil` in `.pii-guard`. For C, delete `.pii-guard`; the hook and the Action then skip the guard.
+3. Guard (answer 8): for B, delete `.pii-guard`; the hook and the Action then skip the guard.
 4. License (answer 6): for A, copy docs/archimedes_lever-LICENSE.txt to `LICENSE` and change the copyright line to the current year and the GitHub account or organization from `<owner/repo>`, unless the user names another holder (a public repo never uses a real name the user has not given). For B, save the text from https://www.apache.org/licenses/LICENSE-2.0.txt, unchanged, as `LICENSE`. For C, add no LICENSE.
 5. Record the answers as the owner's decisions in docs/DECISIONS.md (with 4A, one row: "Recommended settings" and the list), and add one `decision` row to the project log (not for 12C).
 6. Commit with a noreply identity, and run `scripts/session_checkin.sh` (it installs the git hooks). Do not push yet: step 4 comes first.
 
 ## 4. The denylist, then the first push
 
-With the guard on (8A or 8B), every push and every pull-request check fails until a name denylist exists (decision 2A, 2026-11-11). The user types the names, comma or newline separated: their names, username variants, employer. Run `python3 scripts/pii_guard.py --status`; it prints a count, never the names.
+With the guard on (8A), every push and every pull-request check fails until a name denylist exists (decision 2A, 2026-11-11). The user types the names, comma or newline separated: their names, username variants, employer. Run `python3 scripts/pii_guard.py --status`; it prints a count, never the names.
 
 | Place | When | Where the user adds it |
 |---|---|---|
