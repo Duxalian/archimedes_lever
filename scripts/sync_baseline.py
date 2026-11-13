@@ -37,8 +37,7 @@ What it changes:
                            first letter). Project text is never renamed. A private repo may keep a real name
                            (--owner NAME); a public repo uses a role. Owner: letters, digits, space . _ , ( ) -
 What it never changes: README.md, docs/ (except adding a missing docs/FIRST_USE.md and updating the kit license),
-.pii-guard and all other files. It prints a note when .pii-guard has no `check: internal` line (the .internal check is opt-in
-since 2026-11-11).
+.pii-guard and all other files.
 Standard library only. Needs git.
 """
 import argparse
@@ -339,10 +338,6 @@ def main():
                 new["docs/LOG.md"] = migrated
         if (base / "LICENSE").exists():
             new["docs/archimedes_lever-LICENSE.txt"] = (base / "LICENSE").read_text()
-        guard = root / ".pii-guard"
-        if guard.is_file() and not any(l.strip().lower() == "check: internal" for l in guard.read_text().splitlines()):
-            print("NOTE: the .internal check in scripts/pii_guard.py is opt-in now. To keep blocking .internal addresses, "
-                  "the owner adds the line 'check: internal' to .pii-guard.\n")
 
 
         changed = []

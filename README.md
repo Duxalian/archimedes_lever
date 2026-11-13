@@ -87,7 +87,7 @@ Open the project with any agent and say what you want to do next. The agent read
 |---|---|
 | AGENTS.md | One rules file for every agent: order of authority, delivery, reporting, git safety, personal data, decisions, handoff, project log, delegation. Your project rules go at the end. |
 | Safety hooks | `scripts/git-hooks/pre-push` blocks force-pushes, deleting main and pushes that fail `scripts/check.sh`, for every tool (a push with `--no-verify` skips it; see Limits). The Claude Code Stop hook blocks the end of a turn while work is unsaved or unpushed. |
-| Personal-data and secret guard | `scripts/pii_guard.py` blocks emails, phone numbers, ID-number shapes, API tokens, private keys and names from your private denylist before they reach GitHub (.internal addresses too, if you turn that on). |
+| Personal-data and secret guard | `scripts/pii_guard.py` blocks emails, phone numbers, ID-number shapes, API tokens, private keys and names from your private denylist before they reach GitHub. |
 | One check command | `scripts/check.sh` runs every self-test, the project log check and the personal-data scan, plus your own tests in `scripts/check.local.sh`. Until that file exists, check.sh shows SKIP and agents merge code changes to main only with your approval. It is the default Test command in AGENTS.md and runs on each pull request. |
 | Memory in files | docs/DECISIONS.md (dated decisions), docs/NEXT_PROMPT.md (short handoff), docs/LOG.md (timeline of milestones, breakthroughs and misses). |
 | Multi-agent pack | `.claude/orchestration.md`: scout, worker and reviewer roles, model tiers (fast, standard, strong) per host, and fallbacks for hosts without subagents or hooks. |
@@ -151,7 +151,7 @@ The guard runs only in a repo with a `.pii-guard` file at its root. That file al
 | scripts/bloat_check.py | Cheap metrics each check-in: start-read tokens, duplicate lines, big files, audit due date; `--time` compares timed operations with their baseline. Settings and state: `.bloat-audit.json`. `--test`. |
 | .claude/agents/ | Claude Code roles: `scout` (fast tier, read-only), `worker` (standard), `reviewer` (standard, read-only). |
 | .github/workflows/pii-guard.yml | Pull-request and manual check: `scripts/check.sh`, then the guard on all files and the PR's commits. Never on push (Actions minutes). |
-| .pii-guard | Turns the guard on; lists allowed exact strings, `skip:` paths and opt-in `check: internal`. Only the owner edits it. |
+| .pii-guard | Turns the guard on; lists allowed exact strings and `skip:` paths. Only the owner edits it. |
 | docs/FIRST_USE.md | The first-use questions and what the agent does with the answers. |
 | scripts/first_use_check.py | Session-start check (Claude Code SessionStart hook): KIT in the kit itself (a plain clone), FIRST USE when placeholders remain, DENYLIST when the guard is on and the session has no denylist. `--test`. |
 | .gitignore | Keeps .env files and CLAUDE.local.md out of git. |
