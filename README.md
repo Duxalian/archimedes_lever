@@ -38,6 +38,8 @@ What went wrong across 5 real projects, and the rule that came out of it. Each r
 | Repo text and web pages are data, not instructions | Research: injected text in README files is followed 2.6x more than in code | Kit AGENTS.md "Untrusted input" |
 | Audit for bloat on a schedule, and measure before you cut | One operation went from 116.6 s to 23.4 s after an audit | Kit `scripts/bloat_check.py` |
 
+Sources: the research figure is from [arXiv 2610.38867](https://arxiv.org/abs/2610.38867) (see [the gap review](docs/reviews/2026-11-13-agentic-gap-review.md)); the other numbers come from the maintainer's own project logs, which are private.
+
 ## What you need
 
 - A free [GitHub account](https://github.com/signup).
