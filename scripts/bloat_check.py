@@ -202,7 +202,7 @@ def report(root, args, today=None):
         data["timings"] = cfg.get("timings", {})
         (root / CONFIG).write_text(json.dumps(data, indent=2) + "\n")
 
-    tail = f"AUDIT DUE ({due}): follow .claude/bloat-audit.md" if due else "audit not due"
+    tail = f"AUDIT DUE ({due}): ask the owner whether to run .claude/bloat-audit.md" if due else "audit not due"
     if args.brief:
         print(f"bloat:       start read ~{s_tok:,} tokens (budget {b['start_read_tokens']:,}) · duplicate lines "
               f"{len(dups)} · big files {len(big)} · over: {', '.join(over) or 'none'}{' · ' + warn if warn else ''} · {tail}")
