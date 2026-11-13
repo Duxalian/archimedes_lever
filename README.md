@@ -53,7 +53,7 @@ Open the project with any agent and say what you want to do next. The agent read
 | One check command | `scripts/check.sh` runs every self-test, the project log check and the personal-data scan, plus your own tests in `scripts/check.local.sh`. It is the default Test command in AGENTS.md and runs on each pull request. |
 | Memory in files | docs/DECISIONS.md (dated decisions), docs/NEXT_PROMPT.md (short handoff), docs/LOG.md (timeline of milestones, breakthroughs and misses). |
 | Multi-agent pack | `.claude/orchestration.md`: scout, worker and reviewer roles, model tiers (fast, standard, strong) per host, and fallbacks for hosts without subagents or hooks. |
-| Upkeep | `scripts/sync_baseline.py` brings a project up to the current kit; `scripts/drift.py` reports how far a project has drifted. |
+| Upkeep (kit only) | `scripts/sync_baseline.py` brings a project up to the current kit by hand; `scripts/drift.py` reports how far a project has drifted. Projects do not get these tools. |
 
 ## Start a new project by hand
 
@@ -117,7 +117,6 @@ The guard runs only in a repo with a `.pii-guard` file at its root. That file al
 | .pii-guard | Turns the guard on; lists allowed exact strings, `skip:` paths and opt-in `check: internal`. Only the owner edits it. |
 | docs/FIRST_USE.md | The first-use questions and what the agent does with the answers. |
 | scripts/first_use_check.py | Session-start check (Claude Code SessionStart hook): KIT in the kit itself (a plain clone), FIRST USE when placeholders remain, DENYLIST when the guard is on and the session has no denylist. `--test`. |
-| .baseline | The kit commit the project was made or last synced from. |
 | .gitignore | Keeps .env files and CLAUDE.local.md out of git. |
 | scripts/check.sh | The one check command (AGENTS.md "Commands": Test). Runs `scripts/check.local.sh` last when it exists. |
 | scripts/session_checkin.sh | Start and end check: branch, ahead/behind, uncommitted files. Installs scripts/git-hooks when no other hooks path is set. |
@@ -127,19 +126,19 @@ The guard runs only in a repo with a `.pii-guard` file at its root. That file al
 | scripts/worker_guard.py | PreToolUse hook that limits what `worker` and `reviewer` may do in git. `--test`. |
 | scripts/log_check.py | Checks docs/LOG.md against the Project log rules. `--test`. |
 | scripts/timeline.py | Renders one or more project logs as one self-contained HTML timeline, or a Markdown story outline per arc for a deck (`--outline FILE`). `--test`. |
-| scripts/drift.py | Report only: how a project differs from this kit. `--project DIR`, `--owner NAME`, `--test`. |
-| scripts/sync_baseline.py | Brings an existing project up to the current kit. Dry run by default; `--apply` writes. Keeps Project rules, Commands and docs/. |
+| scripts/drift.py | Kit only. Report only: how a project differs from this kit. `--project DIR`, `--owner NAME`, `--test`. |
+| scripts/sync_baseline.py | Kit only. Brings an existing project up to the current kit. Dry run by default; `--apply` writes. Keeps Project rules, Commands and docs/. |
 | scripts/bootstrap.sh | Fills the placeholders once, then deletes itself. |
 
 ## Sync an existing project
 
-In the project repo, with no uncommitted changes:
+Projects do not stay in sync with the kit, and they do not carry the sync tools. To bring a project up to the kit by hand, in the project repo with no uncommitted changes:
 
-1. First time only (the project has no `scripts/sync_baseline.py` yet): clone this repo next to the project, then run its copy:
+1. Clone this repo next to the project, then run its copy:
    ```
-   python3 ../archimedes_lever/scripts/sync_baseline.py --name "Project Name" --repo YOUR_USER/NAME --purpose "One-line purpose"
+   python3 ../archimedes_lever/scripts/sync_baseline.py --baseline ../archimedes_lever
    ```
-   Later syncs: `python3 scripts/sync_baseline.py`. Add `--owner NAME` when the project AGENTS.md has no `- Owner:` line, and `--timezone ZONE` (IANA name) when it has no `- Time zone:` line.
+   Add `--name`, `--repo` and `--purpose` when the project AGENTS.md has no header values, `--owner NAME` when it has no `- Owner:` line, and `--timezone ZONE` (IANA name) when it has no `- Time zone:` line.
 2. Read the diff. Nothing is written yet.
 3. Run the same command with `--apply`, review `git diff`, then commit and push.
 
