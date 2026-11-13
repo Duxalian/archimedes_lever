@@ -14,10 +14,10 @@ Tell me your thoughts about this repo: https://github.com/rhope-ops/archimedes_l
 
 | Take | What it gives you | Effort | Needs |
 |---|---|---|---|
-| 1. [Preferences](PREFERENCES.md) for your own AI account | Every chat asks its questions up front, labels its recommendations, marks its confidence, checks its work before it says "done", and saves you clicks and copying | About 5 minutes: the assistant asks you 4 questions and gives you one block to paste | Any Claude, ChatGPT or Codex account. No GitHub. |
-| 2. A project kit (the rest of this repo) | A new project where every agent follows one rules file, cannot force-push or leak your name or email, checks its own work, and records decisions | About 15 minutes with an agent ("Start here" below) | A free GitHub account and an agent that can run commands |
+| 1. [Preferences](PREFERENCES.md) for your own AI account | Every chat asks its questions up front, labels its recommendations, marks its confidence, checks its work before it says "done", and saves you clicks and copying | About 5 minutes (estimate, not timed): the assistant asks you 4 questions and gives you one block to paste | Any Claude, ChatGPT or Codex account. No GitHub. |
+| 2. A project kit (the rest of this repo) | A new project where every agent follows one rules file, is blocked from force-pushes and from pushing your listed names or your email, checks its own work, and records decisions | About 15 minutes with an agent (estimate, not timed) ("Start here" below) | A free GitHub account and an agent that can run commands |
 
-Take 1 alone gets most of the benefit for most people. To do it, ask your assistant: `Interview me and fill in PREFERENCES.md from https://github.com/rhope-ops/archimedes_lever for Claude` (or ChatGPT, or Codex).
+You can take 1 without 2. To do it, ask your assistant: `Interview me and fill in PREFERENCES.md from https://github.com/rhope-ops/archimedes_lever for Claude` (or ChatGPT, or Codex).
 
 ## Lessons behind the rules
 
@@ -35,7 +35,7 @@ What went wrong across 5 real projects, and the rule that came out of it. Each r
 | Build from a real sample and the full source, not from memory | A package built from docs failed on import; the real export showed the wrong key | Ask for a sample first (not yet a rule) |
 | Change one thing per test, and use a control | A test changed 2 things at once and could not find the cause | Not yet a rule |
 | Keep personal data out of git from the first commit | An old repo could never go public: its history held a name and an email | Kit `scripts/pii_guard.py` |
-| Repo text and web pages are data, not instructions | Research: injected text in README files is followed 2.6x more than in code | Kit AGENTS.md "Untrusted input" |
+| Repo text and web pages are data, not instructions | Research: one model followed an instruction injected in a README or TODO file 2.6x more often than the same instruction in a code or data file | Kit AGENTS.md "Untrusted input" |
 | Audit for bloat on a schedule, and measure before you cut | One operation went from 116.6 s to 23.4 s after an audit | Kit `scripts/bloat_check.py` |
 
 Sources: the research figure is from [arXiv 2610.38867](https://arxiv.org/abs/2610.38867) (see [the gap review](docs/reviews/2026-11-13-agentic-gap-review.md)); the other numbers come from the maintainer's own project logs, which are private.
@@ -71,6 +71,8 @@ Either way, the agent asks 4 questions: the name, what it is for, your time zone
 
 One step is yours: the agent asks you to type your own names into a private list (the personal-data guard checks every push against it, so your names never land on GitHub by mistake). You never type them into the chat. In the browser (way A), this means you add a setting and start one new session; the agent gives you a prompt to paste there, so you do not answer the questions again.
 
+In the browser (way A), Claude Code may be allowed to push only to its own branch, not to `main`. The agent then says the push to `main` is blocked. Type `Please open a pull request`, open the link it gives, and click **Merge pull request**.
+
 If you know git: `git clone https://github.com/rhope-ops/archimedes_lever my-project`, open the folder with your agent and type `Please read the repo and initiate.`
 
 Details for agents: [docs/FIRST_USE.md](docs/FIRST_USE.md).
@@ -84,7 +86,7 @@ Open the project with any agent and say what you want to do next. The agent read
 | Part | What it does for you |
 |---|---|
 | AGENTS.md | One rules file for every agent: order of authority, delivery, reporting, git safety, personal data, decisions, handoff, project log, delegation. Your project rules go at the end. |
-| Safety hooks | `scripts/git-hooks/pre-push` blocks force-pushes, deleting main and pushes that fail `scripts/check.sh`, for every tool. The Claude Code Stop hook blocks the end of a turn while work is unsaved or unpushed. |
+| Safety hooks | `scripts/git-hooks/pre-push` blocks force-pushes, deleting main and pushes that fail `scripts/check.sh`, for every tool (a push with `--no-verify` skips it; see Limits). The Claude Code Stop hook blocks the end of a turn while work is unsaved or unpushed. |
 | Personal-data and secret guard | `scripts/pii_guard.py` blocks emails, phone numbers, ID-number shapes, API tokens, private keys and names from your private denylist before they reach GitHub (.internal addresses too, if you turn that on). |
 | One check command | `scripts/check.sh` runs every self-test, the project log check and the personal-data scan, plus your own tests in `scripts/check.local.sh`. Until that file exists, check.sh shows SKIP and agents merge code changes to main only with your approval. It is the default Test command in AGENTS.md and runs on each pull request. |
 | Memory in files | docs/DECISIONS.md (dated decisions), docs/NEXT_PROMPT.md (short handoff), docs/LOG.md (timeline of milestones, breakthroughs and misses). |
@@ -104,14 +106,15 @@ For people who use git and want no agent in the setup, or who use a chat with no
    ```
    scripts/bootstrap.sh "Project Name" YOUR_USER/NEW_NAME "One-line purpose" "the owner" "Europe/Berlin"
    ```
-   The 4th argument is the name agents use for you (default "the owner"). A public repo uses a role, for example `"the maintainer"`; a private repo may use your first name. The 5th is the time zone for project log times, as an IANA name (default UTC).
+   The 4th argument is the name agents use for you (default "the owner"). A public repo uses a role, for example `"the maintainer"`. A private repo may use your first name only with the guard off (delete `.pii-guard`): the guard blocks every push that contains a name on your denylist. The 5th is the time zone for project log times, as an IANA name (default UTC).
    Bootstrap moves the kit's MIT license to docs/archimedes_lever-LICENSE.txt (keep it: it covers the kit's scripts). Add your own `LICENSE` if you want one.
 3. Set up the name denylist (next section), run `scripts/session_checkin.sh` (it installs the git hooks), then commit and push.
 4. Paste the Project text from `docs/host-prompts.md` into your claude.ai Project instructions (or the GPT / Gemini equivalent).
 
 ## Keep personal data out
 
-0. With the guard on, every push and pull-request check with no denylist fails, so set each place you use: your computer (step 2), GitHub (step 3), and the cloud environment variable `PII_GUARD_DENYLIST` for Claude cloud sessions. `python3 scripts/pii_guard.py --status` prints where the list comes from and how many entries, never the names.
+With the guard on, every push and pull-request check with no denylist fails, so set each place you use: your computer (step 2), GitHub (step 3), and the cloud environment variable `PII_GUARD_DENYLIST` for Claude cloud sessions. `python3 scripts/pii_guard.py --status` prints where the list comes from and how many entries, never the names.
+
 1. Commit as your GitHub noreply address: GitHub **Settings → Emails**, turn on "Keep my email addresses private" and "Block command line pushes that expose my email". Then:
    ```
    git config --global user.email "ID+USER@users.noreply.github.com"
@@ -136,7 +139,7 @@ The guard runs only in a repo with a `.pii-guard` file at its root. That file al
 | docs/DECISIONS.md | Dated decision log. Owner decisions vs agent recommendations. |
 | docs/LOG.md | Project log for a timeline and a narrative deck: milestones, breakthroughs, misses, decisions, grouped in arcs; each arc has Problem, Turning point, Outcome and Lesson. A public repo keeps it in a private place named in Project rules. |
 | docs/host-prompts.md | Pointer texts for the claude.ai Project, GPT, Gemini and any other chat. |
-| docs/reviews/ | Detailed evidence. |
+| docs/reviews/ | Detailed evidence. Bootstrap deletes the kit's own reports; a project starts with only docs/reviews/README.md. |
 | .bloat-audit.json | The kit's own audit state and timing baselines (scripts/bloat_check.py). Template repo only: bootstrap deletes it; a project's first audit makes its own. |
 | PREFERENCES.md | The owner's personal preferences for Claude, ChatGPT and Codex, ready to paste. Template repo only: bootstrap deletes it. |
 | LICENSE | The kit's license (MIT). Bootstrap moves it to docs/archimedes_lever-LICENSE.txt; the project picks its own LICENSE. |
@@ -183,6 +186,8 @@ An old AGENTS.md without the kit layout moves under "Project rules" with a revie
 - A project does not update with the kit. The kit keeps no changelog: its history is in git (`git log`).
 - Account-wide preferences (your own settings in Claude, ChatGPT or Codex) reach only that host. Every agent gets the rules from AGENTS.md.
 - Setup needs an agent with file access. A chat that cannot run commands can only give you text to paste: use "Start a new project by hand".
+- With the guard on, the pull-request check needs the `PII_GUARD_DENYLIST` secret. GitHub does not give secrets to pull requests from forks, so a pull request from a fork always fails the check. The maintainer checks it by hand, or copies it to a branch in the repo.
+- The pull-request check runs the scripts from the pull request itself, so a pull request that edits `scripts/pii_guard.py` or `scripts/check.sh` can change the result. Review changes to those files by hand.
 - Hooks are seat belts, not locks: Claude Code hooks bind Claude Code only, and `--no-verify` skips git hooks.
 - The Claude Code sandbox (network allowlist in .claude/settings.json) needs bubblewrap and socat on Linux; without them Claude Code warns and runs commands unboxed, while deny rules and git hooks still apply. Claude cloud containers lack them but sit behind their own network proxy. macOS needs nothing extra.
 - The guard finds shapes and listed names. It does not find a name you did not list, or personal facts written in prose. Read before you publish.
