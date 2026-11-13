@@ -10,15 +10,15 @@ AGENTS.md "Verification" points here. Other agents read this file directly.
 ## Run
 
 ```bash
-node .claude/skills/ui-verify/measure.mjs <url-or-html-file> <out-dir>
+node .claude/skills/ui-verify/measure.mjs <url-or-html-file> [out-dir]
 ```
 
-It needs Playwright (`require('playwright')` must resolve). For each width (375, 1440 px) and scheme (light, dark) it saves a full-page screenshot and checks:
+It needs Playwright (`require('playwright')` must resolve). Without an out-dir, screenshots go to a new temp folder, never the repo; the script prints the paths. For each width (375, 1440 px) and scheme (light, dark) it saves a full-page screenshot and checks:
 
 | Check | Pass |
 |---|---|
 | Text contrast (WCAG AA) | 4.5:1; 3:1 for large text (24 px, or 18.66 px bold) |
-| Interactive targets | at least 24×24 px |
+| Interactive targets | at least 24×24 px (a link inside a sentence is exempt, as in WCAG 2.5.8) |
 | Horizontal page scroll | 0 px |
 
 Exit 0 = all pass. Text on an image or a gradient is listed as "unchecked": check it by hand and say so.

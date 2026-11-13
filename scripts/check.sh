@@ -30,7 +30,7 @@ if [ -f scripts/git-hooks/pre-push ]; then run "pre-push self-test" scripts/git-
 
 if [ ! -f scripts/log_check.py ]; then
   :  # starter tier: no project log
-elif grep -q '{{PROJECT_NAME}}' AGENTS.md 2>/dev/null; then
+elif grep -q '{{PROJECT_NAME}}' AGENTS.md 2>/dev/null && grep -q '{{PROJECT_NAME}}' docs/LOG.md 2>/dev/null; then
   skip "project log" "template placeholders: run first use"
 elif [ -f docs/LOG.md ]; then
   run "project log" python3 scripts/log_check.py docs/LOG.md

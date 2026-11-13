@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // UI measurement for the ui-verify skill (.claude/skills/ui-verify/SKILL.md).
-// Usage: node measure.mjs <url-or-file> [out-dir]
+// Usage: node measure.mjs <url-or-file> [out-dir]   (default out-dir: a new folder in the system temp dir, never the repo)
 // For each width (375, 1440) and scheme (light, dark): saves a screenshot and checks
 //   - horizontal page scroll (scrollWidth > viewport width)
 //   - text contrast against WCAG AA (4.5:1, or 3:1 for large text: >= 24px, or >= 18.66px and bold)
@@ -10,6 +10,7 @@
 // Needs Playwright (require('playwright') must resolve).
 import { createRequire } from 'node:module';
 import { mkdirSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -20,14 +21,20 @@ try { ({ chromium } = require('playwright')); } catch {
   catch { console.error('Playwright not found: install it, or run where require("playwright") resolves.'); process.exit(2); }
 }
 
-const [target, outDir = 'ui-verify-out'] = process.argv.slice(2);
+const [target, outDir = `${tmpdir()}/ui-verify-${Date.now()}`] = process.argv.slice(2);  // default: outside the repo
 if (!target) { console.error('Usage: node measure.mjs <url-or-file> [out-dir]'); process.exit(2); }
 const url = /^[a-z]+:\/\//i.test(target) ? target : pathToFileURL(resolve(target)).href;
 mkdirSync(outDir, { recursive: true });
 
 function audit() {
-  const parse = (c) => { const m = c.match(/[\d.]+/g); return m ? m.map(Number) : [0, 0, 0, 0]; };
-  const alpha = (c) => (c.length > 3 ? c[3] : 1);
+  // Any CSS colour (rgb, rgba, oklch, lab, ...) to [r, g, b, a in 0..1], through a 1x1 canvas.
+  const cx = document.createElement('canvas').getContext('2d', { willReadFrequently: true });
+  const parse = (c) => { cx.clearRect(0, 0, 1, 1); cx.fillStyle = '#000'; cx.fillStyle = c; cx.fillRect(0, 0, 1, 1);
+    const d = cx.getImageData(0, 0, 1, 1).data; return d[3] ? [d[0] * 255 / d[3], d[1] * 255 / d[3], d[2] * 255 / d[3], d[3] / 255] : [0, 0, 0, 0]; };
+  const blend = (fg, bg) => [0, 1, 2].map((i) => fg[i] * fg[3] + bg[i] * (1 - fg[3]));
+  const alpha = (c) => c[3];
+  const dark = matchMedia('(prefers-color-scheme: dark)').matches && /dark/.test(getComputedStyle(document.documentElement).colorScheme);
+  const canvasBg = dark ? [18, 18, 18, 1] : [255, 255, 255, 1];
   const lum = ([r, g, b]) => { const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); };
   const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
   const bgOf = (el) => {
@@ -37,7 +44,7 @@ function audit() {
       const c = parse(s.backgroundColor);
       if (alpha(c) >= 0.99) return c;
     }
-    return [255, 255, 255];
+    return canvasBg;
   };
   const visible = (el) => { const r = el.getBoundingClientRect(); const s = getComputedStyle(el); return r.width > 0 && r.height > 0 && s.visibility !== 'hidden' && s.display !== 'none' && Number(s.opacity) > 0; };
   const name = (el) => el.tagName.toLowerCase() + (el.id ? '#' + el.id : '') + (el.className && typeof el.className === 'string' ? '.' + el.className.trim().split(/\s+/).join('.') : '');
@@ -50,8 +57,9 @@ function audit() {
     if (!el || seen.has(el) || !n.textContent.trim() || !visible(el)) continue;
     seen.add(el);
     const s = getComputedStyle(el);
-    const fg = parse(s.color), bg = bgOf(el);
+    const bg = bgOf(el);
     if (!bg) { unchecked.push(name(el)); continue; }
+    const fg = blend(parse(s.color), bg);
     const size = parseFloat(s.fontSize), bold = Number(s.fontWeight) >= 700;
     const need = size >= 24 || (size >= 18.66 && bold) ? 3 : 4.5;
     const r = ratio(fg, bg);
@@ -59,6 +67,9 @@ function audit() {
   }
   for (const el of document.querySelectorAll('a[href], button, input:not([type=hidden]), select, textarea, [role=button], [tabindex]:not([tabindex="-1"])')) {
     if (!visible(el)) continue;
+    // WCAG 2.5.8 exempts a link inside a sentence: an inline link whose parent has other text.
+    if (el.tagName === 'A' && getComputedStyle(el).display === 'inline' && el.parentElement &&
+        [...el.parentElement.childNodes].some((n) => n.nodeType === Node.TEXT_NODE && n.textContent.trim())) continue;
     const r = el.getBoundingClientRect();
     if (r.width < 24 || r.height < 24) targets.push({ el: name(el), w: Math.round(r.width), h: Math.round(r.height) });
   }
