@@ -14,7 +14,7 @@ First full audit of the kit (`.claude/bloat-audit.md`), asked for by the owner o
 | Timing: `check` (scripts/check.sh) | 2.9 s (baseline, first record) | 3.0 s | +25% |
 | Timing: `checkin` (scripts/session_checkin.sh) | 0.9 s (baseline, first record) | 1.1 s (+22%, in limit) | +25% |
 | Timing: `bloat-brief` | 0.1 s (baseline, first record) | 0.1 s | +25% |
-| Removals proposed / approved / made | - | 6 / 0 / 0 | - |
+| Removals proposed / approved / made | - | 6 / 5 / 5 (P1–P5, the owner, 2026-11-13) | - |
 | Rules removed or merged | - | 0 (1 added, owner request) | - |
 | Key assumptions: high / medium / low / untraced | - | 3 / 3 / 1 / 0 | - |
 
@@ -30,6 +30,22 @@ Commands: `python3 scripts/bloat_check.py --time --record` (before), `--time` (a
 | Delivery | 118 → 163 | host-limit rule added |
 | Git safety | 160 | 2 bullets describe what pre-push and settings.json enforce |
 | Others (14 sections) | 1,229 | |
+
+## After the owner approved P1–P5 (2026-11-13)
+
+| Measure | After the audit | After P1–P5 |
+|---|---|---|
+| Start read (~tokens) | 3,799 | 3,256 (−543, −14%) |
+| AGENTS.md words / bytes | 2,387 / 15,197 start read | 2,024 (−363, −15%) / 12,370 |
+| Tracked files / size | 39 / 255 KB | 40 / 257 KB (+ .claude/project-log.md) |
+| Timing: check / checkin / bloat-brief (s) | 2.9 / 0.9 / 0.1 | 3.2 / 0.6 / 0.1 (all within +25%) |
+
+- P1: the detail moved to `.claude/project-log.md`, not to docs/LOG.md: sync_baseline.py keeps a project's docs/, so existing projects would not get it. sync_baseline.py and bootstrap.sh copy and rename it.
+- P2, P3: pointers go to the file headers of `scripts/pii_guard.py` and the enforcing files, not to README: bootstrap replaces README in projects.
+- P4: the rule moved to "Checks", not "Commands": sync_baseline.py keeps a project's own Commands section, so the rule would not reach existing projects.
+- P5: `audit_due` counts from the first commit when there is no `last_audit`; 4 new self-test cases.
+- Found on the way: bootstrap.sh did not rename the owner in `.claude/bloat-audit.md` and `scripts/bloat_check.py`, which sync_baseline.py renames, so the first sync after a bootstrap with an owner name changed them. Fixed; a bootstrap with owner "Sam" followed by a sync now changes only `.baseline`.
+- Verified: kit check.sh 11 pass, 1 skip; new trial project (owner "Sam") check.sh 11 of 11, audit not due on day one; a project made from 6f5f4f1 and synced with `--apply` gets `.claude/project-log.md` and passes check.sh 11 of 11.
 
 ## Fixes made (exceptions list only)
 
