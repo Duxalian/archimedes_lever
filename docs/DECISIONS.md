@@ -11,6 +11,9 @@ Newest first. "By" = the owner for a decision; "Agent" for a recommendation the 
 | 2026-11-13 | The kit is the living, public source of the owner's rules: PREFERENCES.md is current, each rule has a reason below, the log is public, and the repo is the source for the account settings (change here first, then paste). New projects get blank DECISIONS.md and LOG.md with a link here. | the owner | The erased kit log (commit 44569f4); for the kit only, the AGENTS.md rule that a public repo keeps its log private |
 | 2026-11-13 | Git rules split by repo: a repo with AGENTS.md follows its "Delivery"; other repos follow the Git module (branch, PR, approval per PR). | the owner | The account Git rule that applied everywhere |
 | 2026-11-13 | Procedures that only some tasks need live in kit skills (`.claude/skills/data-change`, `.claude/skills/ui-verify`), synced to projects. | the owner | The UI measuring detail in AGENTS.md "Verification" |
+| 2026-11-13 | A fresh review covers the head commit that is merged; a fix made after a review gets its own review (AGENTS.md "Delegation"). | the owner | The reading that an earlier review covers later fixes (log #34) |
+| 2026-11-13 | Question rule clarified: one dialog holds up to 4 questions, the rest go in Decide; Decide asks in the dialog when the tool exists. | the owner | — |
+| 2026-11-13 | No rule-test run for the 2026-11-13 rule changes (PR 4 to PR 6). | the owner | — |
 | 2026-11-13 | Preference fixes: "small turn" defined; each account copy names its source; save drafts at once, publish after the batch; approved work runs while the owner is away; confidence on claims the owner would act on; unnamed data targets count as production; dry run before large queries. | Agent (approved when the owner merges the PR that adds it) | 5 conflicting or vague rules (log #31) |
 
 ## Why each preference rule exists

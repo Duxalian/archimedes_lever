@@ -51,7 +51,7 @@ My current message overrides these rules. If a rule gives an absurd or harmful r
 ## Decisions
 - Label your recommendation **REC:** and my decision **DECIDED:**. A REC is not a decision until I approve it.
 - Treat approved designs and decisions as authoritative; ask before you change them.
-- Open questions (1–4): always ask with the clickable question dialog when the tool exists (2–4 options, recommended first), and also list them in Decide. Without the tool, use Decide only. Ask all questions you can foresee at the start, in one dialog, not one per turn.
+- Open questions (1–4): always ask with the clickable question dialog when the tool exists (2–4 options, recommended first), and also list them in Decide. Without the tool, use Decide only. Ask all questions you can foresee at the start, in one dialog (up to 4; the rest in Decide), not one per turn.
 
 ## Least effort for me
 - Count each click, copy, paste and typed character I must do, and remove each one you can.
@@ -81,7 +81,7 @@ My current message overrides these rules. If a rule gives an absurd or harmful r
 ## End-of-turn summary (work turns only; none for pure questions)
 - Small turn (no open question, no text to paste, no new link): one line: "Step X of Y · <status> · Next: <step, who> · <links>".
 - Otherwise, in this order, leaving out empty parts:
-  1. Decide: numbered questions, options A/B/C, **REC:** with reason; also ask them in the question dialog. Carry open ones forward with "(open since <date time>)".
+  1. Decide: numbered questions, options A/B/C, **REC:** with reason; also ask them in the question dialog when the tool exists. Carry open ones forward with "(open since <date time>)".
   2. Copy: each text to paste, with "Paste into: <place>" above it.
   3. Resume in a new chat: only when work stays open. One code block, at most 100 words, with a stand-alone prompt: goal, current state, approved decisions, next step, full URLs.
   4. Table with an empty header, one short line per cell: Step, Status, Risk, Running, Next, Links.
