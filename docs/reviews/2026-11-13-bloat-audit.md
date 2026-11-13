@@ -7,18 +7,18 @@ First full audit of the kit (`.claude/bloat-audit.md`), asked for by the owner o
 | Measure | Before | After | Budget |
 |---|---|---|---|
 | Start read (~tokens) | 3,740 | 3,799 (+59: host-limit rule in AGENTS.md "Delivery") | 12,000 (warn 6,000) |
-| AGENTS.md words | 2,387 | 2,421 | - |
+| AGENTS.md words | 2,342 | 2,387 (+45) | - |
 | Duplicate lines (80+ chars, 2+ files) | 2 | 2 | 20 |
-| Tracked files / size | 38 / 252 KB | 40 / ~262 KB (this report, `.bloat-audit.json`) | - |
+| Tracked files / size | 37 / 246 KB | 39 / 255 KB (this report, `.bloat-audit.json`) | - |
 | Big files | 0 | 0 | 500 KB |
-| Timing: `check` (scripts/check.sh) | not measured | 2.9 s (baseline) | +25% |
-| Timing: `checkin` (scripts/session_checkin.sh) | not measured | 0.9 s (baseline) | +25% |
-| Timing: `bloat-brief` | not measured | 0.1 s (baseline) | +25% |
+| Timing: `check` (scripts/check.sh) | 2.9 s (baseline, first record) | 3.0 s | +25% |
+| Timing: `checkin` (scripts/session_checkin.sh) | 0.9 s (baseline, first record) | 1.1 s (+22%, in limit) | +25% |
+| Timing: `bloat-brief` | 0.1 s (baseline, first record) | 0.1 s | +25% |
 | Removals proposed / approved / made | - | 6 / 0 / 0 | - |
 | Rules removed or merged | - | 0 (1 added, owner request) | - |
 | Key assumptions: high / medium / low / untraced | - | 3 / 3 / 1 / 0 | - |
 
-Commands: `python3 scripts/bloat_check.py --time --record`; `wc -w AGENTS.md`; `git ls-files | xargs wc -c`.
+Commands: `python3 scripts/bloat_check.py --time --record` (before), `--time` (after); `git show 6f5f4f1:AGENTS.md | wc -w`; `git ls-tree -r -l 6f5f4f1` and `git ls-files | xargs cat | wc -c` for sizes. Section words exclude the heading line. Numbers corrected after the fresh review (wc ran after the AGENTS.md edit).
 
 ## AGENTS.md cost by section (words)
 
@@ -27,7 +27,7 @@ Commands: `python3 scripts/bloat_check.py --time --record`; `wc -w AGENTS.md`; `
 | Project log | 412 | 17% of the file; needed only when a log row is written |
 | Bloat, drift and assumptions | 212 | |
 | Personal data | 211 | half restates README "Keep personal data out" and pii_guard.py |
-| Delivery | 163 → 197 | host-limit rule added |
+| Delivery | 118 → 163 | host-limit rule added |
 | Git safety | 160 | 2 bullets describe what pre-push and settings.json enforce |
 | Others (14 sections) | 1,229 | |
 
