@@ -103,6 +103,7 @@ The guard runs only in a repo with a `.pii-guard` file at its root. That file al
 | docs/reviews/ | Detailed evidence. |
 | CHANGELOG.md | Kit versions and decisions about the kit. Template repo only: bootstrap deletes it. |
 | KIT_LOG.md | The kit's own project log (story of how the kit got here; same format as docs/LOG.md). Template repo only: bootstrap deletes it. |
+| PREFERENCES.md | The owner's personal preferences for Claude, ChatGPT and Codex, ready to paste. Template repo only: bootstrap deletes it. |
 | LICENSE | The kit's license (MIT). Bootstrap moves it to docs/archimedes_lever-LICENSE.txt; the project picks its own LICENSE. |
 | .claude/settings.json | Claude Code deny list (force-push incl. --force-with-lease, hard reset, clean, reading .env and key files), a sandbox with a network allowlist (GitHub, PyPI, npm), and the Stop hook. Binds Claude Code only. |
 | .claude/orchestration.md | Multi-agent rules: roles, model routing by tier, fallbacks, briefs, review and merge, lanes. Read only when delegating. |
