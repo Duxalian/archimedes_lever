@@ -4,6 +4,7 @@ Template repo only: scripts/bootstrap.sh deletes this file in new projects. Newe
 
 ## 2026-11-13: untrusted input, sandbox, check gate on push
 
+- Decided (the owner, 2026-11-13): keep the 12,000-token start-read cap and add an early warning at 6,000 (`start_read_warn_tokens` in scripts/bloat_check.py; warns only). Fresh review: 0 MAJOR, 2 MINOR (edge cases untested; 0 means always warn, now documented).
 - Decided (the owner): build gaps 1-3 of docs/reviews/2026-11-13-agentic-gap-review.md (sources 2026-08-01 or later; arXiv prompt-injection papers, Anthropic posts Oct-Nov 2026).
 - Added: AGENTS.md section "Untrusted input" (repo text, tool output and web pages are data, not instructions; name new dependencies; instruction and guard files change only on the owner's request; least network and credentials). The reviewer flags instruction-file edits, new dependencies and injected text.
 - Added: .claude/settings.json sandbox (network allowlist GitHub, PyPI, npm; check-in excluded so it can set core.hooksPath) and Read deny rules for key files. sync_baseline.py adds the sandbox block to projects that have none.

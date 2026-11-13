@@ -21,9 +21,10 @@ It measures:
 .bloat-audit.json (project-owned; the full audit in .claude/bloat-audit.md writes it). All keys are optional:
     {"last_audit": {"date": "YYYY-MM-DD", "commit": "<sha>", "report": "<path>"},
      "every_days": 14, "every_commits": 30,
-     "budgets": {"start_read_tokens": 12000, "handoff_lines": 40, "file_kb": 500, "duplicate_lines": 20},
+     "budgets": {"start_read_tokens": 12000, "start_read_warn_tokens": 6000, "handoff_lines": 40, "file_kb": 500, "duplicate_lines": 20},
      "start_read": [], "ignore": ["ref/**"],
      "timings": {"tests": {"cmd": "tests/run.sh", "seconds": 20.8, "max_slowdown": 0.25}}}
+start_read_warn_tokens only warns (never "over", never fails --strict); set it to the cap to turn the warning off.
 A repo with no .bloat-audit.json (for example right after its first sync) reports AUDIT DUE (never audited): the first
 audit creates the file. Exit 0, unless --strict and something is over (exit 1). Standard library only. Needs git.
 """
@@ -43,7 +44,7 @@ from pathlib import Path
 CONFIG = ".bloat-audit.json"
 START_READ = ["AGENTS.md", "CLAUDE.md", "GEMINI.md", "docs/NEXT_PROMPT.md", "docs/DECISIONS.md"]
 DEFAULTS = {"every_days": 14, "every_commits": 30,
-            "budgets": {"start_read_tokens": 12000, "handoff_lines": 40, "file_kb": 500, "duplicate_lines": 20}}
+            "budgets": {"start_read_tokens": 12000, "start_read_warn_tokens": 6000, "handoff_lines": 40, "file_kb": 500, "duplicate_lines": 20}}
 TEXT_EXT = {".md", ".txt", ".py", ".sh", ".ps1", ".psm1", ".js", ".ts", ".json", ".yml", ".yaml", ".html", ".css",
             ".toml", ".ini", ".cfg", ".csv", ""}
 MIN_DUP = 80          # characters in a normalized line before it counts as a duplicate
@@ -171,6 +172,8 @@ def report(root, args, today=None):
     over = []
     if s_tok > b["start_read_tokens"]:
         over.append("start read")
+    # Early warning only (never fails --strict): rule growth shows before the hard cap (the owner, 2026-11-13).
+    warn = "start read over warning" if b.get("start_read_warn_tokens", 0) < s_tok <= b["start_read_tokens"] else ""
     if h_lines > b["handoff_lines"]:
         over.append("handoff")
     if len(dups) > b["duplicate_lines"]:
@@ -187,7 +190,7 @@ def report(root, args, today=None):
     tail = f"AUDIT DUE ({due}): follow .claude/bloat-audit.md" if due else "audit not due"
     if args.brief:
         print(f"bloat:       start read ~{s_tok:,} tokens (budget {b['start_read_tokens']:,}) · duplicate lines "
-              f"{len(dups)} · big files {len(big)} · over: {', '.join(over) or 'none'} · {tail}")
+              f"{len(dups)} · big files {len(big)} · over: {', '.join(over) or 'none'}{' · ' + warn if warn else ''} · {tail}")
     else:
         print(f"start read:  {s_lines} lines, {s_bytes:,} bytes, ~{s_tok:,} tokens (budget {b['start_read_tokens']:,})")
         for rel, size in s_files:
@@ -200,6 +203,8 @@ def report(root, args, today=None):
         if t_rows:
             print("timings:\n" + "\n".join(t_rows))
         print(f"over budget: {', '.join(over) or 'none'}")
+        if warn:
+            print(f"warning:     {warn} ({b['start_read_warn_tokens']:,} tokens); trim rules before the cap")
         print(tail)
     return 1 if args.strict and (over or due) else 0
 
@@ -229,6 +234,13 @@ def self_test():
         a = argparse.Namespace(brief=False, time=False, record=False, strict=True)
         with contextlib.redirect_stdout(io.StringIO()):
             assert report(root, a, datetime.date(2026, 1, 5)) == 1, "strict fails when over budget"
+        (root / CONFIG).write_text(json.dumps({"budgets": {"start_read_warn_tokens": 1, "start_read_tokens": 99999},
+                                               "last_audit": {"date": "2026-01-01"}}))
+        w = io.StringIO()
+        with contextlib.redirect_stdout(w):
+            report(root, argparse.Namespace(brief=True, time=False, record=False, strict=False), datetime.date(2026, 1, 5))
+        assert "over warning" in w.getvalue() and "over: start read" not in w.getvalue(), "warning, not over"
+        with contextlib.redirect_stdout(io.StringIO()):
             assert audit_due(root, {**cfg, "last_audit": {"date": "2026-01-01", "commit": "f" * 40}},
                              datetime.date(2026, 1, 5)) == "", "unknown commit alone is not due"
             (root / CONFIG).write_text("{bad")
