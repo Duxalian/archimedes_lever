@@ -55,7 +55,7 @@ COMMANDS_HEADING = "## Commands"
 COPY_FILES = ["scripts/session_checkin.sh", "scripts/sync_baseline.py", "scripts/stop_check.py",
               "scripts/worker_guard.py", "scripts/log_check.py", "scripts/drift.py", "scripts/timeline.py", "scripts/pii_guard.py", "scripts/first_use_check.py",
               "scripts/check.sh", "scripts/bloat_check.py", "scripts/git-hooks/pre-push",
-              ".claude/orchestration.md", ".claude/bloat-audit.md"]
+              ".claude/orchestration.md", ".claude/bloat-audit.md", ".github/workflows/pii-guard.yml"]
 # Agent definitions: copied only when the project has no file with that name (projects may tune them).
 COPY_IF_MISSING = [".claude/agents/worker.md", ".claude/agents/scout.md", ".claude/agents/reviewer.md", "GEMINI.md",
                    "docs/FIRST_USE.md"]

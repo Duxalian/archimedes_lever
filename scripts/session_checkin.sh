@@ -35,7 +35,7 @@ echo "uncommitted: $uncommitted"
 
 [ -f scripts/bloat_check.py ] && python3 scripts/bloat_check.py --brief
 
-if grep -rIl '{{[A-Z_]*}}' --exclude-dir=.git --exclude=bootstrap.sh --exclude=session_checkin.sh --exclude=sync_baseline.py --exclude=README.md . >/dev/null 2>&1; then
+if grep -rIl '{{[A-Z_]*}}' --exclude-dir=.git --exclude=bootstrap.sh --exclude=session_checkin.sh --exclude=sync_baseline.py --exclude=first_use_check.py --exclude=drift.py --exclude=check.sh --exclude=README.md . >/dev/null 2>&1; then
   echo "warning: template placeholders remain; run scripts/bootstrap.sh"
 fi
 exit 0
