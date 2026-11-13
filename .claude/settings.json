@@ -51,6 +51,10 @@
         "files.pythonhosted.org",
         "registry.npmjs.org"
       ]
-    }
+    },
+    "excludedCommands": [
+      "scripts/session_checkin.sh",
+      "bash scripts/session_checkin.sh"
+    ]
   }
 }
