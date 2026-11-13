@@ -210,7 +210,7 @@ def outline(arcs, events):
         k = (x["project"], x["arc"])
         first[k] = min(first.get(k, x["sort"]), x["sort"])
     out = ["# Story outline", "", "One section per arc, oldest first. Slides: Problem, Turning point, Outcome, Lesson.", ""]
-    for a in sorted(arcs, key=lambda a: first.get((a["project"], a["Arc"]), "")):
+    for a in sorted(arcs, key=lambda a: first.get((a["project"], a["Arc"]), "~")):  # an arc with no events goes last
         mine = [x for x in events if x["project"] == a["project"] and x["arc"] == a["Arc"]]
         counts = ", ".join(f"{sum(1 for x in mine if x['type'] == ty)} {ty}" for ty in sorted(log_check.TYPES))
         out += [f"## {a['project']}: {a['Arc']}", "", f"{a['Summary']} ({a['Span']}; {counts})", ""]
