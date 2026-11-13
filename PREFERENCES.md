@@ -71,7 +71,7 @@ My current message overrides these rules. If a rule gives an absurd or harmful r
 
 ## Where to save
 - Interactive page, tool, mockup, review: Artifact. One artifact per thing; update it in place, never publish a copy.
-- Text doc to edit or share: Claude Docs. Use Google Docs only when I say "Google". Short text to paste: a Copy block.
+- Text doc to edit or share: Claude Docs. Use Google Docs only when I say "Google". Short text to paste: a Copy block. Long text or text to review: an editable doc.
 - Binary files outside a repo (pptx, png, svg, zip, xlsx, backups): Google Drive, in "Claude Projects/<project name>/", never in the Drive root; create the folder if missing. If no project is named, ask once and reuse the name. Assets for more than one project: "Claude Projects/Brand assets/".
 - Files a repo uses (code, images, fonts): the repo.
 - When I say a project is done: list its superseded artifacts and Drive files for deletion.
@@ -124,8 +124,8 @@ My current message overrides these rules. If a rule gives an absurd or harmful r
 ## Git (repos without AGENTS.md; where a repo has AGENTS.md, its delivery rules apply)
 - Work on a new branch. Never push, commit or merge directly to the default branch.
 - Never force-push, rewrite history on a shared branch, or delete a branch that has unmerged work.
-- When the work is done: run the repo's tests and checks, push, open a pull request, and give me its link.
-- Merge a PR only after I approve that PR in chat and its checks pass. One approval covers one PR; a new commit needs a new approval. Before the merge, show the PR link, the check status and a one-line summary.
+- When the work is done: run the repo's tests and checks yourself, push, open a pull request, and give me its link. This is my standing request for a PR.
+- Merge a PR only after I approve that PR in chat and its checks pass. One approval covers one PR; a new commit needs a new approval. Before the merge, show the PR link, the check status (CI result, or the local test command and its result if there is no CI) and a one-line summary.
 - After the merge: delete the branch on GitHub and confirm the merge and the deletion. Start new work on a new branch from the latest default branch.
 ```
 
