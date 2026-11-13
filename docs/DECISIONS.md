@@ -8,6 +8,9 @@ Newest first. "By" = the owner for a decision; "Agent" for a recommendation the 
 
 | Date | Decision | By | Replaces |
 |---|---|---|---|
+| 2026-11-13 | A fresh review covers the head commit that is merged; a fix made after a review gets its own review (AGENTS.md "Delegation"). | the owner | The reading that an earlier review covers later fixes (log #34) |
+| 2026-11-13 | Question rule clarified: one dialog holds up to 4 questions, the rest go in Decide; Decide asks in the dialog when the tool exists. | the owner | — |
+| 2026-11-13 | No rule-test run for the 2026-11-13 rule changes (PR 4 to PR 6). | the owner | — |
 | 2026-11-13 | Merge without per-PR approval: a PR merges when its checks pass and a fresh review finds no MAJOR finding; the owner is asked only for UI changes, live or irreversible effects, or a MAJOR finding. Applies to the account Git rules and to the AGENTS.md no-tests exception. | the owner | Approval per PR (also in the row "Git rules split by repo"); a new commit needs a new approval |
 | 2026-11-13 | Claude only: the kit, its templates and PREFERENCES.md name no other AI host; GEMINI.md and the ChatGPT, Codex and Gemini texts are removed. History rows in docs/LOG.md and docs/reviews/ keep their names. | the owner | Model-agnostic kit (log #4, #26) |
 | 2026-11-13 | PREFERENCES.md is one block, synced to the owner's new account text; no modules, no Source line; "Production = …", large-query dry run, "Assume I am away", "no token counts" and the UI measuring line leave the preferences (the kit skills keep the data and UI steps). The reason table moves from this file to PREFERENCES.md. | the owner | Core + 4 modules (2026-11-13); the Source line |
