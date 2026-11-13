@@ -2,6 +2,11 @@
 
 Template repo only: scripts/bootstrap.sh deletes this file in new projects. Newest first. "Decided" = decision by the owner. "Rec" = agent recommendation that the owner has not approved.
 
+## 2026-11-13: owner preferences for Claude, ChatGPT and Codex
+
+- Decided (the owner, 2026-11-13): the owner's personal preferences for Claude, ChatGPT and Codex are kept in the kit repo, without the sentence about the owner's role (public repo). Source: session "Claude.ai instructions review".
+- Added: PREFERENCES.md (one block per host, ready to paste). Template repo only: scripts/bootstrap.sh deletes it with CHANGELOG.md and KIT_LOG.md, so new projects do not inherit it.
+
 ## 2026-11-13: project log story fields (for a narrative deck)
 
 - Decided (the owner, 2026-11-13): the project log is the one history source for a narrative deck; CHANGELOG stays as kit release notes. Story context goes in the Arcs table only (rows unchanged): Arc | Span | Summary | Problem | Turning point | Outcome | Lesson. Existing arcs are backfilled from the log, commits and session summaries; `-` where no source exists.
