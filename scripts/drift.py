@@ -219,6 +219,22 @@ def self_test():
         good = "<!--" not in full.replace("<!-- Fill in", "").replace("<!-- Add rules", "") and "## Project log" in full
         print(("ok   " if good else "FAIL ") + "apply_tier full: markers gone, Project log kept")
         ok = ok and good
+        good = sb.header_tier("- Tier: Starter\n") == "starter" and sb.header_tier("# old\n") == "full"
+        print(("ok   " if good else "FAIL ") + "header_tier: any case; no line = full")
+        ok = ok and good
+        st = proj / "st"
+        (st / ".claude").mkdir(parents=True)
+        (st / "AGENTS.md").write_text((base / "AGENTS.md").read_text())
+        for rel in sb.ADVANCED_FILES:
+            (st / rel).parent.mkdir(parents=True, exist_ok=True)
+            (st / rel).write_text("x")
+        with __import__("contextlib").redirect_stdout(__import__("io").StringIO()):
+            sb.set_tier(st, "starter")
+        left = [r for r in sb.ADVANCED_FILES if (st / r).exists()]
+        agents = (st / "AGENTS.md").read_text()
+        good = not left and "- Tier: starter" in agents and "## Project log" not in agents and "<!-- full" not in agents
+        print(("ok   " if good else "FAIL ") + f"set_tier starter: advanced files gone ({len(left)} left), AGENTS.md filtered")
+        ok = ok and good
     print("DRIFT TEST " + ("PASS" if ok else "FAIL"))
     return 0 if ok else 1
 

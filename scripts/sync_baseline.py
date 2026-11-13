@@ -13,7 +13,8 @@ Options:
     --owner NAME             Name agents use for the decider (default: the project's "- Owner:" line, else "the owner").
                              A public repo sets a role, for example --owner "the maintainer", so no real name is synced in.
     --tier starter|full      Kit tier (default: the project's "- Tier:" line, else "full", the only tier before 2026-11-13).
-                             --tier full on a starter project adds the advanced parts (ADVANCED_FILES below, docs/LOG.md).
+                             --tier full on a starter project adds the advanced parts (ADVANCED_FILES below, and a new
+                             docs/LOG.md unless Project rules name a project log place).
                              --tier starter on a full project keeps the advanced files and lists them for you to delete.
     --set-tier starter|full  Bootstrap only: apply the tier to THIS repo in place (AGENTS.md blocks; in starter, delete
                              ADVANCED_FILES). No baseline, no diff.
@@ -161,8 +162,8 @@ def header_timezone(text):
 
 def header_tier(text):
     """The project's "- Tier:" value; "full" for projects made before tiers existed."""
-    tier = re.search(r"^- Tier: (starter|full)\s*$", text or "", re.M)
-    return tier.group(1) if tier else "full"
+    tier = re.search(r"^- Tier: (starter|full)\s*$", text or "", re.M | re.I)
+    return tier.group(1).lower() if tier else "full"
 
 
 def apply_tier(text, tier):
@@ -396,7 +397,8 @@ def main():
             new[".gitignore"] = merge_lines(base / ".gitignore", root / ".gitignore")
         log = root / "docs/LOG.md"
         rules = section(proj_agents.read_text(), RULES_HEADING) if proj_agents.exists() else ""
-        if tier == "full" and not log.is_file() and not re.search(r"(?i)project log", rules or "") and (base / "docs/LOG.md").exists():
+        upgrading = tier == "full" and header_tier(proj_agents.read_text() if proj_agents.exists() else "") == "starter"
+        if upgrading and not log.is_file() and not re.search(r"(?i)project log", rules or "") and (base / "docs/LOG.md").exists():
             zone = header_timezone(new["AGENTS.md"]) or "UTC"
             stamp = log_stamp(zone)
             text = (base / "docs/LOG.md").read_text()

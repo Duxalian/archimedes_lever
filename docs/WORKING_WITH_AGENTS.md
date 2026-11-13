@@ -30,7 +30,7 @@ For people. Agents read AGENTS.md; this page is for you. It covers the habits th
 
 ## Rules: short, and enforced where it counts
 
-- Keep AGENTS.md short. Every line costs attention on every task, and longer files lower adherence ([Claude Code memory docs](https://code.claude.com/docs/en/memory): under 200 lines). A study found that context files add about 20% to cost for a small gain ([ETH Zurich, arXiv 2602.11988](https://arxiv.org/abs/2602.11988)).
+- Keep AGENTS.md short. Every line costs attention on every task, and longer files lower adherence ([Claude Code memory docs](https://code.claude.com/docs/en/memory): under 200 lines). A study found that context files did not generally raise task success, for files written by people or by models, and raised cost by over 20% ([ETH Zurich, arXiv 2602.11988](https://arxiv.org/abs/2602.11988)). Instructions in them were followed; repository overviews did not help. So write rules the agent cannot find in the code, not a tour of the repo.
 - A rule that must never break belongs in a hook, not only in text. This kit blocks force-pushes and pushes with personal data in git hooks, because a written "never force-push" rule was not obeyed by every tool.
 
 ## When you want more
