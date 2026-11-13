@@ -263,9 +263,9 @@ def self_test():
     expect("example domain allowed", "a" + at + "example" + dot + "com", [])
     expect("placeholder t@t ignored", "t" + at + "t", [])
     mil_on = ["check: mil"]
-    expect(".mil off by default", "see genai" + dot + "mil today", [])
-    expect(".mil email", "x" + dot + "y" + at + "us.af" + dot + "mil", ["email", "mil"], allow=mil_on)
-    expect(".mil host", "see genai" + dot + "mil today", ["mil"], allow=mil_on)
+    expect(".mil off by default", "see example" + dot + "mil today", [])
+    expect(".mil email", "x" + dot + "y" + at + "example" + dot + "mil", ["email", "mil"], allow=mil_on)
+    expect(".mil host", "see example" + dot + "mil today", ["mil"], allow=mil_on)
     expect("phone dashes", "call 555-123-" + "4567", ["phone"])
     expect("phone parens", "call (555) 123-" + "4567", ["phone"])
     expect("phone intl", "call +44 20 7946 " + "0958", ["phone"])
@@ -279,8 +279,8 @@ def self_test():
     expect("denylist name", "ask Alex" + "andra first", ["name"], deny=["Alexandra"])
     expect("denylist any case", "ALEX" + "ANDRA", ["name"], deny=["alexandra"])
     expect("denylist whole word", "Alexandra" + "s", [], deny=["Alexandra"])
-    expect("allow list", "see genai" + dot + "mil", [], allow=["genai" + dot + "mil", "check: mil"])
-    expect("skip line is not an allowed value", "see genai" + dot + "mil", ["mil"], allow=["skip: ref/x.txt", "check: mil"])
+    expect("allow list", "see example" + dot + "mil", [], allow=["example" + dot + "mil", "check: mil"])
+    expect("skip line is not an allowed value", "see example" + dot + "mil", ["mil"], allow=["skip: ref/x.txt", "check: mil"])
     good = not skipped("a.txt", {"skip: *"}) and not skipped("a/b.txt", {"skip: **"}) \
         and skipped("ref/x.txt", {"skip: ref/x.txt"}) and skipped("ref/a/b.txt", {"skip: ref/"}) \
         and skipped("ref/y.txt", {"skip: ref/*.txt"}) and not skipped("docs/x.txt", {"skip: ref/x.txt"})
