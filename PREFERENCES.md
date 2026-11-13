@@ -28,9 +28,9 @@ If the assistant gives only the changed lines (some web tools copy only short qu
 | 3 | `[[STYLE]]` | How should it write to you? | A: "Write to me in ASD-STE100 Simplified Technical English (short sentences, one meaning per word); use plain English only where STE is unclear or longer." · B: "Write to me in plain, short English." |
 | 4 | (modules) | Which modules do you want? (several allowed; see the table above) | None · Builder · Data · Agent work · Git |
 | 5 | `[[PLAN]]` | Only with Agent work: which plan do you have? (Usage limits change what the assistant should ask before heavy work) | Claude: Free, Pro, Max 5x or Max 20x · ChatGPT: Free, Plus or Pro |
-| 6 | `[[SOURCE]]` | Where is your own current copy of these preferences, so the assistant can tell you when the account copy differs? | The URL of your copy (for example your fork's PREFERENCES.md) · none |
+| 6 | `[[SOURCE]]` | Only for Claude and Codex: where is your own current copy of these preferences, so the assistant can tell you when the account copy differs? | The URL of your copy (for example your fork's PREFERENCES.md) · none |
 
-Rules for the assistant that fills it in: replace each `[[...]]` with the answer, remove the line of a fill-in answered "none", keep every other line word for word, give the host's core first and then the chosen modules in the order Builder, Data, Agent work, Git, and keep the ChatGPT text under 5,000 characters. The user's answers stay in their own account; never commit them to a repo.
+Rules for the assistant that fills it in: replace each `[[...]]` with the answer, remove the line of a fill-in answered "none", keep every other line word for word, give the host's core first and then the chosen modules in the order Builder, Data, Agent work, Git, and keep the ChatGPT text under 5,000 characters (ChatGPT has no Source line: with every module and a full URL it would pass the limit; keep the `[[FIELD]]` answer to 40 characters or fewer). The user's answers stay in their own account; never commit them to a repo.
 
 ## Claude (paste into https://claude.ai/settings/profile, field "What personal preferences should Claude consider in responses?")
 
@@ -136,7 +136,6 @@ My current message overrides these rules. If a rule gives an absurd or harmful r
 ### Core
 
 ```markdown
-Source: [[SOURCE]]. These rules are a copy; if you see that they differ from the source, tell me.
 Explain [[FIELD]] at expert level; other fields in plain terms. Time zone: [[TIME_ZONE]]; show times in it.
 My current message overrides these rules. If a rule gives an absurd result, follow its intent and tell me.
 
