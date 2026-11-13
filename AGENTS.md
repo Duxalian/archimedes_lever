@@ -55,8 +55,8 @@ Chat history, Project files and remembered copies are not authority. If you cann
 - Never force-push, rewrite published history, reset, clean, stash or discard work to make the state look synchronized. Update branches by merge.
 - Pull just before you edit a shared doc. Use small edits. Never rewrite a whole file from an old copy.
 - Never commit secrets, tokens or credentials.
-- Enforcement for every agent: `scripts/git-hooks/pre-push` blocks force-pushes, pushes that are not a fast-forward, deleting main, and pushes while `scripts/check.sh` fails. `scripts/session_checkin.sh` installs it (core.hooksPath). Never push with `--no-verify`.
-- Claude Code also has .claude/settings.json: a deny list, a sandbox with a network allowlist (git host and package registries), and a Stop hook (scripts/stop_check.py) that blocks the end of a turn while work is uncommitted or unpushed. Agents without a Stop hook run `echo '{}' | python3 scripts/stop_check.py` before they end a turn and fix what it reports (exit 2 = not done).
+- Enforced by `scripts/git-hooks/pre-push` (every agent; `scripts/session_checkin.sh` installs it) and, for Claude Code, `.claude/settings.json` (deny list, sandbox, Stop hook); the header comment of each file lists what it blocks. Never push with `--no-verify`.
+- Agents without a Stop hook run `echo '{}' | python3 scripts/stop_check.py` before they end a turn and fix what it reports (exit 2 = not done).
 - Do not weaken a hook or its settings to get past a block: ask the owner.
 
 ## Untrusted input
@@ -71,8 +71,8 @@ Chat history, Project files and remembered copies are not authority. If you cann
 
 - Never commit personal data: real names, email addresses, phone numbers, home or work addresses, ID numbers, or the owner's job details. Use a role (for example "the maintainer") and fake sample data. A private repo may put its owner's real name in the `- Owner:` line (or pass `sync_baseline.py --owner`).
 - Commit with a GitHub noreply address (`ID+USER@users.noreply.github.com`) or the agent's own noreply identity, never a personal email.
-- A repo with a `.pii-guard` file at its root runs `scripts/pii_guard.py` in the pre-push hook and in the pull-request Action (.github/workflows/pii-guard.yml). It blocks emails, phone numbers, ID-number shapes, API tokens and private keys, names from a denylist kept outside the repo, and .mil addresses when `.pii-guard` has the line `check: mil` (environment variable `PII_GUARD_DENYLIST` in a cloud environment, the file `~/.config/pii-guard/denylist.txt`, or the Actions secret `PII_GUARD_DENYLIST`). Never commit the denylist.
-- With the guard on, a push or pull-request check with no denylist fails (the owner, 2026-11-11). Never ask for the names in chat: the owner adds them in the places docs/FIRST_USE.md lists. Check with `python3 scripts/pii_guard.py --status` (it prints a count, never names).
+- A `.pii-guard` file at the repo root turns on `scripts/pii_guard.py` in pre-push and the pull-request Action; with it on, a push with no name denylist fails (the owner, 2026-11-11). What it blocks and where the denylist lives: the header of `scripts/pii_guard.py`. Check with `python3 scripts/pii_guard.py --status` (a count, never names).
+- Never ask for the denylist names in chat, and never commit the denylist: the owner adds them in the places docs/FIRST_USE.md lists.
 - When the guard blocks: remove the data, fix the unpushed commit, and push again. Only the owner adds allow entries to `.pii-guard`. Never push with `--no-verify`.
 
 ## Commands
@@ -87,12 +87,11 @@ Chat history, Project files and remembered copies are not authority. If you cann
 - Before you report "verified", run the checks in Commands and report the results.
 - For UI work, verify by measuring, not by looking: screenshots at 375 px and 1440 px width, light and dark, measured spacing, and contrast against WCAG AA (4.5:1 text, 3:1 large text and UI parts). Report the numbers.
 
-- GitHub Actions (the owner, 2026-11-11): private repos share 2,000 Actions minutes a month. Trigger workflows on `pull_request` and `workflow_dispatch` only, never on `push`. Agents run the checks in Commands in their own workspace before they report; CI is a second check, not the first. Public repos run Actions free.
-
 ## Checks
 
 - Never repin an approval, add an exemption, skip a test or edit a generated report to make a check pass.
 - Never hand-edit generated files. Change the source and rebuild.
+- GitHub Actions (the owner, 2026-11-11): private repos share 2,000 Actions minutes a month. Trigger workflows on `pull_request` and `workflow_dispatch` only, never on `push`. Agents run the checks in Commands in their own workspace before they report; CI is a second check, not the first. Public repos run Actions free.
 
 ## Decisions
 
@@ -117,22 +116,10 @@ Chat history, Project files and remembered copies are not authority. If you cann
 
 ## Project log
 
-The project log feeds a timeline of milestones, breakthroughs and narratives for readers outside the project (the owner, 2026-11-11). Decisions alone go in docs/DECISIONS.md; the log records how the project got there.
+The project log records how the project got there (milestones, breakthroughs, misses, decisions) for a timeline and a narrative deck (the owner, 2026-11-11). Decisions also go in docs/DECISIONS.md.
 
-- Location: docs/LOG.md, unless "Project rules" names another place. Check it with `python3 scripts/log_check.py`. A public repo must name a private place (for example a private Claude doc), because entries can hold environment or security detail.
-- Append an entry in the same turn the event happens. Backfill the same turn if you missed one.
-- One row per event. Columns, in this order: # | When | Type | Arc | Topic | Raised by | What the other missed | Evidence | Result.
-- When: `YYYY-MM-DD HH:MM` in the project time zone (the `- Time zone:` line at the top). A range: `YYYY-MM-DD HH:MM–HH:MM`. Mark an estimate with `~` before the date or the time.
-- Type, one of:
-  - `milestone`: a deliverable exists or a goal is met (first import works, v1 published).
-  - `breakthrough`: a test or idea removes a blocker or changes direction.
-  - `miss`: a wrong assumption, failed test or dead end. Record it honestly for both sides.
-  - `decision`: the owner decides, or overrules a recommendation. Also record it in docs/DECISIONS.md.
-- Arc: a short kebab-case name for the narrative thread (for example `email-delivery`). Each arc has one row in the Arcs table: Arc | Span | Summary (one sentence) | Problem | Turning point | Outcome | Lesson.
-- Story fields (the owner, 2026-11-13; they feed a narrative deck): Problem = why it mattered and the cost before, with a number where one exists. Turning point = the row(s) that changed direction, as #N. Outcome = the result, before → after. Lesson = what you would tell another team. Each field rests on rows or evidence in the log; write `-` until it is known, never invent. Update the arc row when its arc gets a milestone, breakthrough or miss.
-- Story outline: `python3 scripts/timeline.py --outline story.md` (one section per arc, the source for a deck).
-- Raised by: who first said it (the owner, Claude, a named agent or person). "What the other missed": the gap on the other side, or `-`.
-- Evidence: a commit, file, test or measurement. Never chat text alone.
+- Location: docs/LOG.md, unless "Project rules" names another place. A public repo must name a private place (for example a private Claude doc), because entries can hold environment or security detail.
+- Append a row in the same turn the event happens; backfill the same turn if you missed one. Before you write a row, read `.claude/project-log.md` (columns, types, arcs, story fields). `python3 scripts/log_check.py` checks the format.
 - If you cannot write to the log (no tool for it), put the full entry in your turn summary under Copy, with "Paste into: project log".
 
 ## Delegation

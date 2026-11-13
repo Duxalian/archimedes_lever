@@ -23,14 +23,14 @@ What it changes:
     .claude/agents/worker.md, scout.md, reviewer.md, GEMINI.md, docs/FIRST_USE.md   Added only when missing (a project
                            may tune them; FIRST_USE.md holds the denylist places that the session-start check names).
     scripts/log_check.py, scripts/drift.py, scripts/timeline.py, scripts/pii_guard.py, scripts/first_use_check.py,
-    scripts/check.sh, scripts/bloat_check.py, scripts/git-hooks/pre-push, .claude/bloat-audit.md
+    scripts/check.sh, scripts/bloat_check.py, scripts/git-hooks/pre-push, .claude/bloat-audit.md, .claude/project-log.md
                            Replaced with the baseline copies. (.pii-guard is not copied: a project opts in itself.)
     .claude/settings.json  Adds the baseline deny rules, each baseline hook event the project has no hook for, and the
                            baseline "sandbox" block when the project has none. Keeps all other settings.
     .gitignore             Adds the baseline lines. Keeps all other lines.
     .baseline              Records the baseline commit that was used.
     docs/LOG.md            An Arcs table with the old columns (Arc | Span | Summary | Outcome) gets the story columns
-                           Problem, Turning point and Lesson, each "-" (AGENTS.md "Project log"). Rows are kept.
+                           Problem, Turning point and Lesson, each "-" (.claude/project-log.md). Rows are kept.
     docs/archimedes_lever-LICENSE.txt   The kit's license (MIT), which covers the copied files.
     Owner name             In baseline text only (AGENTS.md above "## Project rules" and the copied files, not this
                            script), "the owner" becomes the project owner ("The owner" becomes the owner with a capital
@@ -57,7 +57,7 @@ COMMANDS_HEADING = "## Commands"
 COPY_FILES = ["scripts/session_checkin.sh", "scripts/sync_baseline.py", "scripts/stop_check.py",
               "scripts/worker_guard.py", "scripts/log_check.py", "scripts/drift.py", "scripts/timeline.py", "scripts/pii_guard.py", "scripts/first_use_check.py",
               "scripts/check.sh", "scripts/bloat_check.py", "scripts/git-hooks/pre-push",
-              ".claude/orchestration.md", ".claude/bloat-audit.md", ".github/workflows/pii-guard.yml"]
+              ".claude/orchestration.md", ".claude/bloat-audit.md", ".claude/project-log.md", ".github/workflows/pii-guard.yml"]
 # Agent definitions: copied only when the project has no file with that name (projects may tune them).
 COPY_IF_MISSING = [".claude/agents/worker.md", ".claude/agents/scout.md", ".claude/agents/reviewer.md", "GEMINI.md",
                    "docs/FIRST_USE.md"]
