@@ -6,7 +6,8 @@ Usage:
     python3 scripts/log_check.py --test            # self-test; prints LOG CHECK TEST PASS
 
 Checks (each failure prints FILE:LINE: message):
-- A "## Arcs" table with the columns Arc | Span | Summary | Outcome.
+- A "## Arcs" table with the columns Arc | Span | Summary | Problem | Turning point | Outcome | Lesson.
+  Every Arcs row has 7 cells. Turning point is "-" or names log rows as #N, and each named row exists.
 - A "## Log" table with the columns # | When | Type | Arc | Topic | Raised by | What the other missed | Evidence | Result.
 - Every row has 9 cells; # is a whole number, unique, and rows are in # order.
 - When: YYYY-MM-DD HH:MM, or a range YYYY-MM-DD HH:MM-HH:MM (en dash or hyphen), or a range across days
@@ -26,7 +27,9 @@ import sys
 import tempfile
 
 LOG_COLS = ["#", "When", "Type", "Arc", "Topic", "Raised by", "What the other missed", "Evidence", "Result"]
-ARC_COLS = ["Arc", "Span", "Summary", "Outcome"]
+ARC_COLS = ["Arc", "Span", "Summary", "Problem", "Turning point", "Outcome", "Lesson"]
+OLD_ARC_COLS = ["Arc", "Span", "Summary", "Outcome"]
+ROW_REF = re.compile(r"#(\d+)")
 TYPES = {"milestone", "breakthrough", "miss", "decision"}
 ARC_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 DATE = r"\d{4}-\d{2}-\d{2}"
@@ -98,12 +101,17 @@ def check(path):
     if "Log" not in t:
         found.append(f"{p}: no table under '## Log'")
         return 0, found
-    arcs = {}
+    arcs, turns = {}, []
     if "Arcs" in t:
         ln, head, rows = t["Arcs"]
         if head != ARC_COLS:
-            found.append(f"{p}:{ln}: Arcs columns must be {' | '.join(ARC_COLS)}")
+            hint = " (add Problem, Turning point and Lesson; write - until known)" if head == OLD_ARC_COLS else ""
+            found.append(f"{p}:{ln}: Arcs columns must be {' | '.join(ARC_COLS)}{hint}")
         for ln, c in rows:
+            if head == ARC_COLS and len(c) != len(ARC_COLS):
+                found.append(f"{p}:{ln}: {len(c)} cells in Arcs row, need {len(ARC_COLS)}")
+            elif head == ARC_COLS:
+                turns.append((ln, c[0], c[4]))
             if not c or not ARC_RE.match(c[0]):
                 found.append(f"{p}:{ln}: arc name {c[0] if c else ''!r} is not kebab-case")
             elif c[0] in arcs:
@@ -116,7 +124,7 @@ def check(path):
     if head != LOG_COLS:
         found.append(f"{p}:{ln}: Log columns must be {' | '.join(LOG_COLS)}")
         return len(rows), found
-    used, last = set(), None
+    used, last, nums = set(), None, set()
     for ln, c in rows:
         if len(c) != len(LOG_COLS):
             if len(c) > 3:
@@ -132,6 +140,7 @@ def check(path):
             if last is not None and n <= last:
                 found.append(f"{p}:{ln}: # {n} is not after # {last} (unique, in order)")
             last = n
+            nums.add(n)
         if not valid_when(when):
             found.append(f"{p}:{ln}: When {when!r} is not YYYY-MM-DD HH:MM (or a range; ~ marks an estimate)")
         if typ not in TYPES:
@@ -143,6 +152,13 @@ def check(path):
         used.add(arc)
         if evidence in ("", "-"):
             found.append(f"{p}:{ln}: Evidence is empty (a commit, file, test or measurement)")
+    for aln, arc, turn in turns:
+        refs = ROW_REF.findall(turn)
+        if turn not in ("", "-") and not refs:
+            found.append(f"{p}:{aln}: arc {arc!r} Turning point must name a log row as #N, or be -")
+        for r in refs:
+            if int(r) not in nums:
+                found.append(f"{p}:{aln}: arc {arc!r} Turning point #{r} is not a log row")
     for arc, aln in arcs.items():
         if arc not in used:
             found.append(f"{p}:{aln}: arc {arc!r} is not used by any log row")
@@ -153,10 +169,10 @@ GOOD = """# Project log: Demo
 
 ## Arcs
 
-| Arc | Span | Summary | Outcome |
-|---|---|---|---|
-| setup | 2026-11-10 | Start. | Ready |
-| flow-import | 2026-11-11 07:39–08:36 | Import. | Works |
+| Arc | Span | Summary | Problem | Turning point | Outcome | Lesson |
+|---|---|---|---|---|---|---|
+| setup | 2026-11-10 | Start. | - | - | Ready | - |
+| flow-import | 2026-11-11 07:39–08:36 | Import. | Manual import took 2 h. | #2 found the cause | Works | Test the import first |
 
 ## Log
 
@@ -197,6 +213,10 @@ def self_test():
     expect("wrong columns", GOOD.replace("| Evidence | Result |", "| Test / evidence | Result |"), "Log columns")
     expect("older header 'When (CT)' passes", GOOD.replace("| # | When |", "| # | When (CT) |"), None)
     expect("no arcs table", GOOD.split("## Arcs")[0] + "## Log" + GOOD.split("## Log")[1], "no table under '## Arcs'")
+    expect("old 4-column Arcs table", GOOD.replace("| Arc | Span | Summary | Problem | Turning point | Outcome | Lesson |", "| Arc | Span | Summary | Outcome |"), "add Problem, Turning point and Lesson")
+    expect("short Arcs row", GOOD.replace("| setup | 2026-11-10 | Start. | - | - | Ready | - |", "| setup | 2026-11-10 | Start. | Ready |"), "4 cells in Arcs row")
+    expect("turning point names a missing row", GOOD.replace("#2 found", "#9 found"), "Turning point #9 is not a log row")
+    expect("turning point without a row", GOOD.replace("#2 found the cause", "found the cause"), "must name a log row")
     print("LOG CHECK TEST " + ("PASS" if ok else "FAIL"))
     return 0 if ok else 1
 
