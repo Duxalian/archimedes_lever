@@ -102,6 +102,7 @@ The guard runs only in a repo with a `.pii-guard` file at its root. That file al
 | docs/host-prompts.md | Pointer texts for the claude.ai Project, GPT, Gemini and any other chat. |
 | docs/reviews/ | Detailed evidence. |
 | CHANGELOG.md | Kit versions and decisions about the kit. Template repo only: bootstrap deletes it. |
+| .bloat-audit.json | The kit's own audit state and timing baselines (scripts/bloat_check.py). Template repo only: bootstrap deletes it; a project's first audit makes its own. |
 | KIT_LOG.md | The kit's own project log (story of how the kit got here; same format as docs/LOG.md). Template repo only: bootstrap deletes it. |
 | PREFERENCES.md | The owner's personal preferences for Claude, ChatGPT and Codex, ready to paste. Template repo only: bootstrap deletes it. |
 | LICENSE | The kit's license (MIT). Bootstrap moves it to docs/archimedes_lever-LICENSE.txt; the project picks its own LICENSE. |
