@@ -83,7 +83,7 @@ Total if P1–P3 are approved: ~530 words, ~22% of AGENTS.md, ~700 start-read to
 | The sandbox runs and keeps the hooks path writable for session_checkin.sh | .claude/settings.json | Not tested: this container has no bubblewrap (gap review, Limits) | medium |
 | Codex, Cursor and Copilot read AGENTS.md; Gemini CLI follows the GEMINI.md import | README, AGENTS.md header | Vendor docs, not tested here | medium |
 | The human part of first use takes one dialog and 1–3 denylist places | docs/FIRST_USE.md | Trial ran the agent steps only; no person timed | medium |
-| GitHub redirects the old account URL | this clone's `origin` (`Duxalian/archimedes_lever`) | GitHub keeps a redirect until someone takes the old name; then the URL points to their repo | low: question for the owner |
+| GitHub redirects the old account URL | this clone's `origin` (the old account name, before the rename to rhope-ops) | GitHub keeps a redirect until someone takes the old name; then the URL points to their repo | low: question for the owner |
 
 ## Tech-debt register
 
