@@ -24,10 +24,13 @@ It measures:
      "budgets": {"start_read_tokens": 12000, "handoff_lines": 40, "file_kb": 500, "duplicate_lines": 20},
      "start_read": [], "ignore": ["ref/**"],
      "timings": {"tests": {"cmd": "tests/run.sh", "seconds": 20.8, "max_slowdown": 0.25}}}
-Exit 0, unless --strict and something is over (exit 1). Standard library only. Needs git.
+A repo with no .bloat-audit.json (for example right after its first sync) reports AUDIT DUE (never audited): the first
+audit creates the file. Exit 0, unless --strict and something is over (exit 1). Standard library only. Needs git.
 """
 import argparse
+import contextlib
 import datetime
+import io
 import fnmatch
 import json
 import re
@@ -48,7 +51,10 @@ MAX_SCAN = 1_000_000  # bytes; larger files are not scanned for duplicates
 
 
 def git(root, *args):
-    r = subprocess.run(["git", "-C", str(root), *args], capture_output=True, text=True)
+    try:
+        r = subprocess.run(["git", "-C", str(root), *args], capture_output=True, text=True)
+    except OSError:
+        return None
     return r.stdout.strip() if r.returncode == 0 else None
 
 
@@ -56,7 +62,9 @@ def load_config(root):
     cfg = json.loads(json.dumps(DEFAULTS))
     p = root / CONFIG
     if p.exists():
-        data = json.loads(p.read_text())
+        data = json.loads(p.read_text(encoding="utf-8"))
+        if not isinstance(data, dict):
+            raise ValueError("top level is not an object")
         budgets = {**cfg["budgets"], **data.get("budgets", {})}
         cfg.update(data)
         cfg["budgets"] = budgets
@@ -119,13 +127,11 @@ def audit_due(root, cfg, today):
         return "never audited"
     reasons = []
     days = (today - datetime.date.fromisoformat(last["date"])).days
-    if days >= cfg["every_days"]:
+    if days >= int(cfg["every_days"]):
         reasons.append(f"{days} days since {last['date']}")
     if last.get("commit"):
         n = git(root, "rev-list", "--count", f"{last['commit']}..HEAD")
-        if n is None:
-            reasons.append("commits since last audit unknown (shallow clone?)") if not reasons else None
-        elif int(n) >= cfg["every_commits"]:
+        if n is not None and int(n) >= int(cfg["every_commits"]):
             reasons.append(f"{n} commits since {last['commit'][:7]}")
     return "; ".join(reasons)
 
@@ -138,26 +144,30 @@ def run_timings(root, cfg, record):
         secs = round(time.monotonic() - t0, 1)
         base = t.get("seconds")
         limit = t.get("max_slowdown", 0.25)
-        verdict = "new" if not base else ("SLOWER" if secs > base * (1 + limit) else "ok")
-        if verdict == "SLOWER":
+        verdict = "FAILED" if rc else "new" if base is None else ("SLOWER" if secs > base * (1 + limit) else "ok")
+        if verdict in ("SLOWER", "FAILED"):
             slow.append(name)
         rows.append(f"  {name}: {secs} s (baseline {base or '-'} s, limit +{int(limit * 100)}%, exit {rc}) {verdict}")
-        if record:
+        if record and not rc:
             t["seconds"] = secs
     return rows, slow
 
 
 def report(root, args, today=None):
     today = today or datetime.date.today()
-    cfg = load_config(root)
+    try:
+        cfg = load_config(root)
+        due = audit_due(root, cfg, today)
+    except (ValueError, TypeError, KeyError) as e:
+        print(f"bloat:       {CONFIG} unreadable ({e}); fix it, then run scripts/bloat_check.py")
+        return 1 if args.strict else 0
     b = cfg["budgets"]
     files = scan_files(root, cfg)
     s_lines, s_bytes, s_tok, s_files = start_read(root, cfg)
     hp = root / "docs/NEXT_PROMPT.md"
-    h_lines = hp.read_text().count("\n") if hp.exists() else 0
+    h_lines = hp.read_bytes().count(b"\n") if hp.exists() else 0
     dups = duplicates(root, files)
     big = big_files(root, files, b["file_kb"])
-    due = audit_due(root, cfg, today)
     over = []
     if s_tok > b["start_read_tokens"]:
         over.append("start read")
@@ -170,7 +180,7 @@ def report(root, args, today=None):
     t_rows, slow = run_timings(root, cfg, args.record) if args.time else ([], [])
     over += [f"timing {n}" for n in slow]
     if args.record and args.time:
-        data = json.loads((root / CONFIG).read_text()) if (root / CONFIG).exists() else {}
+        data = json.loads((root / CONFIG).read_text(encoding="utf-8")) if (root / CONFIG).exists() else {}
         data["timings"] = cfg.get("timings", {})
         (root / CONFIG).write_text(json.dumps(data, indent=2) + "\n")
 
@@ -217,7 +227,16 @@ def self_test():
         rows, slow = run_timings(root, cfg, record=False)
         assert not slow and "ok" in rows[0], "fast command is ok"
         a = argparse.Namespace(brief=False, time=False, record=False, strict=True)
-        assert report(root, a, datetime.date(2026, 1, 5)) == 1, "strict fails when over budget"
+        with contextlib.redirect_stdout(io.StringIO()):
+            assert report(root, a, datetime.date(2026, 1, 5)) == 1, "strict fails when over budget"
+            assert audit_due(root, {**cfg, "last_audit": {"date": "2026-01-01", "commit": "f" * 40}},
+                             datetime.date(2026, 1, 5)) == "", "unknown commit alone is not due"
+            (root / CONFIG).write_text("{bad")
+            assert report(root, a, datetime.date(2026, 1, 5)) == 1, "bad config: message, no traceback"
+            (root / CONFIG).write_text(json.dumps({"timings": {"f": {"cmd": "false"}, "t": {"cmd": "true"}}}))
+            report(root, argparse.Namespace(brief=True, time=True, record=True, strict=False))
+        saved = json.loads((root / CONFIG).read_text())["timings"]
+        assert "seconds" not in saved["f"] and saved["t"]["seconds"] is not None, "record skips failed commands"
     print("BLOAT TEST PASS")
 
 
