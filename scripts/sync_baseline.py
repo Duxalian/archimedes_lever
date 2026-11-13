@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Sync a project repo to the current Duxalian/archimedes_lever baseline.
+"""Sync a project repo to the current rhope-ops/archimedes_lever baseline.
 
 Run it from inside the project repo:
     python3 scripts/sync_baseline.py            # dry run: show the diff, write nothing
     python3 scripts/sync_baseline.py --apply    # write the files (commit them yourself)
 
 Options:
-    --baseline PATH_OR_URL   Baseline repo (default: https://github.com/Duxalian/archimedes_lever)
+    --baseline PATH_OR_URL   Baseline repo (default: https://github.com/rhope-ops/archimedes_lever)
     --name, --repo, --purpose   Header values, needed only when the project AGENTS.md has none.
     --timezone ZONE          IANA time zone for project log times, needed only when the project AGENTS.md has no
                              "- Time zone:" line (projects synced before 2026-11-11 have none).
@@ -51,7 +51,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-DEFAULT_BASELINE = "https://github.com/Duxalian/archimedes_lever"
+DEFAULT_BASELINE = "https://github.com/rhope-ops/archimedes_lever"
 RULES_HEADING = "## Project rules"
 COMMANDS_HEADING = "## Commands"
 COPY_FILES = ["scripts/session_checkin.sh", "scripts/sync_baseline.py", "scripts/stop_check.py",
@@ -336,7 +336,7 @@ def main():
             migrated = migrate_arcs(log.read_text())
             if migrated != log.read_text():
                 new["docs/LOG.md"] = migrated
-        new[".baseline"] = f"Duxalian/archimedes_lever {base_sha}\n"
+        new[".baseline"] = f"rhope-ops/archimedes_lever {base_sha}\n"
         if (base / "LICENSE").exists():
             new["docs/archimedes_lever-LICENSE.txt"] = (base / "LICENSE").read_text()
         guard = root / ".pii-guard"

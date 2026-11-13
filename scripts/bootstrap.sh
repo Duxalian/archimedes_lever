@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Fill the template placeholders in a new project made from Duxalian/archimedes_lever.
+# Fill the template placeholders in a new project made from rhope-ops/archimedes_lever.
 # Usage: scripts/bootstrap.sh "Project Name" Owner/repo "One-line purpose" ["Owner name"] ["Time zone"]
 # Owner name: what agents call the decider (default "the owner"). A private repo may use your name; a public repo uses a role,
 # for example "the maintainer".
@@ -63,8 +63,8 @@ if grep -rIn '{{[A-Z_]*}}' "${files[@]}" README.md; then
 fi
 
 # Record the baseline commit this project starts from (sync_baseline.py updates it later).
-base_sha="$(git ls-remote https://github.com/Duxalian/archimedes_lever HEAD 2>/dev/null | cut -f1)" || base_sha=""
-echo "Duxalian/archimedes_lever ${base_sha:-unknown (ls-remote failed)}" > .baseline
+base_sha="$(git ls-remote https://github.com/rhope-ops/archimedes_lever HEAD 2>/dev/null | cut -f1)" || base_sha=""
+echo "rhope-ops/archimedes_lever ${base_sha:-unknown (ls-remote failed)}" > .baseline
 
 # The kit's changelog, story log (KIT_LOG.md) and owner preferences (PREFERENCES.md) live only in the template repo. The kit's license moves next to the docs: the copied scripts
 # stay under it, and the root LICENSE is the project's own choice (docs/FIRST_USE.md, question 6).

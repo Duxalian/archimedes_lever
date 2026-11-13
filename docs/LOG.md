@@ -6,7 +6,7 @@ Source for a timeline of milestones, breakthroughs and narratives. Rules: AGENTS
 
 | Arc | Span | Summary | Problem | Turning point | Outcome | Lesson |
 |---|---|---|---|---|---|---|
-| setup | {{DATE}} | Project made from the Duxalian/archimedes_lever baseline. | - | - | Repo ready | - |
+| setup | {{DATE}} | Project made from the rhope-ops/archimedes_lever baseline. | - | - | Repo ready | - |
 
 ## Log
 

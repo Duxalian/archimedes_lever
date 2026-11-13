@@ -253,12 +253,12 @@ def self_test():
     with tempfile.TemporaryDirectory() as d:
         f = pathlib.Path(d, "LOG.md")
         f.write_text(log_check.GOOD.replace("| T | Owner | - | Commit abc |", "| <script>x</script> | Owner | - | other_repo 59cd968; Commits 1234567, 89abcde |"), encoding="utf-8")
-        page, problems = build([f"Demo={f}@Duxalian/demo"], "Test")
+        page, problems = build([f"Demo={f}@rhope-ops/demo"], "Test")
         checks = [
             ("renders", page is not None and not problems),
             ("all 4 rows", page and page.count("<article") == 4),
             ("html escaped", page and "<script>x</script>" not in page and "&lt;script&gt;" in page),
-            ("commit linked", page and "https://github.com/Duxalian/demo/commit/63ae6e2" in page),
+            ("commit linked", page and "https://github.com/rhope-ops/demo/commit/63ae6e2" in page),
             ("newest first", page and page.index("23:50") < page.index("22:11")),
             ("other repo hash not linked", page and "/commit/59cd968" not in page),
             ("list of commits linked", page and "/commit/1234567" in page and "/commit/89abcde" in page),

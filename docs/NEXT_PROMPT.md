@@ -4,7 +4,7 @@ Updated: {{DATE}} by bootstrap. Keep this file at 40 lines or fewer. The current
 
 ## State
 
-- main: bootstrapped from Duxalian/archimedes_lever.
+- main: bootstrapped from rhope-ops/archimedes_lever.
 
 ## Open (in order)
 
