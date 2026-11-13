@@ -1,0 +1,24 @@
+{
+  "last_audit": {
+    "date": "2026-11-13",
+    "commit": "eab8b98570d0d90dce728fa159ec67acf37563df",
+    "report": "docs/reviews/2026-11-13-bloat-audit.md"
+  },
+  "timings": {
+    "check": {
+      "cmd": "bash scripts/check.sh",
+      "max_slowdown": 0.25,
+      "seconds": 2.9
+    },
+    "checkin": {
+      "cmd": "bash scripts/session_checkin.sh",
+      "max_slowdown": 0.25,
+      "seconds": 0.9
+    },
+    "bloat-brief": {
+      "cmd": "python3 scripts/bloat_check.py --brief",
+      "max_slowdown": 0.25,
+      "seconds": 0.1
+    }
+  }
+}

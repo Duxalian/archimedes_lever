@@ -42,7 +42,7 @@ if [ "$BS_OWNER" != "the owner" ]; then
   # The same files sync_baseline.py renames (its COPY_FILES), so a sync right after bootstrap changes nothing.
   # Not renamed on purpose: docs/FIRST_USE.md, scripts/first_use_check.py and scripts/sync_baseline.py, whose
   # "the owner" is an option, a role or a literal the script needs.
-  owner_files=("${files[@]}" .claude/orchestration.md scripts/session_checkin.sh scripts/stop_check.py scripts/worker_guard.py
+  owner_files=("${files[@]}" .claude/orchestration.md .claude/bloat-audit.md .claude/project-log.md scripts/bloat_check.py scripts/session_checkin.sh scripts/stop_check.py scripts/worker_guard.py
     scripts/log_check.py scripts/drift.py scripts/timeline.py scripts/pii_guard.py scripts/check.sh scripts/git-hooks/pre-push)
   for f in "${owner_files[@]}"; do
     perl -pi -e 'my $c = ucfirst $ENV{BS_OWNER}; s/\b([Tt])he owner\b/$1 eq "T" ? $c : $ENV{BS_OWNER}/ge' "$f"
@@ -66,9 +66,9 @@ fi
 base_sha="$(git ls-remote https://github.com/rhope-ops/archimedes_lever HEAD 2>/dev/null | cut -f1)" || base_sha=""
 echo "rhope-ops/archimedes_lever ${base_sha:-unknown (ls-remote failed)}" > .baseline
 
-# The kit's changelog, story log (KIT_LOG.md) and owner preferences (PREFERENCES.md) live only in the template repo. The kit's license moves next to the docs: the copied scripts
+# The kit's changelog, story log (KIT_LOG.md), owner preferences (PREFERENCES.md) and audit state (.bloat-audit.json) live only in the template repo. The kit's license moves next to the docs: the copied scripts
 # stay under it, and the root LICENSE is the project's own choice (docs/FIRST_USE.md, question 6).
-rm -f -- CHANGELOG.md KIT_LOG.md PREFERENCES.md
+rm -f -- CHANGELOG.md KIT_LOG.md PREFERENCES.md .bloat-audit.json
 if [ -f LICENSE ]; then mv -- LICENSE docs/archimedes_lever-LICENSE.txt; fi
 
 rm -- "$0"

@@ -25,8 +25,9 @@ It measures:
      "start_read": [], "ignore": ["ref/**"],
      "timings": {"tests": {"cmd": "tests/run.sh", "seconds": 20.8, "max_slowdown": 0.25}}}
 start_read_warn_tokens only warns (never "over", never fails --strict); set it to the cap to turn the warning off.
-A repo with no .bloat-audit.json (for example right after its first sync) reports AUDIT DUE (never audited): the first
-audit creates the file. Exit 0, unless --strict and something is over (exit 1). Standard library only. Needs git.
+A repo with no "last_audit" reports AUDIT DUE (never audited) once it is every_days or every_commits past its first
+commit (a new project is not due on day one; an older project synced for the first time usually is). The first audit
+creates the file. Exit 0, unless --strict and something is over (exit 1). Standard library only. Needs git.
 """
 import argparse
 import contextlib
@@ -34,6 +35,7 @@ import datetime
 import io
 import fnmatch
 import json
+import os
 import re
 import subprocess
 import sys
@@ -125,7 +127,20 @@ def big_files(root, files, kb):
 def audit_due(root, cfg, today):
     last = cfg.get("last_audit") or {}
     if not last.get("date"):
-        return "never audited"
+        # Never audited: due once the repo is every_days or every_commits past its first commit (the owner, 2026-11-13),
+        # so a new project does not report AUDIT DUE on day one. No history readable, or a shallow clone (its oldest
+        # commit is a cut, not the first commit): due.
+        if git(root, "rev-parse", "--is-shallow-repository") == "true":
+            return "never audited"
+        first = git(root, "log", "--max-parents=0", "--format=%cs")
+        count = git(root, "rev-list", "--count", "HEAD")
+        if not first or not count:
+            return "never audited"
+        start = min(datetime.date.fromisoformat(d) for d in first.split())
+        days = (today - start).days
+        if days >= int(cfg["every_days"]) or int(count) >= int(cfg["every_commits"]):
+            return f"never audited; {days} days and {count} commits since the first commit"
+        return ""
     reasons = []
     days = (today - datetime.date.fromisoformat(last["date"])).days
     if days >= int(cfg["every_days"]):
@@ -228,7 +243,25 @@ def self_test():
         assert [f for f, _ in big_files(root, files, 2)] == ["big.txt"], "big file"
         assert "days since" in audit_due(root, cfg, datetime.date(2026, 2, 1)), "due by days"
         assert audit_due(root, cfg, datetime.date(2026, 1, 5)) == "", "not due"
-        assert audit_due(root, {**cfg, "last_audit": None}, datetime.date(2026, 1, 5)) == "never audited"
+        never = {**cfg, "last_audit": None}
+        assert audit_due(root, never, datetime.date(2026, 1, 5)) == "never audited", "no commits: due"
+        with tempfile.TemporaryDirectory() as n:
+            subprocess.run(["git", "init", "-q", n], check=True)
+            env = {**os.environ, "GIT_AUTHOR_DATE": "2026-01-01T12:00:00Z", "GIT_COMMITTER_DATE": "2026-01-01T12:00:00Z"}
+            subprocess.run(["git", "-C", n, "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-q", "--allow-empty",
+                            "-m", "first"], check=True, env=env)
+            first = datetime.date(2026, 1, 1)
+            assert audit_due(Path(n), never, first) == "", "never audited, new repo: not due yet"
+            assert audit_due(Path(n), never, first + datetime.timedelta(days=14)).startswith("never audited;"), "due by days"
+            assert audit_due(Path(n), {**never, "every_commits": 1}, first).startswith("never audited;"), "due by commits"
+            subprocess.run(["git", "-C", n, "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-q", "--allow-empty",
+                            "-m", "second"], check=True, env=env)
+            s = str(Path(n).parent / (Path(n).name + "-shallow"))
+            subprocess.run(["git", "clone", "-q", "--depth", "1", "file://" + n, s], check=True, capture_output=True)
+            try:
+                assert audit_due(Path(s), never, first) == "never audited", "shallow clone: due"
+            finally:
+                subprocess.run(["rm", "-rf", s], check=True)
         rows, slow = run_timings(root, cfg, record=False)
         assert not slow and "ok" in rows[0], "fast command is ok"
         a = argparse.Namespace(brief=False, time=False, record=False, strict=True)

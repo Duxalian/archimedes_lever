@@ -102,12 +102,14 @@ The guard runs only in a repo with a `.pii-guard` file at its root. That file al
 | docs/host-prompts.md | Pointer texts for the claude.ai Project, GPT, Gemini and any other chat. |
 | docs/reviews/ | Detailed evidence. |
 | CHANGELOG.md | Kit versions and decisions about the kit. Template repo only: bootstrap deletes it. |
+| .bloat-audit.json | The kit's own audit state and timing baselines (scripts/bloat_check.py). Template repo only: bootstrap deletes it; a project's first audit makes its own. |
 | KIT_LOG.md | The kit's own project log (story of how the kit got here; same format as docs/LOG.md). Template repo only: bootstrap deletes it. |
 | PREFERENCES.md | The owner's personal preferences for Claude, ChatGPT and Codex, ready to paste. Template repo only: bootstrap deletes it. |
 | LICENSE | The kit's license (MIT). Bootstrap moves it to docs/archimedes_lever-LICENSE.txt; the project picks its own LICENSE. |
 | .claude/settings.json | Claude Code deny list (force-push incl. --force-with-lease, hard reset, clean, reading .env and key files), a sandbox with a network allowlist (GitHub, PyPI, npm), and the Stop hook. Binds Claude Code only. |
 | .claude/orchestration.md | Multi-agent rules: roles, model routing by tier, fallbacks, briefs, review and merge, lanes. Read only when delegating. |
 | .claude/bloat-audit.md | The periodic bloat, drift and assumption audit (AGENTS.md "Bloat, drift and assumptions"). Read only when an audit is due. |
+| .claude/project-log.md | How to write a project log row: columns, types, arcs, story fields (AGENTS.md "Project log"). Read only when writing a row. |
 | scripts/bloat_check.py | Cheap metrics each check-in: start-read tokens, duplicate lines, big files, audit due date; `--time` compares timed operations with their baseline. Settings and state: `.bloat-audit.json`. `--test`. |
 | .claude/agents/ | Claude Code roles: `scout` (fast tier, read-only), `worker` (standard), `reviewer` (standard, read-only). |
 | .github/workflows/pii-guard.yml | Pull-request and manual check: `scripts/check.sh`, then the guard on all files and the PR's commits. Never on push (Actions minutes). |
