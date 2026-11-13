@@ -21,7 +21,7 @@ It measures:
 .bloat-audit.json (project-owned; the full audit in .claude/bloat-audit.md writes it). All keys are optional:
     {"last_audit": {"date": "YYYY-MM-DD", "commit": "<sha>", "report": "<path>"},
      "every_days": 14, "every_commits": 300,
-     "budgets": {"start_read_tokens": 12000, "start_read_warn_tokens": 6000, "handoff_lines": 40, "file_kb": 500, "duplicate_lines": 20},
+     "budgets": {"start_read_tokens": 6000, "start_read_warn_tokens": 4500, "handoff_lines": 40, "file_kb": 500, "duplicate_lines": 20},
      "start_read": [], "ignore": ["ref/**"],
      "timings": {"tests": {"cmd": "tests/run.sh", "seconds": 20.8, "max_slowdown": 0.25}}}
 start_read_warn_tokens only warns (never "over", never fails --strict); set it to the cap to turn the warning off.
@@ -46,7 +46,7 @@ from pathlib import Path
 CONFIG = ".bloat-audit.json"
 START_READ = ["AGENTS.md", "CLAUDE.md", "GEMINI.md", "docs/NEXT_PROMPT.md", "docs/DECISIONS.md"]
 DEFAULTS = {"every_days": 14, "every_commits": 300,
-            "budgets": {"start_read_tokens": 12000, "start_read_warn_tokens": 6000, "handoff_lines": 40, "file_kb": 500, "duplicate_lines": 20}}
+            "budgets": {"start_read_tokens": 6000, "start_read_warn_tokens": 4500, "handoff_lines": 40, "file_kb": 500, "duplicate_lines": 20}}
 TEXT_EXT = {".md", ".txt", ".py", ".sh", ".ps1", ".psm1", ".js", ".ts", ".json", ".yml", ".yaml", ".html", ".css",
             ".toml", ".ini", ".cfg", ".csv", ""}
 MIN_DUP = 80          # characters in a normalized line before it counts as a duplicate
