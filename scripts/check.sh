@@ -22,9 +22,10 @@ run() {  # run NAME COMMAND...
 }
 skip() { echo "SKIP  $1 ($2)"; skip=$((skip + 1)); }
 
-for s in pii_guard first_use_check stop_check worker_guard log_check timeline drift bloat_check; do
+for s in pii_guard first_use_check stop_check worker_guard log_check timeline bloat_check; do
   if [ -f "scripts/$s.py" ]; then run "$s self-test" python3 "scripts/$s.py" --test; else skip "$s self-test" "not in this repo"; fi
 done
+if [ -f scripts/drift.py ]; then run "drift self-test" python3 scripts/drift.py --test; fi  # kit only: projects have no sync tools
 if [ -f scripts/git-hooks/pre-push ]; then run "pre-push self-test" scripts/git-hooks/pre-push --test; fi
 
 if grep -q '{{PROJECT_NAME}}' AGENTS.md 2>/dev/null; then
