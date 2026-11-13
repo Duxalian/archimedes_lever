@@ -33,7 +33,7 @@ Replace "Claude" with "ChatGPT" or "Codex" if that is what you use.
 
 ## The lessons behind the rules
 
-These are things that went wrong across 5 real projects, and the rule each one led to. Each rule now lives either in [PREFERENCES.md](PREFERENCES.md) (your account) or in the kit (your projects).
+These are things that went wrong across 5 real projects, and the rule each one led to. The reason for every rule is in [docs/DECISIONS.md](docs/DECISIONS.md); the story is in the public [docs/LOG.md](docs/LOG.md). Each rule now lives either in [PREFERENCES.md](PREFERENCES.md) (your account) or in the kit (your projects).
 
 | Lesson | What happened | Where the rule lives |
 |---|---|---|
@@ -103,7 +103,8 @@ Two tiers. **Starter** (recommended for a first project): AGENTS.md, the safety 
 | Safety hooks | `scripts/git-hooks/pre-push` blocks force-pushes, deleting main, and pushes that fail `scripts/check.sh`, for every tool (a push with `--no-verify` skips it; see Limits). The Claude Code Stop hook stops a turn from ending while work is unsaved or unpushed. |
 | Personal-data and secret guard | `scripts/pii_guard.py` blocks emails, phone numbers, ID-number patterns, API tokens, private keys and the names on your private list before they reach GitHub. |
 | One check command | `scripts/check.sh` runs every self-test, the project log check and the personal-data scan, plus your own tests in `scripts/check.local.sh`. Until that file exists, check.sh shows SKIP, and agents merge code changes to main only with your approval. It is the default test command in AGENTS.md and runs on every pull request. |
-| Memory in files | docs/DECISIONS.md (dated decisions), docs/NEXT_PROMPT.md (a short handoff note); full only: docs/LOG.md (a timeline of milestones, breakthroughs and misses). |
+| Memory in files | docs/DECISIONS.md (dated decisions), docs/NEXT_PROMPT.md (a short handoff note); full only: docs/LOG.md (a timeline of milestones, breakthroughs and misses). A project starts with blank copies; the kit's own files are the maintainer's public record. |
+| Skills | `.claude/skills/data-change` (dry run, approval and row counts before data writes and large queries) and `.claude/skills/ui-verify` (measured screenshots, contrast and target sizes). |
 | Novice guide | docs/WORKING_WITH_AGENTS.md: explore, plan, build, verify; clean context; how to ask. |
 | Multi-agent pack (full only) | `.claude/orchestration.md`: scout, worker and reviewer roles, model tiers (fast, standard, strong) for each host, and fallbacks for hosts without subagents or hooks. |
 | Upkeep checks (full only) | `scripts/bloat_check.py` and the bloat audit; `.claude/rule-tests.md`. |

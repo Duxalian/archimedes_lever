@@ -66,7 +66,8 @@ COMMANDS_HEADING = "## Commands"
 COPY_FILES = ["scripts/session_checkin.sh", "scripts/stop_check.py",
               "scripts/worker_guard.py", "scripts/log_check.py", "scripts/timeline.py", "scripts/pii_guard.py", "scripts/first_use_check.py",
               "scripts/check.sh", "scripts/bloat_check.py", "scripts/git-hooks/pre-push",
-              ".claude/orchestration.md", ".claude/bloat-audit.md", ".claude/project-log.md", ".claude/rule-tests.md", ".github/workflows/pii-guard.yml"]
+              ".claude/orchestration.md", ".claude/bloat-audit.md", ".claude/project-log.md", ".claude/rule-tests.md", ".github/workflows/pii-guard.yml",
+              ".claude/skills/data-change/SKILL.md", ".claude/skills/ui-verify/SKILL.md", ".claude/skills/ui-verify/measure.mjs"]
 # Agent definitions: copied only when the project has no file with that name (projects may tune them).
 COPY_IF_MISSING = [".claude/agents/worker.md", ".claude/agents/scout.md", ".claude/agents/reviewer.md", "GEMINI.md",
                    "docs/FIRST_USE.md"]
@@ -74,6 +75,12 @@ BASELINE_OWNER = "the owner"  # role word in baseline text; no real name lives i
 # Never rename the owner inside this script: it holds BASELINE_OWNER as a literal.
 # first_use_check.py and docs/FIRST_USE.md use "the owner" as an answer option and a role: keep them as written
 # (bootstrap.sh skips them too).
+def log_template(base):
+    """The blank project log: docs/templates/LOG.md (the kit's docs/LOG.md is its own log); older baselines: docs/LOG.md."""
+    t = base / "docs/templates/LOG.md"
+    return t if t.exists() else base / "docs/LOG.md"
+
+
 # Advanced parts: a starter project has none of these (one list for bootstrap, sync and drift).
 ADVANCED_FILES = [".claude/orchestration.md", ".claude/agents/scout.md", ".claude/agents/worker.md",
                   ".claude/project-log.md", "docs/LOG.md", "scripts/log_check.py", "scripts/timeline.py",
@@ -398,10 +405,10 @@ def main():
         log = root / "docs/LOG.md"
         rules = section(proj_agents.read_text(), RULES_HEADING) if proj_agents.exists() else ""
         upgrading = tier == "full" and header_tier(proj_agents.read_text() if proj_agents.exists() else "") == "starter"
-        if upgrading and not log.is_file() and not re.search(r"(?i)project log", rules or "") and (base / "docs/LOG.md").exists():
+        if upgrading and not log.is_file() and not re.search(r"(?i)project log", rules or "") and log_template(base).exists():
             zone = header_timezone(new["AGENTS.md"]) or "UTC"
             stamp = log_stamp(zone)
-            text = re.sub(r"(?m)^> Template: first use fills in.*\n", "", (base / "docs/LOG.md").read_text())  # kit-only note, as bootstrap.sh
+            text = re.sub(r"(?m)^> Template: first use fills in.*\n", "", log_template(base).read_text())  # kit-only note, as bootstrap.sh
             name, _, _ = header_values(new["AGENTS.md"])
             for key, val in (("PROJECT_NAME", name or "Project"), ("TIMEZONE", zone),
                              ("DATE", stamp[:10]), ("TIME", stamp[11:])):
